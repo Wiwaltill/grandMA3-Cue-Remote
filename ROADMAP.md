@@ -1,6 +1,6 @@
 # Roadmap
 
-v0.1.0 ist implementiert und lokal geprüft; die Abnahme auf echtem iPad/Safari steht noch aus. Weitere Meilensteine sind geplant.
+v0.1.0 ist implementiert und lokal geprüft; die Abnahme auf echtem iPad/Safari steht noch aus. Auf Benutzerwunsch ist zusätzlich eine grafische macOS-Serversteuerung für die Demo vorgezogen. Weitere Meilensteine sind geplant.
 
 ## v0.1.0 – Demo (implementiert; Safari-Abnahme offen)
 Responsive React/TypeScript-Oberfläche, Current/Next, Cue-Tabelle, Fortschritt, GO+/GO−, Lock, Reset. Lokaler Demo-Adapter ohne Netzwerk zum Pult. Akzeptanz: Build, Tests und Bedienung in Safari; Demo eindeutig sichtbar.
@@ -22,3 +22,6 @@ Hoch-/Querformat, Safe Areas, Touch-Ziele, Homescreen-Metadaten, Safari-Test auf
 
 ## v1.0.0 – macOS Release
 Electron-App, Serverkonfiguration und Start/Stop, arm64-DMG via GitHub Actions, Setup-Anleitung für MA und Netzwerk, Release-Checks. Signierung/Notarisierung abhängig von verfügbaren Zertifikaten; Einschränkungen dokumentieren. Freigabe erst nach Test mit echtem Pult/onPC und iPad.
+
+## Vorgezogen: grafischer Demo-Serverbetrieb
+Desktop-Startfenster mit Server starten/stoppen, bestätigtem HTTP-Status, Portwahl, expliziter LAN-Freigabe, Browser öffnen und eigenständigem arm64-App-Bundle. Bedienung per Doppelklick ohne Terminal. Lokaler Build und Servertests vorhanden; native GUI-Abnahme noch offen. Dieser Teil ersetzt nicht die spätere DMG-/Signierungs- oder Hardware-Abnahme von v1.0.0.

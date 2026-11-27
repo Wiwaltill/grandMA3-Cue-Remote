@@ -21,3 +21,4 @@ Erste Aufgabe: v0.1.0 als responsive Web-App mit getrenntem Demo-Adapter, realis
 
 - Abgeschlossene, geprüfte Änderungen für dieses Projekt selbstständig committen und zu GitHub pushen; keine erneute Freigabe für gewöhnliche Commits und Pushs anfordern. Keine fremden Änderungen überschreiben und keinen Force-Push verwenden.
 - Vom Benutzer keine Terminalbedienung verlangen. Installation, Start und technische Prüfungen selbst übernehmen und eine direkt nutzbare Oberfläche bzw. einen Link bereitstellen.
+- Serverstart, Serverstopp und Betriebseinstellungen müssen über eine grafische Benutzeroberfläche bedienbar sein. Ein von Codex gestarteter Terminalprozess ersetzt diese Produktanforderung nicht. Die macOS-App muss per Doppelklick startbar sein.

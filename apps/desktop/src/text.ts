@@ -1,0 +1,15 @@
+export const desktopText = {
+  title:'MA3 CUE REMOTE', label:'LOKALER DEMO-SERVER', intro:'Deine Cue Remote. Mit einem Klick bereit.',
+  demo:'DEMO', notice:'Lokale Simulation. Keine Verbindung zu einem Lichtpult.',
+  status:'SERVERSTATUS', stopped:'Gestoppt', starting:'Wird gestartet …', running:'Läuft', stopping:'Wird gestoppt …', error:'Start fehlgeschlagen',
+  stoppedHint:'Starte den Server, um die Weboberfläche zu öffnen.', runningHint:'Der Demo-Server ist bereit. Öffne jetzt die Cue Remote.',
+  port:'Port', portHint:'0 wählt automatisch einen freien Port.',
+  lan:'Im lokalen Netzwerk freigeben', lanHint:'Nur für einen bewussten Demo-Test mit dem iPad im gleichen vertrauenswürdigen WLAN.',
+  local:'Nur auf diesem Mac erreichbar', network:'LAN-Freigabe aktiv',
+  start:'Server starten', stop:'Server stoppen', open:'Weboberfläche öffnen',
+  addresses:'WEBADRESSEN', localAddress:'Dieser Mac', lanAddress:'iPad / lokales Netzwerk',
+  quitHint:'Beim Schließen der App wird der Server beendet.',
+  standalone:'Bitte die macOS-App öffnen. Diese Serversteuerung benötigt die Desktop-App.',
+  ipcError:'Die Aktion konnte nicht ausgeführt werden. Bitte die App erneut öffnen.',
+  errors:{'port-in-use':'Dieser Port ist bereits belegt. Bitte einen anderen Port oder 0 wählen.','invalid-config':'Bitte einen gültigen Port eingeben: 0 oder 1024–65535.','missing-build':'Die gebaute Weboberfläche fehlt. Bitte die App neu erstellen.','start-failed':'Der Server konnte nicht gestartet werden. Bitte erneut versuchen.'},
+} as const;

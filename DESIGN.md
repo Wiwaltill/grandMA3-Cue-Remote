@@ -21,3 +21,7 @@ Große Touch-Ziele (mindestens 44 CSS-Pixel), ausreichend Abstand, Safe Areas, k
 
 ## Zustände
 DEMO / CONNECTING / ONLINE / STALE / OFFLINE. ONLINE nur bei bestätigtem frischem Pultstatus. Unbekannte Werte als — anzeigen. Bei Sperre oder unklarem Status Steuerung deaktivieren, Grund anzeigen. Letzte Cue und Loop anhand Pultstatus behandeln, keine pauschale Endannahme im Live-Modus.
+
+## Lokale Serversteuerung
+
+Ein separates macOS-Fenster dient dem Betrieb, die Playback-Oberfläche bleibt unverändert. Dunkles Design mit eindeutigem DEMO-Hinweis. Sichtbarer Serverstatus (gestoppt, wird gestartet, läuft, wird gestoppt, Fehler), Portfeld und explizite LAN-Freigabe. Große Buttons „Server starten“/„Server stoppen“ und „Weboberfläche öffnen“. Bei laufendem Server Konfiguration sperren; während Statuswechseln Aktionen deaktivieren. Lokale und LAN-Webadressen werden erst nach erfolgreichem Start angezeigt. Serverstatus ist kein Pultverbindungsstatus. Schließen beendet die App inklusive Server.
