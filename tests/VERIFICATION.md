@@ -1,6 +1,6 @@
-# Abnahme v0.2.11
+# Prüfstand v1.0.0
 
-Stand: 27. November 2026. Entwicklungsfassung, keine Freigabe für laufende Shows.
+Stand: 27. November 2026. Regulärer GitHub-Release v1.0.0 auf Benutzerwunsch. Die Versionsfreigabe erweitert die unten dokumentierte Kompatibilität oder Show-Abnahme nicht.
 
 ## Automatisch
 
@@ -131,3 +131,7 @@ Isolierter Browsercheck: Load Cue 1.5 zeigt GELADEN 1.5/Solo separat neben Next 
 ## Release-Ergänzung v0.2.11: DMG
 
 Komprimiertes read-only DMG mit hdiutil erstellt und verifiziert. Image schreibgeschützt eingehängt: App rekursiv mit dem ursprünglichen ZIP-Release-Bundle verglichen (identisch), codesign --verify --deep --strict erfolgreich, Programme-Verknüpfung nach /Applications sowie Installations- und Lizenzdateien geprüft. Image anschließend ausgehängt. Eigene SHA-256-Datei erzeugt; ursprüngliches ZIP und Release-Tag bleiben unverändert. Typecheck, Lint, 35 Tests und Build erneut erfolgreich. Native Finder-Drag-and-drop-/Gatekeeper-Installation weiterhin nicht automatisiert abgenommen; keine Pultbefehle für diese Packaging-Änderung.
+
+## Veröffentlichung v1.0.0
+
+App-/Web-Version und npm-Metadaten auf 1.0.0 angehoben; Playback-Verhalten unverändert. Typecheck, Lint und alle 35 Tests erneut erfolgreich. Web-/Desktop-Build, arm64-App-Paketierung und DMG-Erstellung erfolgreich. Die schreibgeschützt eingehängte DMG enthält Version 1.0.0; Signatur mit codesign --verify --deep --strict und Programme-Verknüpfung geprüft, App identisch mit dem gebauten Bundle. Keine erneuten Pultbefehle für die Versionsveröffentlichung. Die oben genannten offenen nativen Installations-, Show- und iPad-Prüfungen bleiben bestehen.

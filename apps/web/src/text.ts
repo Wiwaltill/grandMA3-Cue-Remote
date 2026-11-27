@@ -14,7 +14,7 @@ export const text = {
   fadeRunning:'Fade läuft', fadeEstimate:'Zeitvorschau aus MA-Gesamtdauer inklusive Delay und individuellen Zeiten; kein gemessener Pultwert.',
   loaded:'GELADEN', loadUnknown:'Load-Status unbekannt', load:'Load', goto:'Goto', targetCue:'Ziel-Cue', cancel:'Abbrechen', maConfirmed:'MA bestätigt', selectionChanged:'Pultstatus hat sich geändert. Bitte Auswahl schließen und erneut öffnen.', loadHint:'Cue im Pult vorladen. GELADEN zeigt die Pult-Rückmeldung; GO+ zeigt das vorgeladene Ziel. NEXT bleibt der Listennachfolger.', gotoHint:'Direkt zum gewählten Cue springen. Die gespeicherten MA-Zeiten gelten.',
   goPlus:'GO+', goMinus:'GO−', previous:'Vorheriger Cue',
-  footer:'OSC · PULTSTATUS', version:'v0.2.11', noNext:'Kein weiterer Cue', unavailable:'Status unklar · Bedienung gesperrt',
+  footer:'OSC · PULTSTATUS', version:'v1.0.0', noNext:'Kein weiterer Cue', unavailable:'Status unklar · Bedienung gesperrt',
   connectionNotice:'grandMA3 OSC · Gewählte Sequenz', unknown:'Status unbekannt',
   pending:'Befehl gesendet · Warte auf Rückmeldung des Pults.', unknownResult:'Ergebnis unbekannt · Gesperrt. Neu synchronisieren; Befehl wird nicht wiederholt.',
   resync:'Neu synchronisieren', error:'Befehl nicht ausgeführt. Bitte Status prüfen.', cooldown:'Doppelklickschutz aktiv',

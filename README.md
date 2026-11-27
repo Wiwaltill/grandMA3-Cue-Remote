@@ -6,13 +6,13 @@
 
 Lokale Sequenz-Fernbedienung für grandMA3 mit einer Mac-App als Server und einer kompakten Weboberfläche für Tablet und Desktop.
 
-[![Version](https://img.shields.io/badge/Version-0.2.11-67dba0?style=flat-square)](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/tag/v0.2.11)
-[![macOS](https://img.shields.io/badge/macOS-13%2B%20%C2%B7%20Apple%20Silicon-9db9de?style=flat-square)](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/tag/v0.2.11)
+[![Version](https://img.shields.io/badge/Version-1.0.0-67dba0?style=flat-square)](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/tag/v1.0.0)
+[![macOS](https://img.shields.io/badge/macOS-13%2B%20%C2%B7%20Apple%20Silicon-9db9de?style=flat-square)](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/tag/v1.0.0)
 [![grandMA3](https://img.shields.io/badge/grandMA3%20onPC-2.5.1.1-f0c96a?style=flat-square)](#voraussetzungen)
 [![CI](https://github.com/Wiwaltill/grandMA3-Cue-Remote/actions/workflows/ci.yml/badge.svg)](https://github.com/Wiwaltill/grandMA3-Cue-Remote/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/Lizenz-MIT-84929b?style=flat-square)](LICENSE)
 
-**[Mac-App als DMG herunterladen](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/download/v0.2.11/MA3-Cue-Remote-v0.2.11-macOS-arm64.dmg)** · [Release Notes](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/tag/v0.2.11) · [Ausführliche Einrichtung](docs/SETUP.md)
+**[Mac-App als DMG herunterladen](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/download/v1.0.0/MA3-Cue-Remote-v1.0.0-macOS-arm64.dmg)** · [Release Notes](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/tag/v1.0.0) · [Ausführliche Einrichtung](docs/SETUP.md)
 
 </div>
 
@@ -39,13 +39,13 @@ Die Oberfläche ist dunkel, kontrastreich und responsiv. DataPool und Sequenz st
 
 Für den normalen Betrieb sind **kein Terminal, kein Node/npm und kein manuell installiertes Lua-Plugin** nötig. Die App läuft lokal, ohne Cloud oder Telemetrie.
 
-> **Vorabrelease:** v0.2.11 ist eine Entwicklungsfassung mit geprüfter lokaler onPC-Anbindung. Die vollständige Show-, Installations- und iPad-Abnahme steht noch aus. Neue Setups zuerst mit einer separaten Testshow prüfen.
+> **v1.0.0:** Regulärer Release mit geprüfter lokaler onPC-Anbindung. Die vollständige Show-, Installations- und iPad-Abnahme steht noch aus. Neue Setups zuerst mit einer separaten Testshow prüfen.
 
 ## In wenigen Schritten verbunden
 
 ### 1. Mac-App installieren
 
-Die [DMG herunterladen](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/download/v0.2.11/MA3-Cue-Remote-v0.2.11-macOS-arm64.dmg) und per Doppelklick öffnen. **MA3 Cue Remote.app** auf die enthaltene Verknüpfung **Programme** ziehen, das Image auswerfen und die App aus **Programme** öffnen. Alternativ ist das [App-ZIP](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/download/v0.2.11/MA3-Cue-Remote-v0.2.11-macOS-arm64.zip) verfügbar. SHA-256-Prüfsummen liegen im Release bei.
+Die [DMG herunterladen](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/download/v1.0.0/MA3-Cue-Remote-v1.0.0-macOS-arm64.dmg) und per Doppelklick öffnen. **MA3 Cue Remote.app** auf die enthaltene Verknüpfung **Programme** ziehen, das Image auswerfen und die App aus **Programme** öffnen. Alternativ ist das [App-ZIP](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/download/v1.0.0/MA3-Cue-Remote-v1.0.0-macOS-arm64.zip) verfügbar. SHA-256-Prüfsummen liegen im Release bei.
 
 Die App ist ad-hoc signiert, aber noch nicht mit einer Apple Developer ID signiert oder notarisiert. Falls macOS den Start blockiert, unter **Systemeinstellungen → Datenschutz & Sicherheit** die Meldung prüfen und die App nur bei vertrauter Herkunft über **Dennoch öffnen** freigeben. Dafür ist kein Terminal nötig.
 

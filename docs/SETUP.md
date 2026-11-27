@@ -4,11 +4,11 @@
 
 Lokale, iPad-optimierte Sequenz-Fernbedienung mit grafischer macOS-Serversteuerung. React/TypeScript, Node und Electron; ohne Cloud oder Telemetrie.
 
-## v0.2.11 - sichtbares Load-Feedback
+## v1.0.0 – Einrichtung und Betrieb
 
 Die App verbindet sich mit **grandMA3 onPC 2.5.1.1**, liest Sequenzname, Cue-Liste, bekannte Fade-Zeiten und Current-Status aus MA und sendet gezieltes GO+/GO− an den ausgewählten DataPool und die eingetragene Sequenznummer. Die Weboberfläche enthält Lock, Auto-Follow, Listenpositionsfortschritt und eine klar als berechnet markierte Fade-Vorschau. Der Demo-Modus ist entfernt. Sie simuliert im Live-Modus keinen Playback-Erfolg.
 
-Echter Test auf dem Entwicklungs-Mac: Version und Sequenzdaten empfangen, GO+ über die Weboberfläche ausgelöst und anschließend Cue 1 vom Pult bestätigt. GO− ohne Zustandsänderung am Listenanfang führte korrekt zur Sperre „Ergebnis unbekannt“. Resynchronisation und Rückkehr zum ursprünglichen Off-Zustand wurden geprüft. Dies ist eine Entwicklungsfassung; die vollständige Show-/iPad-Abnahme steht aus.
+Echter Test auf dem Entwicklungs-Mac: Version und Sequenzdaten empfangen, GO+ über die Weboberfläche ausgelöst und anschließend Cue 1 vom Pult bestätigt. GO− ohne Zustandsänderung am Listenanfang führte korrekt zur Sperre „Ergebnis unbekannt“. Resynchronisation und Rückkehr zum ursprünglichen Off-Zustand wurden geprüft. v1.0.0 ist als regulärer Release veröffentlicht; die vollständige Show-/iPad-Abnahme steht weiterhin aus.
 
 **Next:** Zeigt immer den nächsten Eintrag der Cueliste mit Nummer, Name und bekanntem Fade. Bei Off wird der erste Cue angezeigt, am Listenende „Ende der Cueliste“. Die blaue Tabellenmarkierung verwendet diesen Listennachfolger. GO+ zeigt einen tatsächlich vorgeladenen Cue bevorzugt als Ziel, sonst den Listennachfolger. Load/Goto sind als separate kleine Buttons erreichbar. Die Anzeige ändert keinen Cue am Pult; Playback bleibt durch echte Rückmeldungen bestätigt.
 
@@ -72,7 +72,7 @@ Die Anwendung besitzt ausschließlich die echte Pultanbindung, keinen Demo-Modus
 
 ## App beziehen
 
-Den fertigen Download gibt es unter [GitHub Releases](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/tag/v0.2.11): **MA3-Cue-Remote-v0.2.11-macOS-arm64.dmg** herunterladen und öffnen, **MA3 Cue Remote.app** auf die enthaltene Verknüpfung **Programme** ziehen, das Image auswerfen und die App aus **Programme** öffnen. Alternativ das ZIP herunterladen und entpacken. macOS 13 oder neuer und Apple Silicon sind erforderlich. DMG und ZIP enthalten außerdem Projekt- und Drittanbieter-Lizenzhinweise. **SHA256SUMS.txt** enthält die ZIP-Prüfsumme, die separate **.dmg.sha256**-Datei die DMG-Prüfsumme.
+Den fertigen Download gibt es unter [GitHub Releases](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/tag/v1.0.0): **MA3-Cue-Remote-v1.0.0-macOS-arm64.dmg** herunterladen und öffnen, **MA3 Cue Remote.app** auf die enthaltene Verknüpfung **Programme** ziehen, das Image auswerfen und die App aus **Programme** öffnen. Alternativ das ZIP herunterladen und entpacken. macOS 13 oder neuer und Apple Silicon sind erforderlich. DMG und ZIP enthalten außerdem Projekt- und Drittanbieter-Lizenzhinweise. **SHA256SUMS.txt** enthält die ZIP-Prüfsumme, die separate **.dmg.sha256**-Datei die DMG-Prüfsumme.
 
 Lokal liegt das App-Bundle unter `release/MA3 Cue Remote-darwin-arm64/MA3 Cue Remote.app`. Für Entwicklungsbuilds erstellt der Workflow [macOS App](https://github.com/Wiwaltill/grandMA3-Cue-Remote/actions/workflows/desktop.yml) weiterhin ein ZIP-Artefakt.
 

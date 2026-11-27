@@ -67,3 +67,6 @@ Tatsächlichen LoadedCue aus jeder MA-Statusantwort übernehmen. Goldene GELADEN
 
 ## Ergänzung v0.2.11 – DMG
 Auf Benutzerwunsch zusätzliches komprimiertes arm64-DMG mit unverändertem Release-App-Bundle und Programme-Verknüpfung. Installation durch Ziehen im Finder, Prüfsumme und reproduzierbarer lokaler Build. Apple-Developer-Signatur, Notarisierung, native Installationsabnahme und automatischer DMG-Build via GitHub Actions bleiben offen.
+
+## Veröffentlichung v1.0.0
+Auf ausdrücklichen Benutzerwunsch wird der vorhandene Funktionsstand als regulärer v1.0.0-Release mit aktualisierter App-Version, arm64-DMG, ZIP und Prüfsummen veröffentlicht. Keine zusätzlichen Playback-Funktionen oder erweiterten Kompatibilitätszusagen. Die bisher dokumentierten offenen Show-/iPad-/Hardware- und nativen Installationsabnahmen sowie Developer-ID-Signatur, Notarisierung und automatischer DMG-Build bleiben offen; die Versionsfreigabe ersetzt diese Prüfungen nicht.
