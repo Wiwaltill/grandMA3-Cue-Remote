@@ -1,6 +1,6 @@
 # Untersuchung: tatsächlicher Pause-Zustand in MA 2.5.1.1
 
-Stand: 27. November 2026. Ergebnis: **Kein verifizierter, erneut abfragbarer Pause-Snapshot gefunden. Externe Pause-Erkennung ist nicht implementiert.** Dies ist keine Aussage, dass intern kein solcher Zustand existiert.
+Stand: 27. November 2026. Ergebnis: **Kein verifizierter, erneut abfragbarer Pause-Snapshot gefunden. Diese erste Untersuchung wird durch die unten dokumentierte OSC-Ergänzung v0.2.7 erweitert.** Dies ist keine Aussage, dass intern kein solcher Zustand existiert.
 
 ## Prüfungen
 
@@ -39,3 +39,17 @@ Für eine zuverlässige Implementierung benötigt die Bridge eine auf 2.5.1.1 pr
 - [MA RunningPlayback: Laufende Objekte, keine gleichnamigen Poolnummern](https://help.malighting.com/grandMA3/2.5/HTML/keyword_runningplayback.html)
 - [MA Deprecated 2.4: HasActivePlayback deprecated](https://help.malighting.com/grandMA3/2.5/HTML/rn_deprecated-2-4.html)
 - Installierte Originalressourcen: gma3_api_meta.lua, system_test_sequence_pause.lua, system_test_framework.lua sowie die lokal mit HelpLua exportierte API-Liste. MA-Dateien werden nicht in dieses Repository kopiert.
+
+## Ergänzung v0.2.7: reale OSC-Playback-Pakete
+
+Auf ausdrücklichen Benutzerwunsch separaten OSC-Ausgabeweg getestet. Bestehende Zeile auf Port 53000 war durch ein anderes Programm belegt und blieb unverändert. Für den Test eigene lokale Ausgabezeile mit eindeutigem Zufallsnamen angelegt; nur deren Port/Prefix/Destination angepasst, Send Yes und Receive/ReceiveCommand/SendCommand No. Enable Output war bereits Yes. Eigene Zeilen anschließend gezielt entfernt; ursprüngliche zwei Zeilen und Sequenz 1 Off bestätigt. Eine Cleanup-Abfrage hatte einen Syntaxfehler; die verbliebene eigene Zeile wurde danach anhand ihres exakten Namens entfernt und der Endzustand erneut geprüft.
+
+| MA-Aktion | OSC-Funktion | Integer | Auswertung |
+| --- | --- | --- | --- |
+| Pause On | Pause | 1 | kurzzeitig on |
+| Pause Off | Pause | 0 | kurzzeitig off |
+| Pause (Toggle), beide Richtungen | Pause | 2 | unknown, niemals blind umschalten |
+
+Typetag in allen Fällen ,sis; drittes Argument Cue-Text. Gemessene Adresse war /cuefeedbackprobe/14.14.1.7.1. Der Zahlenpfad unterscheidet sich vom Dokumentationsbeispiel und wird deshalb im Produkt dynamisch aus q:Addr() gelesen. Keine Namen oder geheimen Zugangsdaten protokolliert. Testbefehle kamen gezielt per OSC an onPC außerhalb der App-Befehlsausführung; physische Pulttaste nicht separat bedient.
+
+Neue Bridge tatsächlich gegen Ausgabe an die lokale Schnittstellen-IP geprüft: externes On setzt pauseState=on und friert Fade-Elapsed ein; Off ergibt off; Toggle ergibt unknown und entfernt die Vorschau. Nach 3,6 Sekunden ohne erneuten Nachweis unknown, während Cue-Verbindung ONLINE bleibt. Kein dauerhafter Pause-Snapshot verfügbar. Anwendung beschränkt explizite Ereignis-/Cmd-Bestätigung auf drei Sekunden. UDP-Verlust und Vertauschung können auch innerhalb dieses Fensters unbemerkt bleiben.

@@ -1,3 +1,4 @@
+import { parsePauseFeedback } from './playback-feedback.ts';
 import dgram, { type Socket } from 'node:dgram';
 import { randomBytes } from 'node:crypto';
 import { networkInterfaces } from 'node:os';
@@ -10,7 +11,7 @@ export function localAddresses(): string[] {
   return [...new Set(['127.0.0.1',...Object.values(networkInterfaces()).flatMap(entries=>(entries??[]).filter(a=>a.family==='IPv4').map(a=>a.address))])];
 }
 function emptySnapshot(revision=0): PlaybackSnapshot {
-  return {sequence:{id:'unconfigured',dataPool:'1',number:'1',name:'—'},cues:[],currentCueId:null,nextCueId:null,playbackState:'off',connectionState:'OFFLINE',revision,timestamp:0,locked:true,commandState:'idle'};
+  return {sequence:{id:'unconfigured',dataPool:'1',number:'1',name:'—'},cues:[],currentCueId:null,nextCueId:null,playbackState:'off',connectionState:'OFFLINE',revision,timestamp:0,locked:true,commandState:'idle',pauseState:'unknown'};
 }
 export function parseFeedback(value: unknown,config: OscConfig): {cues: Cue[];name: string;current: string | null;next: string | null;running: boolean;version: string} | null {
   if (!value || typeof value!=='object') return null;
@@ -31,6 +32,11 @@ export function parseFeedback(value: unknown,config: OscConfig): {cues: Cue[];na
 }
 export class OscBridge {
   private socket: Socket | null=null;
+  private feedbackSocket: Socket | null=null;
+  private feedbackAddress: string | null=null;
+  private pauseEvidenceAt=0;
+  private pauseGeneration=0;
+  private commandPauseGeneration=0;
   private config: OscConfig | null=null;
   private state: LiveState={snapshot:emptySnapshot(),commandState:'idle',error:null,version:null};
   private timer: ReturnType<typeof setInterval> | null=null;
@@ -50,14 +56,21 @@ export class OscBridge {
   private options: {now?:()=>number;pollMs?:number;timeoutMs?:number};
   private now=()=> (this.options.now??Date.now)();
   getState=(): LiveState=>{
+    if(this.pauseEvidenceAt && this.now()-this.pauseEvidenceAt>this.timeout())this.applyPause('unknown');
     const state=structuredClone(this.state);
     if(this.preview && state.snapshot.connectionState==='ONLINE')state.snapshot.fadePreview=advanceFade(this.preview.value,this.now()-this.preview.anchor);
     return state;
   };
   getConfig=()=>this.config?{...this.config}:null;
   subscribe=(fn:()=>void)=>{this.listeners.add(fn);return()=>{this.listeners.delete(fn);};};
+  private applyPause(state: 'on' | 'off' | 'unknown') {
+    this.pauseGeneration++;this.pauseEvidenceAt=state==='unknown'?0:this.now();
+    if(state==='unknown')this.preview=null;
+    else if(this.preview){const value=advanceFade(this.preview.value,this.now()-this.preview.anchor);this.preview={value:{...value,paused:state==='on'},anchor:this.now()};}
+    this.publish({pauseState:state});
+  }
   private publish(update: Partial<PlaybackSnapshot>,error=this.state.error) {
-    if(update.connectionState && update.connectionState!=='ONLINE'){this.preview=null;update={...update,appPauseState:'unknown'};if(update.connectionState!=='CONNECTING')this.restoreSelectionUnlock=false;}
+    if(update.connectionState && update.connectionState!=='ONLINE'){this.preview=null;this.pauseEvidenceAt=0;this.pauseGeneration++;update={...update,pauseState:'unknown'};if(update.connectionState!=='CONNECTING')this.restoreSelectionUnlock=false;}
     const previous=this.state.snapshot;
     const next={...previous,...update,commandState:this.state.commandState};
     const semantic=(s: PlaybackSnapshot)=>JSON.stringify({...s,timestamp:0,revision:0});
@@ -76,8 +89,9 @@ export class OscBridge {
       if(raw && this.commandNonce && raw.ackNonce===this.commandNonce && this.pendingAction==='pause' && this.state.commandState==='pending' && this.now()-this.pendingAt<=this.timeout()) {
         this.commandNonce=null;this.pendingAction=null;
         if(raw.result==='OK') {
-          if(this.preview){const value=advanceFade(this.preview.value,this.now()-this.preview.anchor);this.preview={value:{...value,paused:this.pendingPauseOn},anchor:this.now()};}
-          this.state.commandState='idle';this.publish({appPauseState:this.pendingPauseOn?'on':'off'},null);
+          this.state.commandState='idle';
+          if(this.commandPauseGeneration===this.pauseGeneration)this.applyPause(this.pendingPauseOn?'on':'off');
+          else this.publish({},null);
         }else{this.state.commandState='unknown';this.publish({connectionState:'STALE',locked:true},'send-failed');}
         return;
       }
@@ -86,6 +100,9 @@ export class OscBridge {
       const parsed=parseFeedback(raw,this.config!);
       if (!parsed) {this.publish({connectionState:'STALE',locked:true},'invalid-snapshot');return;}
       const previous=this.state.snapshot;
+      const nextAddress=typeof raw.feedbackAddress==='string' && /^\/(?:[1-9]\d*\.){1,15}[1-9]\d*$/.test(raw.feedbackAddress) && raw.feedbackAddress.length<=160?raw.feedbackAddress:null;
+      if(this.feedbackAddress!==nextAddress){this.feedbackAddress=nextAddress;this.applyPause('unknown');}
+      if(!parsed.running || previous.currentCueId!==parsed.current){this.pauseEvidenceAt=0;this.pauseGeneration++;}
       if(!parsed.running)this.preview=null;
       else if(previous.connectionState==='ONLINE' && previous.timestamp>0 && previous.currentCueId!==parsed.current){
         const duration=parsed.cues.find(c=>c.id===parsed.current)?.duration;
@@ -98,18 +115,31 @@ export class OscBridge {
       if (this.state.commandState==='pending' && this.pendingAction!=='pause' && fingerprint!==this.beforeCommand) {this.state.commandState='idle';this.pendingAction=null;}
       const restoreUnlocked=this.restoreSelectionUnlock;this.restoreSelectionUnlock=false;
       const unknown=this.state.commandState==='unknown';
-      this.publish({cues:parsed.cues,sequence:{...this.state.snapshot.sequence,name:parsed.name},currentCueId:parsed.current,nextCueId:parsed.next,playbackState:parsed.running?'running':'off',timestamp:this.receivedAt,connectionState:unknown?'STALE':'ONLINE',...(!parsed.running || previous.currentCueId!==parsed.current?{appPauseState:'unknown' as const}:{}),...(unknown?{locked:true}:restoreUnlocked?{locked:false}:{})},unknown?'timeout':null);
+      this.publish({cues:parsed.cues,sequence:{...this.state.snapshot.sequence,name:parsed.name},currentCueId:parsed.current,nextCueId:parsed.next,playbackState:parsed.running?'running':'off',timestamp:this.receivedAt,connectionState:unknown?'STALE':'ONLINE',...(!parsed.running || previous.currentCueId!==parsed.current?{pauseState:'unknown' as const}:{}),...(unknown?{locked:true}:restoreUnlocked?{locked:false}:{})},unknown?'timeout':null);
     });
     socket.on('error',()=>{if(this.socket===socket) this.publish({connectionState:'OFFLINE',locked:true},'send-failed');});
     try {await new Promise<void>((resolve,reject)=>{socket.once('error',reject);socket.bind(0,'0.0.0.0',()=>{socket.removeListener('error',reject);resolve();});});}
     catch {this.disconnect();this.publish({},'send-failed');return this.getState();}
     if (this.socket!==socket) return this.getState();
+    if(config.feedbackPort){
+      const feedback=dgram.createSocket('udp4');this.feedbackSocket=feedback;
+      feedback.on('message',(packet,info)=>{
+        if(this.feedbackSocket!==feedback || info.address!==this.config?.host || !this.feedbackAddress || this.state.snapshot.connectionState!=='ONLINE' || this.now()-this.receivedAt>this.timeout())return;
+        const state=parsePauseFeedback(packet,this.feedbackAddress,this.config.feedbackPrefix??this.config.prefix);
+        if(state!==null)this.applyPause(state);
+      });
+      feedback.on('error',()=>{if(this.feedbackSocket===feedback)this.publish({connectionState:'OFFLINE',locked:true},'send-failed');});
+      try{await new Promise<void>((resolve,reject)=>{feedback.once('error',reject);feedback.bind(config.feedbackPort,config.replyHost,()=>{feedback.removeListener('error',reject);resolve();});});}
+      catch{this.disconnect();this.publish({},'send-failed');return this.getState();}
+      if(this.socket!==socket)return this.getState();
+    }
     this.query();
     this.timer=setInterval(()=>this.tick(),this.options.pollMs??500);
     return this.getState();
   }
   private timeout=()=>this.options.timeoutMs??3000;
   private tick() {
+    if(this.pauseEvidenceAt && this.now()-this.pauseEvidenceAt>this.timeout())this.applyPause('unknown');
     if (this.state.commandState==='pending' && this.now()-this.pendingAt>this.timeout()) {this.state.commandState='unknown';this.publish({connectionState:'STALE',locked:true},'timeout');}
     if (this.now()-(this.receivedAt || this.queriedAt)>this.timeout() && this.state.snapshot.connectionState!=='OFFLINE') this.publish({connectionState:'STALE',locked:true},'timeout');
     if (!this.nonce || this.now()-this.queriedAt>this.timeout()) this.query();
@@ -125,6 +155,8 @@ export class OscBridge {
   disconnect=(): LiveState=>{
     this.restoreSelectionUnlock=false;
     if(this.timer)clearInterval(this.timer);this.timer=null;
+    const feedback=this.feedbackSocket;this.feedbackSocket=null;try{feedback?.close();}catch{/* already closed */}
+    this.feedbackAddress=null;this.pauseEvidenceAt=0;
     const socket=this.socket;this.socket=null;try{socket?.close();}catch{/* already closed */}
     this.config=null;this.nonce=null;this.commandNonce=null;this.pendingAction=null;this.receivedAt=0;this.state.commandState='idle';
     this.publish({connectionState:'OFFLINE',locked:true},null);return this.getState();
@@ -152,7 +184,7 @@ export class OscBridge {
     this.beforeCommand=JSON.stringify([s.currentCueId,s.playbackState==='running']);this.pendingAt=this.now();this.pendingAction=command.action;this.state.commandState='pending';this.publish({});
     const socket=this.socket;
     const address=socket.address();if(typeof address==='string')throw new Error('No UDP port');
-    this.pendingPauseOn=s.appPauseState!=='on';
+    this.pendingPauseOn=s.pauseState!=='on';this.commandPauseGeneration=this.pauseGeneration;
     this.commandNonce=command.action==='pause'?randomBytes(16).toString('hex'):null;
     const packet=encodeOscCommand(this.config.prefix,command.action==='pause'?pauseRequest(this.config,address.port,this.commandNonce!,this.pendingPauseOn):playbackCommand(this.config,command.action));
     await new Promise<void>(resolve=>socket.send(packet,this.config!.port,this.config!.host,error=>{if(error && this.socket===socket){this.state.commandState='unknown';this.publish({connectionState:'OFFLINE',locked:true},'send-failed');}resolve();}));

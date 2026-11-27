@@ -49,3 +49,6 @@ Die Vorschau verwendet die maximale von MA gelieferte Duration aller Cue-Parts s
 
 ## v0.2.6 - Follow-Cues sichtbar
 Trigger und Triggerzeit aus MA, Follow-Markierungen in Current/Next und Cueliste. Next-Hinweis auf automatischen Start nach vorherigem Übergang plus Zusatzwartezeit. Automatik ausschließlich im Pult; Current/Next wechseln nach dessen bestätigter Rückmeldung. Keine lokale GO-Planung, keine Änderung der Showtrigger. Automatisierter Test und Browserprüfung mit isoliertem simuliertem MA; echte Triggerabfrage rein lesend geprüft.
+
+## v0.2.7 - OSC-Playback-Pause
+Zusätzlicher konfigurierbarer Feedback-Empfänger. MA-Pause On/Off real verifiziert (OSC Pause 1/0); Toggle 2 bleibt unbekannt. Bekannter Zustand nur kurzzeitig, danach unbekannt und Vorschau verworfen. Dynamische Objektadresse, Quell-IP-/Frameprüfung, keine automatische Showkonfiguration. Ende-zu-Ende mit onPC und isolierten UDP-/Browsertests geprüft.

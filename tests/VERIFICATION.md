@@ -1,4 +1,4 @@
-# Abnahme v0.2.6
+# Abnahme v0.2.7
 
 Stand: 27. November 2026. Entwicklungsfassung, keine Freigabe für laufende Shows.
 
@@ -6,7 +6,7 @@ Stand: 27. November 2026. Entwicklungsfassung, keine Freigabe für laufende Show
 
 - TypeScript strict für React, Node-Bridge, Electron-Main und Preload erfolgreich.
 - ESLint erfolgreich.
-- 25 Tests erfolgreich: 2 Fade-Berechnungstests, 16 OSC-/UDP-Tests, 7 Server-/HTTP-Tests.
+- 29 Tests erfolgreich: 2 Fade-Berechnungstests, 20 OSC-/UDP-Tests, 7 Server-/HTTP-Tests.
 - Produktionsbuild und macOS-arm64-App-Bundle erfolgreich; lokale Ad-hoc-Signatur wird beim Packaging mit codesign geprüft.
 - npm-Lockfile vorhanden; OSC benötigt keine zusätzliche Runtime-Bibliothek.
 
@@ -91,3 +91,11 @@ Browser mit isoliertem simuliertem MA: Next zeigt FOLLOW +3,0 s und Automatisch 
 ## Untersuchung externer Pause
 
 Zusätzliche reale Pause-On/Off-Vergleiche auf der freigegebenen lokalen Testshow, danach Off wiederhergestellt und bestätigt. Kein verifizierter abfragbarer Pause-Zustand gefunden; keine Produktimplementierung. [Ergebnisse, Negativbefunde und erforderliche nächste Nachweise](PAUSE-INVESTIGATION.md).
+
+## OSC-Playback-Pause v0.2.7
+
+Reale Pakete und Ende-zu-Ende-Bridge gegen onPC geprüft; siehe Ergänzung im [Untersuchungsbericht](PAUSE-INVESTIGATION.md). On/Off frieren vorhandene Vorschau ein/setzten fort. Toggle oder Frischeablauf entfernen sie und zeigen unbekannt. Keine permanente MA-Konfiguration hinterlassen.
+
+Vier neue automatisierte Tests: strikter Parser inkl. Fremdziel/Präfix/abgeschnittener/überlanger Daten, explizite On/Off-Idempotenz und doppelte Toggles, Ablauf trotz frischer Heartbeats plus Reconnect, sowie verspätetes Cmd-OK nach neuerem mehrdeutigem Feedback. Bestehende Konfigurationsvalidierung um Feedback-Port/Präfix erweitert. 29 Tests erfolgreich. Quell-IP-Prüfung im Receiver; keine kryptographische Authentifizierung von OSC-Ereignissen, nur vertrauenswürdiges Show-LAN.
+
+Browsercheck mit isoliertem simuliertem MA: initial Pause unbekannt ohne false-pressed-Zustand, nach App-OK Pause aktiv und stehender Fade; nach drei Sekunden wieder Pause unbekannt und kein weiterlaufender/abgeschlossener Balken. 390x844 ohne Dokumentüberlauf, Buttons sichtbar. Native Mac-Fenster und manuelles Anlegen der Ausgabezeile per GUI nicht interaktiv geprüft; Text/IPC/Build geprüft.

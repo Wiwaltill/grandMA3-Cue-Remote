@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { advanceFade, fadePercent, type FadePreview } from '../../../packages/shared/fade.ts';
 import { text as t, fadeRemainingLabel } from './text.ts';
-export function FadeProgress({preview,available,compact=false}: {preview?: FadePreview;available: boolean;compact?: boolean}) {
+export function FadeProgress({preview,available,compact=false,uncertain=false}: {preview?: FadePreview;available: boolean;compact?: boolean;uncertain?: boolean}) {
   const [clock,setClock]=useState<{preview?: FadePreview;elapsed: number}>({elapsed:0});
   useEffect(()=>{
     setClock({preview,elapsed:0});
@@ -10,7 +10,7 @@ export function FadeProgress({preview,available,compact=false}: {preview?: FadeP
     const tick=()=>{const delta=performance.now()-start;setClock({preview,elapsed:delta});if(preview.elapsedMs+delta<preview.durationMs)frame=requestAnimationFrame(tick);};
     frame=requestAnimationFrame(tick);return()=>cancelAnimationFrame(frame);
   },[preview,available]);
-  if(!preview || !available)return compact?null:<div className="fade-preview" aria-live="off" title={t.fadeEstimate}><p>{available?t.fadeWaiting:t.fadeUnavailable}</p></div>;
+  if(!preview || !available)return compact?null:<div className="fade-preview" aria-live="off" title={t.fadeEstimate}><p>{available?uncertain?t.fadeUnknown:t.fadeWaiting:t.fadeUnavailable}</p></div>;
   const value=advanceFade(preview,clock.preview===preview?clock.elapsed:0);const percent=fadePercent(value);
   const bar=<progress className="fade-progress" value={percent} max={100} aria-label={t.fadePreview}/>;
   if(compact)return <div className="row-fade" aria-live="off">{bar}</div>;

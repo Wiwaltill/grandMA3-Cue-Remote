@@ -28,3 +28,4 @@
 .timing-detail{display:block;font-size:9px;line-height:1.4;color:var(--muted);margin-top:5px;overflow-wrap:anywhere;max-width:100%}.cue-detail>div{min-width:0}.cue-detail .timing-detail{max-width:34vw}.fade-preview .eyebrow{letter-spacing:1px}@media(max-width:650px){.timing-detail{font-size:8px}.cue-detail .timing-detail{max-width:34vw}}
 
 .trigger-badge{display:inline-block;font-size:9px;font-weight:750;line-height:1.4;color:#f1cf85;background:#493b1e;border:1px solid #776039;border-radius:4px;padding:3px 6px;margin-top:6px;max-width:100%;overflow-wrap:anywhere}.row-trigger{display:table;margin:4px 8px 4px 0;font-size:8px}.follow-notice{font-size:11px;line-height:1.4;color:#f1cf85;margin:12px 0 0;padding-top:9px;border-top:1px solid #3b5060}@media(max-width:650px){.trigger-badge{font-size:8px}.follow-notice{font-size:9px}.row-trigger{font-size:7px}}
+.secondary-controls .pause.is-unknown strong{font-size:15px;line-height:1.2}.pause.is-unknown{border-style:dashed}
