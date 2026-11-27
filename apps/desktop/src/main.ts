@@ -1,10 +1,12 @@
 import { app, BrowserWindow, ipcMain, shell, Menu } from 'electron';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { OscBridge, localAddresses } from './bridge.js';
 import { DemoServer } from './server.js';
 
 let window: BrowserWindow | null = null;
 let demoServer: DemoServer;
+const bridge=new OscBridge();
 const hasLock = app.requestSingleInstanceLock();
 if (!hasLock) app.quit();
 else {
@@ -15,7 +17,7 @@ else {
     const launcherUrl = pathToFileURL(launcherPath).href;
     demoServer = new DemoServer(join(root,'dist'),status => {
       if (window && !window.isDestroyed()) window.webContents.send('server:status',status);
-    });
+    },bridge);
     const authorized = (event: Electron.IpcMainInvokeEvent) => {
       if (!window || event.sender !== window.webContents || event.senderFrame !== window.webContents.mainFrame || event.senderFrame.url !== launcherUrl) throw new Error('Unauthorized IPC');
     };
@@ -27,8 +29,13 @@ else {
       const status = demoServer.getStatus();
       if (status.phase === 'running' && status.port) await shell.openExternal(`http://127.0.0.1:${status.port}`);
     });
+    ipcMain.handle('osc:get',event=>{authorized(event);return bridge.getState();});
+    ipcMain.handle('osc:addresses',event=>{authorized(event);return localAddresses();});
+    ipcMain.handle('osc:connect',(event,config: unknown)=>{authorized(event);return bridge.connect(config);});
+    ipcMain.handle('osc:disconnect',event=>{authorized(event);return bridge.disconnect();});
+    ipcMain.handle('server:open-live',async event=>{authorized(event);const url=demoServer.getStatus().liveUrls?.[0];if(url)await shell.openExternal(url);});
     const createWindow = async () => {
-      window = new BrowserWindow({width:760,height:780,minWidth:620,minHeight:680,title:'MA3 Cue Remote · Server',backgroundColor:'#101416',webPreferences:{preload:join(root,'dist-desktop/preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
+      window = new BrowserWindow({width:760,height:780,minWidth:620,minHeight:680,title:'MA3 Cue Remote · Server',backgroundColor:'#101416',webPreferences:{preload:join(root,'dist-desktop/apps/desktop/src/preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
       window.webContents.setWindowOpenHandler(() => ({action:'deny'}));
       window.webContents.on('will-navigate',event => event.preventDefault());
       window.webContents.session.setPermissionRequestHandler((_contents,_permission,callback) => callback(false));
@@ -48,7 +55,7 @@ else {
   let quitting = false;
   app.on('before-quit',event => {
     if (quitting || !demoServer) return;
-    event.preventDefault(); quitting = true;
+    event.preventDefault(); quitting = true;bridge.disconnect();
     void demoServer.stop().finally(() => app.quit());
   });
 }

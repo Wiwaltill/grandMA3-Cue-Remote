@@ -12,7 +12,13 @@ export const text = {
   lockReason:'Bedienung gesperrt. Zum Fortfahren oben entsperren.', ready:'Demo bereit · Jeder Tastendruck schaltet einen Cue.',
   goPlus:'GO+', goMinus:'GO−', previous:'Vorheriger Cue', reset:'Demo Reset', resetTitle:'Demo auf Cue 04 zurücksetzen',
   resetConfirm:'Demo auf Cue 04 zurücksetzen?', cancel:'Abbrechen', confirm:'Zurücksetzen',
-  footer:'DEMO ENGINE', version:'v0.1.0', noNext:'Kein weiterer Cue', unavailable:'Status unklar · Bedienung gesperrt',
+  footer:'DEMO ENGINE', version:'v0.2.0', noNext:'Kein weiterer Cue', unavailable:'Status unklar · Bedienung gesperrt',
+  livePageTitle:'MA3 Cue Remote · Live', dataPool:'DATAPOOL', liveReady:'Pultstatus frisch · GO steuert die ausgewählte Sequenz.', liveOff:'Sequenz ist Off · GO+ wird an das Pult gesendet.',
+  liveNotice:'grandMA3 OSC · Echte Pultdaten, keine Demo', liveFooter:'OSC · PULTSTATUS',
+  liveSequenceHint:'Sequenz im gewählten DataPool. Wechsel sperrt bis zum vollständigen neuen Pultstatus.',
+  unknown:'Status unbekannt', unknownNext:'Next wird vom Pult nicht gemeldet',
+  pending:'Befehl gesendet · Warte auf geänderten Pultstatus.', unknownResult:'Ergebnis unbekannt · Gesperrt. Neu synchronisieren; GO wird nicht wiederholt.',
+  resync:'Neu synchronisieren',
   error:'Befehl nicht ausgeführt. Bitte Status prüfen.', cooldown:'Doppelklickschutz aktiv',
 } as const;
 export const fadeLabel = (fade?: number) => fade === undefined ? '—' : `${fade.toFixed(1)} s`;

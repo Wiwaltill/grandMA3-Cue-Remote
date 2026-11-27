@@ -1,51 +1,43 @@
-# Abnahme v0.1.0
+# Abnahme v0.2.0
 
-Stand: 27. November 2026.
+Stand: 27. November 2026. Entwicklungsfassung, keine Freigabe für laufende Shows.
 
 ## Automatisch
 
-- TypeScript strict: erfolgreich.
-- ESLint: erfolgreich.
-- Node-Test-Runner: 18 Tests erfolgreich (12 Playback-, 6 Servertests).
-- Vite-Produktionsbuild: erfolgreich.
-- npm-Abhängigkeiten mit Lockfile; Installation meldet keine bekannten Schwachstellen.
+- TypeScript strict für React, Node-Bridge, Electron-Main und Preload erfolgreich.
+- ESLint erfolgreich.
+- 26 Tests erfolgreich: 12 Demo-/Sequenztests, 7 OSC-/UDP-Tests, 7 Server-/HTTP-Tests.
+- Produktionsbuild und macOS-arm64-App-Bundle erfolgreich; lokale Ad-hoc-Signatur wird beim Packaging mit codesign geprüft.
+- npm-Lockfile vorhanden; OSC benötigt keine zusätzliche Runtime-Bibliothek.
 
-Die in der Desktop-App eingebettete Node-Version kann native Rollup-Module wegen macOS-Library-Validation nicht laden. Für den Build wurde eine unveränderte offizielle Node-24.22.3-Installation in einem temporären Verzeichnis verwendet. Dies ist keine Voraussetzung bei regulär installiertem Node.js inklusive npm.
+Die OSC-Tests benutzen echte UDP-Sockets auf Loopback und einen simulierten MA-Empfänger. Sie prüfen OSC-Adressierung/UTF-8/Padding, Konfiguration, Off-/Dezimal-Cues, unbekanntes Next, keine optimistische Fortschreibung, kein automatisches GO, Request-Deduplizierung, konkurrierende Requests, stabile Revisionen bei Heartbeats, Timeout ohne Retry, gefälschte Nonces, Stale/Recovery, vollständige Resynchronisation und Sequenzwechsel mit neuer Sperre. HTTP-Tests prüfen Bedienerschlüssel, Origin, abgewiesene freie Commands/Konfigurationsversuche und Schlüsselrotation nach Serverneustart. CI spricht niemals ein echtes Pult an.
 
-## Browser
+## Echte lokale Testshow – ausdrücklich freigegeben
 
-Im verfügbaren In-App-Browser geprüft:
+Der Benutzer bestätigte eine separate geöffnete Testshow und gab den Verbindungstest frei. Getestet wurde grandMA3 onPC **2.5.1.1 auf demselben Mac**.
 
-- Start auf Current 04 / Next 05.
-- GO+ wechselt auf 05 / 05.1; Positionsanzeige folgt.
-- GO− wechselt zurück auf 04 / 05.
-- Sperre deaktiviert Playback und Reset; Entsperren gibt Bedienung frei.
-- Reset zeigt einen Bestätigungsdialog und stellt Cue 04 wieder her.
-- Desktopdarstellung visuell geprüft.
-- Responsive Layouts 390×844, 768×1024, 1024×768: Dokumentbreite entspricht Viewportbreite, kein horizontaler Überlauf.
-- Mobile Bedienflächen mindestens 44 CSS-Pixel hoch.
-- Keine Browser-Konsolenfehler während der Prüfung.
+1. Offiziellen OSC-Command-Eingang auf UDP 8000 erreicht. Der lokale Schnittstellen-Zugriff funktionierte; Loopback 127.0.0.1 lieferte im konkreten Setup keine Antwort. Leeres Präfix funktionierte.
+2. Rein lesende Lua-Abfragen über OSC lieferten Versionsnummer, Sequenzeigenschaften, Cue-Liste und Fade. Verfügbarkeit von socket/json und Objektmethoden wurde mit ausgelieferten MA-Ressourcen abgeglichen und durch tatsächliche Antworten bestätigt.
+3. Implementierte Bridge verband sich mit DataPool 1 / Sequenz 1. Der Snapshot enthielt tatsächlichen Namen, Cue 1, Fade 1 s, Off und unbekanntes Next. Keine Demo-Cues im Live-Modus.
+4. Die Live-Weboberfläche wurde über ihren zeitlich auf den Serverlauf begrenzten Bedienerlink geöffnet. Sie zeigte ONLINE erst nach echter gültiger Antwort und begann gesperrt. Ziel-DataPool und Sequenz waren sichtbar.
+5. Nach explizitem Entsperren wurde einmal GO+ im Browser betätigt. Zunächst Pending und deaktivierte Bedienung; erst die spätere MA-Rückmeldung zeigte tatsächlichen Current Cue 1 und laufendes Playback.
+6. Ein GO− am ersten/einzigen Cue änderte den Pultstatus nicht. Die App meldete nach Timeout korrekt „Ergebnis unbekannt“, STALE und gesperrt. Sie wiederholte den GO nicht automatisch.
+7. „Neu synchronisieren“ wechselte auf CONNECTING und nach vollständiger neuer Antwort auf ONLINE. Die Bedienung blieb bis zur bewussten Freigabe gesperrt.
+8. Die gezielt getestete Sequenz wurde anschließend auf ihren ursprünglichen Off-Zustand zurückgesetzt; die Live-Oberfläche bestätigte Off und Position 0/1. Keine Cue-Programmierung, kein Showfile-Export und kein Pluginimport durchgeführt.
+
+Die echte Abnahme bestätigt diese lokale Konstellation. Sie bestätigt weder jede Cue-/Loop-/Restart-Konfiguration noch verlorene UDP-Pakete oder Ende-zu-Ende-Exactly-once-Semantik.
+
+## Browser und Demo
+
+Die Demo wurde zuvor mit GO+/GO−, Sperre, bestätigtem Reset, Nummernübernahme, ungültiger Eingabe und Verwerfen geprüft. Dokumentbreite entsprach dem Viewport bei 390×844, 768×1024 und 1024×768; Bedienelemente mindestens 44 CSS-Pixel hoch. Auch lange Sequenznummern erzeugten keinen horizontalen Überlauf. Live-Pultdaten, Lock, Pending, echter GO+, unbekanntes GO−-Ergebnis und Resynchronisation wurden im verfügbaren In-App-Browser geprüft.
 
 ## Noch offen
 
-Echtes iPad/Safari, Hardware-Touch, Safe Areas auf einem Gerät und Safari-Abnahme sind hier nicht verfügbar. Der Roadmap-Akzeptanzpunkt „Bedienung in Safari“ ist daher noch offen.
+- Echtes iPad/Safari, Hardware-Touch, Safe Areas und Netzwerk-/WLAN-Ausfalltests.
+- Native Electron-Fenster-/IPC-Bedienung, Doppelstart und Installation aus einem heruntergeladenen Artefakt. Die verfügbaren Browserwerkzeuge steuern keine nativen macOS-Fenster; das Bundle ist gebaut und seine Signatur geprüft.
+- Generische Next-Cue-Abfrage. Ohne explizit geladenen Cue bleibt Next unbekannt; keine Index-/Loop-Annahme.
+- Umfangreiche Shows, größere Cue-Mengen, Zeitformate/Sonderzustände, gleichzeitige Objektverschiebungen und stabile MA-Handles.
+- Apple-Developer-Signatur, Notarisierung und DMG.
+- Ein lokal erfolgreicher Build bestätigt nicht automatisch den GitHub-Workflow-Lauf.
 
-Keine Pult- oder onPC-Tests durchgeführt. Netzwerk-Reconnect, Timeout, echte Serverrollen und mehrere Browser-Clients sind in v0.1.0 nicht implementiert. Die Adaptertests prüfen konkurrierende Befehle und mehrere Abonnenten innerhalb einer Demo-Instanz; sie ersetzen keine spätere Netzwerk-Abnahme.
-
-## Ergänzung: grafischer Serverbetrieb
-
-- Typecheck für Renderer, Electron-Main und Preload sowie Lint erfolgreich.
-- Server-Integrationstests mit echten lokalen Test-Ports: Start, HTTP-/Asset-Auslieferung, HEAD, Stop, Neustart, Konfigurationsvalidierung, belegter Port, doppelte Aktionen, fehlender Build und Schutz vor Zugriff auf Repository-/Desktop-Dateien erfolgreich.
-- Eigenständiges macOS-arm64-Bundle mit Electron 45.5.0 erstellt. Lokale Ad-hoc-Signatur wird im Packaging-Schritt per codesign geprüft.
-- Die gebaute Web-Demo nach Umstellung auf den gemeinsamen Build erneut geladen und GO+ auf Current 05 / Next 05.1 im Browser bestätigt.
-- Gestaltung der gebauten Desktop-Seite im verfügbaren Browser visuell geprüft. Ohne Electron-Bridge sind alle Serveraktionen gesperrt und ein Hinweis auf die Desktop-App wird angezeigt.
-- Native Electron-UI/IPC-Bedienung, Standardbrowser-Öffnung, macOS-Schließen/Single-Instance-Verhalten und LAN-/iPad-Erreichbarkeit sind noch manuell abzunehmen. Die verfügbaren Browserwerkzeuge steuern keine nativen macOS-Fenster. Der Server-Lebenszyklus selbst ist durch Integrationstests abgedeckt.
-- GitHub-Artefakt-Workflow hinzugefügt; ein grüner lokaler Build ersetzt keinen bestätigten GitHub-Lauf.
-
-## Ergänzung: Sequenznummer per UI
-
-- Zwei zusätzliche Domänentests: ungültige Eingaben ohne Zustandsänderung; Übernahme/Normalisierung; neue Demo-Sequenz beginnt Off; alte Zielreferenz wird abgewiesen; Reset behält Nummer; Sperre, Status, Revision und Doppelklickschutz werden eingehalten.
-- Im Produktionsbuild per Browser geprüft: 42 eingeben sperrt Playback bis zur Übernahme; Übernahme zeigt Sequenz 42, Current Off, Next Einlass und Position 0/10 ohne Playback.
-- Ungültige Nummer 0 zeigt einen Hinweis und sperrt Übernahme/Playback. „Verwerfen“ stellt 42 wieder her. Lock deaktiviert das Eingabefeld.
-- Auch mit langer gültiger Nummer kein horizontaler Überlauf bei 390×844 und 1024×768.
-- Typecheck, Lint, alle 18 Tests, Web-/Desktop-Build erfolgreich; macOS-App neu gebaut. Keine Verbindung oder Befehle an grandMA3 gesendet. Native GUI-/Safari-Abnahme bleibt offen.
+Die eingebettete Node-Version der Desktop-Umgebung blockiert native Rollup-Module durch macOS-Library-Validation. Die Prüfungen nutzen deshalb eine unveränderte offizielle Node-24.22.3-Installation im temporären Verzeichnis. Bei regulär installiertem Node inklusive npm ist dieser Umweg nicht nötig.

@@ -1,1 +1,20 @@
-{"compilerOptions":{"target":"ES2022","module":"NodeNext","moduleResolution":"NodeNext","strict":true,"skipLibCheck":true,"noUnusedLocals":true,"noUnusedParameters":true,"rootDir":"apps/desktop/src","outDir":"dist-desktop"},"include":["apps/desktop/src/main.ts","apps/desktop/src/server.ts","apps/desktop/src/contracts.ts","apps/desktop/src/preload.cts"]}
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "skipLibCheck": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "rootDir": ".",
+    "outDir": "dist-desktop",
+    "rewriteRelativeImportExtensions": true
+  },
+  "include": [
+    "apps/desktop/src/main.ts",
+    "apps/desktop/src/server.ts",
+    "apps/desktop/src/contracts.ts",
+    "apps/desktop/src/preload.cts"
+  ]
+}

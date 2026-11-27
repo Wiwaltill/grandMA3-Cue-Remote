@@ -1,14 +1,14 @@
 # Roadmap
 
-v0.1.0 ist implementiert und lokal geprüft; die Abnahme auf echtem iPad/Safari steht noch aus. Auf Benutzerwunsch ist zusätzlich eine grafische macOS-Serversteuerung für die Demo vorgezogen. Weitere Meilensteine sind geplant.
+v0.1.0 ist implementiert und lokal geprüft; die Abnahme auf echtem iPad/Safari steht noch aus. Auf Benutzerwunsch ist zusätzlich eine grafische macOS-Serversteuerung für die Demo vorgezogen. v0.2.0 enthält die OSC-Bridge mit echten Sequenz-Snapshots und wurde auf der freigegebenen lokalen Testshow geprüft. Die vollständige Live-/Hardware-Abnahme bleibt offen.
 
 ## v0.1.0 – Demo (implementiert; Safari-Abnahme offen)
 Responsive React/TypeScript-Oberfläche, Current/Next, Cue-Tabelle, Fortschritt, GO+/GO−, Lock, Reset. Lokaler Demo-Adapter ohne Netzwerk zum Pult. Akzeptanz: Build, Tests und Bedienung in Safari; Demo eindeutig sichtbar.
 
-## v0.2.0 – OSC
-Node-Bridge, konfigurierbare IP/Ports, gezieltes GO+/GO−, validierte OSC-Konfiguration, Testshow. Akzeptanz: ein Tastendruck löst genau einen gezielten Befehl aus; unbekanntes Ergebnis wird nicht als Erfolg angezeigt.
+## v0.2.0 – OSC (implementiert, lokale Testshow geprüft)
+Node-Bridge, konfigurierbare IP/Ports, gezieltes GO+/GO−, validierte OSC-Konfiguration, Testshow. UDP-Kodierung, gezieltes GO+/GO−, IP/Port/Präfix/DataPool/Sequenz-Konfiguration per UI und echte Rückmeldung sind implementiert. Lokale Testshow: GO+ und Pultfeedback geprüft; GO− am Listenanfang führte korrekt zu unbekanntem Ergebnis und Sperre. Automatische Tests prüfen genau einen Versand und keine Wiederholung. Allgemeine Show-Abnahme bleibt offen.
 
-## v0.3.0 – Sequenzdaten
+## v0.3.0 – Sequenzdaten (teilweise vorgezogen)
 Lua-Integrationsprototyp, Sequenzauswahl, Cue-Nummern/Namen/Fade, DataPool-Kontext. Akzeptanz: dokumentierte und getestete Datenübertragung aus MA 2.5.1.1; Fallback bei fehlender API.
 
 ## v0.4.0 – Live-Feedback
@@ -28,3 +28,6 @@ Desktop-Startfenster mit Server starten/stoppen, bestätigtem HTTP-Status, Portw
 
 ## Vorgezogen: Sequenznummer eingeben
 Auf Benutzerwunsch ist die Eingabe/Übernahme der Sequenznummer in der Web-UI vorhanden, derzeit ausschließlich für virtuelle Demo-Sequenzen. Validierung, Sperre bei unbestätigter Eingabe und Wechsel ohne automatisches Playback sind umgesetzt. Reale Auswahl, Existenzprüfung und Cuedaten aus grandMA3 bleiben bei v0.3.0 und der Live-Anbindung.
+
+## Live-Stand v0.2.0
+Echte Cue-Liste und Current/Off kommen aus lesenden Lua-Abfragen über OSC; kein Pluginimport nötig. Der Übertragungsweg nutzt auf der Zielversion vorhandene und auf der Testshow geprüfte socket-/json-Module. Next ist nur für einen explizit geladenen Cue bekannt; ansonsten bleibt es unbekannt. Es gibt kein aus Indizes erfundenes Live-Next. Allgemeine Next-Abfrage, stabile Handles, größere Shows, Netzwerk-Ausfall-Abnahme und echtes iPad/Safari bleiben offen. Server-Token, Origin-Prüfung, Lock, Frische, Deduplizierung, ein ausstehender Befehl und explizite Resynchronisation sind als notwendige Basis vorgezogen, ersetzen aber keine Produktionsabnahme von v0.5.0.

@@ -1,4 +1,4 @@
-name: macOS Demo App
+name: macOS App
 on:
   workflow_dispatch:
   push:

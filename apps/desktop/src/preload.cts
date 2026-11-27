@@ -4,6 +4,11 @@ contextBridge.exposeInMainWorld('desktop', {
   getStatus: () => ipcRenderer.invoke('server:get'),
   start: (config: unknown) => ipcRenderer.invoke('server:start',config),
   stop: () => ipcRenderer.invoke('server:stop'),
+  getLive: () => ipcRenderer.invoke('osc:get'),
+  getAddresses: () => ipcRenderer.invoke('osc:addresses'),
+  connectOsc: (config: unknown) => ipcRenderer.invoke('osc:connect',config),
+  disconnectOsc: () => ipcRenderer.invoke('osc:disconnect'),
+  openLive: () => ipcRenderer.invoke('server:open-live'),
   openDemo: () => ipcRenderer.invoke('server:open'),
   onStatus: (listener: (status: unknown) => void) => {
     const handler = (_event: Electron.IpcRendererEvent,status: unknown) => listener(status);

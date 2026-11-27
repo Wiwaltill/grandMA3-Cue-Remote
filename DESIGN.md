@@ -29,3 +29,9 @@ Ein separates macOS-Fenster dient dem Betrieb, die Playback-Oberfläche bleibt u
 ## Sequenznummer
 
 Unter der Kopfzeile steht ein touchgeeignetes Feld „Sequenznummer“ mit „Übernehmen“. Nur positive ganze Zahlen werden angenommen. Unbestätigte oder ungültige Eingaben sperren Playback und Reset; „Verwerfen“ stellt die übernommene Nummer wieder her. Bei Bedienungssperre oder unklarem Verbindungsstatus kann die Sequenz nicht gewechselt werden. Demo-Auswahl und Beispiel-Cues sind ausdrücklich gekennzeichnet. Ein Wechsel löst kein Playback aus.
+
+## Live-Verbindung ab v0.2.0
+
+Die Mac-App trennt Webserver- und OSC-Verbindungsstatus. Ziel-IP, lokale Rückmelde-IP, OSC-Port, Präfix, DataPool und Sequenznummer werden über Felder eingegeben. „Verbinden“ fragt lesend ab; „Trennen“ beendet Abfragen. „Demo öffnen“ und „Live-Weboberfläche öffnen“ sind getrennte Aktionen. Verbindungsdaten sind während einer Verbindung gesperrt.
+
+Im Live-Browser werden DataPool und Zielsequenz angezeigt. ONLINE gibt es ausschließlich nach validierter frischer Antwort der Zielversion. Die Bedienung beginnt gesperrt. Pending deaktiviert weitere GO-Befehle; unbekanntes Ergebnis sperrt dauerhaft bis zur neuen vollständigen Synchronisation und manuellen Freigabe. „Neu synchronisieren“ löst keinen GO aus. Ein Live-Reset existiert nicht. Unbekanntes Next ist ausdrücklich beschriftet und darf nicht als Listenende erscheinen. Nur echte Pultdaten bestimmen die Cueliste und Current.

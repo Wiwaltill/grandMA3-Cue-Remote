@@ -5,6 +5,7 @@ export interface PlaybackSnapshot {
   sequence: SequenceRef; cues: readonly Cue[]; currentCueId: string | null;
   nextCueId: string | null; playbackState: 'running' | 'off';
   connectionState: ConnectionState; revision: number; timestamp: number; locked: boolean;
+  nextCueKnown?: boolean; commandState?: 'idle' | 'pending' | 'unknown';
 }
 export interface Command { requestId: string; sequenceRef: SequenceRef; action: 'goPlus' | 'goMinus'; expectedRevision: number }
 export type CommandResult = { accepted: true } | { accepted: false; reason: 'duplicate' | 'locked' | 'unavailable' | 'revision' | 'sequence' | 'boundary' | 'busy' | 'invalid' };
@@ -12,7 +13,7 @@ export type CommandResult = { accepted: true } | { accepted: false; reason: 'dup
 export interface PlaybackTransport {
   getSnapshot(): PlaybackSnapshot;
   subscribe(listener: () => void): () => void;
-  execute(command: Command): CommandResult;
-  setLocked(locked: boolean): void;
-  selectSequenceNumber(number: string, expectedRevision: number): CommandResult;
+  execute(command: Command): CommandResult | Promise<CommandResult>;
+  setLocked(locked: boolean): void | Promise<void>;
+  selectSequenceNumber(number: string, expectedRevision: number): CommandResult | Promise<CommandResult>;
 }

@@ -81,3 +81,25 @@ test('missing build and malformed config are shown as errors without listening',
   assert.deepEqual(server.getStatus().urls,[]);
   assert.equal((await server.stop()).phase,'stopped');
 });
+
+test('live HTTP API requires operator token, rejects cross-origin mutations and exposes no configuration or shell',async()=>{
+  const {OscBridge}=await import('../apps/desktop/src/bridge.ts');
+  const f=await fixture();const bridge=new OscBridge();const server=new DemoServer(f.root,()=>{},bridge);
+  try {
+    const state=await server.start({port:0,allowLan:false});const url=state.urls[0];
+    const token=new URL(state.liveUrls![0]).hash.slice(1);const headers={Authorization:`Bearer ${token}`,'Content-Type':'application/json'};
+    assert.equal((await fetch(url+'/api/state')).status,401);
+    const response=await fetch(url+'/api/state',{headers});assert.equal(response.status,200);
+    assert.equal((await response.json()).snapshot.connectionState,'OFFLINE');
+    assert.equal((await fetch(url+'/api/commands',{method:'POST',headers:{...headers,Origin:'http://untrusted.test'},body:'{}'})).status,403);
+    const invalid=await fetch(url+'/api/commands',{method:'POST',headers,body:JSON.stringify({action:'shell',command:'Off Sequence Thru'})});
+    assert.deepEqual(await invalid.json(),{accepted:false,reason:'invalid'});
+    assert.equal((await fetch(url+'/api/connect',{method:'POST',headers,body:'{}'})).status,400);
+    assert.equal((await fetch(url+'/api/sequence',{method:'POST',headers,body:'null'})).status,400);
+    assert.equal((await fetch(url+'/api/lock',{method:'POST',headers,body:JSON.stringify({locked:false})})).status,200);
+    assert.equal(bridge.getState().snapshot.locked,true);
+    await server.stop();const restarted=await server.start({port:0,allowLan:false});
+    assert.notEqual(new URL(restarted.liveUrls![0]).hash.slice(1),token);
+    assert.equal((await fetch(restarted.urls[0]+'/api/state',{headers})).status,401);
+  }finally{await server.stop();bridge.disconnect();await f.cleanup();}
+});

@@ -2,6 +2,7 @@ import { StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { DesktopApi, ServerStatus } from './contracts.ts';
 import { desktopText as t } from './text.ts';
+import { OscPanel } from './OscPanel.tsx';
 import './styles.css';
 declare global { interface Window { desktop?: DesktopApi } }
 function Launcher() {
@@ -37,7 +38,9 @@ function Launcher() {
     </fieldset>
     <div role="status" className="feedback">{!api?t.standalone:error || (status?.error?t.errors[status.error]:!validPort?t.errors['invalid-config']:'')}</div>
     <div className="actions"><button className={running?'stop':'start'} disabled={!api || !status || busy || (!running && !validPort)} onClick={()=>void action(()=>running?api!.stop():api!.start({port:Number(port),allowLan}))}>{phase==='starting'?t.starting:phase==='stopping'?t.stopping:running?t.stop:t.start}</button><button className="open" disabled={!running || busy} onClick={()=>void action(()=>api!.openDemo())}>{t.open}<span aria-hidden="true">↗</span></button></div>
-    {running && <section className="addresses"><div className="eyebrow">{t.addresses}</div>{status?.urls.map((url,index)=><div className="address" key={url}><span>{index===0?t.localAddress:t.lanAddress}</span><code>{url}</code></div>)}</section>}
+    {running && <button className="live-open" disabled={busy} onClick={()=>void action(()=>api!.openLive())}>{t.openLive} ↗</button>}
+    <OscPanel api={api}/>
+    {running && <section className="addresses"><div className="eyebrow">{t.addresses}</div>{status?.urls.map((url,index)=><div className="address" key={url}><span>{index===0?t.localAddress:t.lanAddress}</span><code>{url}</code></div>)}{status?.liveUrls && <><p className="hint">{t.osc.pairing}</p>{status.liveUrls.map(url=><code className="live-url" key={url}>{url}</code>)}</>}</section>}
     <footer><span className={status?.allowLan && running?'network':''}>◈ {status?.allowLan && running?t.network:t.local}</span><p>{t.notice}</p><p>{t.quitHint}</p></footer>
   </main>;
 }
