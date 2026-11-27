@@ -1,4 +1,4 @@
-# Abnahme v0.2.3
+# Abnahme v0.2.4
 
 Stand: 27. November 2026. Entwicklungsfassung, keine Freigabe für laufende Shows.
 
@@ -63,3 +63,11 @@ Isolierte UDP-Tests prüfen gemeinsame DataPool-/Sequenzwahl, Validierung beider
 Browserprüfung ausschließlich mit isoliertem simuliertem MA-Empfänger: Zahnrad öffnet Einstellungen; DataPool 2 und Sequenz 4 gemeinsam übernommen, anschließend ONLINE und weiterhin entsperrt. Manuellen Lock gesetzt, Sequenz 5 übernommen: weiterhin gesperrt. Reload auf ?page=settings erhält Seite und ausgewähltes Ziel. Hauptseite ohne Eingabefelder; Dokumentgröße entspricht Viewport bei 390×844, 820×1180, 1024×768 und 1280×720. Cueliste hat eigenen Scrollbereich; GO+/GO−/Pause bleiben sichtbar. Bei sehr niedrigen Fenstern wird bewusst Seitenscrollen zugelassen.
 
 Keine erneuten Befehle an ein echtes Pult für diese Änderung. Netzwerk-/OSC-Syntax unverändert. Native Mac-Fensterbedienung und echtes iPad/Safari bleiben offen; arm64-App und Signaturprüfung durch Packaging geprüft.
+
+## Fade-Warnung und Pause-Anzeige v0.2.4
+
+Bestehende UDP-Tests erweitert: Pause sendet ausdrücklich On bzw. Off, kein Aktiv-Zustand allein durch Senden; erst passende MA-Ausführungsbestätigung setzt appPauseState. Bestätigte Pause wird auch ohne Fade-Vorschau angezeigt. Resync und fehlende Pause-Bestätigung verwerfen den Zustand. 21 Tests insgesamt.
+
+Realer Test in der bereits ausdrücklich freigegebenen separaten onPC-Testshow 2.5.1.1: zunächst Off geprüft, GO+ bestätigt, Pause On und Pause Off jeweils mit echter MA-Cmd-Ausführungsbestätigung OK; Berechnung angehalten und fortgesetzt. Abschließend ursprünglichen Off-Zustand wiederhergestellt und durch Statusantwort bestätigt. Keine Showfile-Programmierung.
+
+Isolierter Browsertest: GO+ mit is-fading und CSS-Animation fade-warning (1,8 Sekunden), gelbe Warnfarbe und Text Fade läuft. Nach bestätigtem Pause On gelber Button Pause aktiv, aria-pressed=true und statischer gelber GO+ (Fade angehalten). Nach Pause Off neutraler Pause-Button, aria-pressed=false und wieder laufender Fortschritt. Keine große Berechnet-Beschriftung. Mobile Dokumentgröße 390x844 ohne Seitenscrollen/Überlauf geprüft. Reduced Motion per CSS ohne Pulsieren; reales Betriebssystem-Setting nicht umgestellt. Native Fensterbedienung und echtes iPad/Safari weiterhin offen.

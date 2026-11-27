@@ -17,11 +17,11 @@ const feedback=(number='1')=>({dataPool:'1',number,version:'2.5.1.1',name:'Test 
 async function setup(options: {now?:()=>number;timeoutMs?:number}={}) {
   const socket=dgram.createSocket('udp4');await new Promise<void>(r=>socket.bind(0,'127.0.0.1',r));
   const address=socket.address();assert.notEqual(typeof address,'string');
-  const counters={go:0,query:0,pause:0};const control={reply:true,advance:true,spoof:false,ackPause:true};let current='',running=false;
+  const counters={go:0,query:0,pause:0};const control={reply:true,advance:true,spoof:false,ackPause:true,pauseCommand:''};let current='',running=false;
   socket.on('message',packet=>{
     const {command}=decode(packet);
     if(command.includes('ackNonce=')){
-      counters.pause++;
+      counters.pause++;control.pauseCommand=command;
       const nonce=command.match(/ackNonce='([a-f0-9]{32})'/)?.[1];
       const port=Number(command.match(/,'127\.0\.0\.1',(\d+)/)?.[1]);
       if(control.ackPause && nonce && port)socket.send(JSON.stringify({ackNonce:nonce,result:'OK'}),port,'127.0.0.1');
@@ -49,7 +49,8 @@ test('OSC string command encoding uses address, string type, UTF-8 and four-byte
   assert.equal(packet.length%4,0);assert.equal(decode(encodeOscCommand('','Ä')).command,'Ä');
   assert.equal(playbackCommand({...config,dataPool:'2',sequenceNumber:'42'},'goMinus'),'Go- DataPool 2 Sequence 42');
   assert.equal(playbackCommand(config,'pause'),'Pause DataPool 1 Sequence 1');
-  assert.match(pauseRequest(config,12345,'a'.repeat(32)),/Cmd\('Pause DataPool 1 Sequence 1'\)/);
+  assert.match(pauseRequest(config,12345,'a'.repeat(32),false),/Pause Off DataPool 1 Sequence 1/);
+  assert.match(pauseRequest(config,12345,'a'.repeat(32)),/Cmd\('Pause On DataPool 1 Sequence 1'\)/);
 });
 test('OSC configuration rejects injection, multicast, invalid ports and noncanonical targets',()=>{
   assert.equal(isOscConfig(config),true);
@@ -125,15 +126,21 @@ test('Pause waits for MA execution acknowledgement and freezes/resumes the calcu
     const pause={...f.command('pause-1'),action:'pause' as const};
     assert.deepEqual(await f.bridge.execute(pause),{accepted:true});
     assert.equal(f.bridge.getState().commandState,'pending');
+    assert.notEqual(f.bridge.getState().snapshot.appPauseState,'on','sending cannot activate pause indicator');
     await until(()=>f.bridge.getState().commandState==='idle');
     assert.equal(f.bridge.getState().snapshot.fadePreview?.paused,true);
+    assert.equal(f.bridge.getState().snapshot.appPauseState,'on');assert.match(f.control.pauseCommand,/Pause On DataPool 1 Sequence 1/);
     now+=200;assert.equal(f.bridge.getState().snapshot.fadePreview?.elapsedMs,150);
     assert.deepEqual(await f.bridge.execute(pause),{accepted:false,reason:'duplicate'});
     await f.bridge.execute({...f.command('pause-2'),action:'pause'});
     await until(()=>f.bridge.getState().commandState==='idle');
     now+=100;assert.equal(f.bridge.getState().snapshot.fadePreview?.elapsedMs,250);
+    assert.equal(f.bridge.getState().snapshot.appPauseState,'off');assert.match(f.control.pauseCommand,/Pause Off DataPool 1 Sequence 1/);
     assert.equal(f.counters.pause,2);assert.equal(f.counters.go,1);
-    f.bridge.resync();assert.equal(f.bridge.getState().snapshot.fadePreview,undefined);
+    f.bridge.resync();assert.equal(f.bridge.getState().snapshot.fadePreview,undefined);assert.equal(f.bridge.getState().snapshot.appPauseState,'unknown');
+    await until(()=>f.bridge.getState().snapshot.connectionState==='ONLINE');f.bridge.setLocked(false);
+    await f.bridge.execute({...f.command('pause-without-preview'),action:'pause'});await until(()=>f.bridge.getState().commandState==='idle');
+    assert.equal(f.bridge.getState().snapshot.appPauseState,'on');assert.equal(f.bridge.getState().snapshot.fadePreview,undefined);
   }finally{f.cleanup();}
 });
 test('missing Pause acknowledgement locks controls without retry despite fresh unchanged snapshots',async()=>{
@@ -141,7 +148,7 @@ test('missing Pause acknowledgement locks controls without retry despite fresh u
     f.control.ackPause=false;f.bridge.setLocked(false);
     await f.bridge.execute({...f.command('pause-no-ack'),action:'pause'});
     await until(()=>f.bridge.getState().commandState==='unknown');
-    assert.equal(f.bridge.getState().snapshot.locked,true);assert.equal(f.counters.pause,1);
+    assert.equal(f.bridge.getState().snapshot.locked,true);assert.equal(f.counters.pause,1);assert.equal(f.bridge.getState().snapshot.appPauseState,'unknown');
     assert.equal(f.counters.go,0);assert.equal(f.bridge.getState().snapshot.fadePreview,undefined);
   }finally{f.cleanup();}
 });

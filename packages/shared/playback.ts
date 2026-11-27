@@ -7,6 +7,7 @@ export interface PlaybackSnapshot {
   nextCueId: string | null; playbackState: 'running' | 'off';
   connectionState: ConnectionState; revision: number; timestamp: number; locked: boolean;
   fadePreview?: FadePreview;
+  appPauseState?: 'on' | 'off' | 'unknown';
   commandState?: 'idle' | 'pending' | 'unknown';
 }
 export interface Command { requestId: string; sequenceRef: SequenceRef; action: 'goPlus' | 'goMinus' | 'pause'; expectedRevision: number }

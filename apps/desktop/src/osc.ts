@@ -24,7 +24,8 @@ export function snapshotQuery(config: OscConfig,port: number,nonce: string): str
 }
 
 // Pause gets an execution acknowledgement from MA's documented synchronous Cmd function.
-export function pauseRequest(config: OscConfig,port: number,nonce: string): string {
+export function pauseRequest(config: OscConfig,port: number,nonce: string,paused=true): string {
   if(!isOscConfig(config) || !Number.isInteger(port) || port<1 || port>65535 || !/^[a-f0-9]{32}$/.test(nonce))throw new Error('Invalid pause request');
-  return `Lua "local r=Cmd('${playbackCommand(config,'pause')}');local u=require('socket').udp();u:sendto(require('json').encode({ackNonce='${nonce}',result=tostring(r)}),'${config.replyHost}',${port});u:close()"`;
+  if(typeof paused!=='boolean')throw new Error('Invalid pause state');
+  return `Lua "local r=Cmd('Pause ${paused?'On':'Off'} DataPool ${config.dataPool} Sequence ${config.sequenceNumber}');local u=require('socket').udp();u:sendto(require('json').encode({ackNonce='${nonce}',result=tostring(r)}),'${config.replyHost}',${port});u:close()"`;
 }

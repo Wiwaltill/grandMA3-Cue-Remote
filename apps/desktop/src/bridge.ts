@@ -39,6 +39,7 @@ export class OscBridge {
   private receivedAt=0;
   private pendingAt=0;
   private pendingAction: Command['action'] | null=null;
+  private pendingPauseOn=true;
   private commandNonce: string | null=null;
   private preview: {value: FadePreview;anchor: number} | null=null;
   private restoreSelectionUnlock=false;
@@ -56,7 +57,7 @@ export class OscBridge {
   getConfig=()=>this.config?{...this.config}:null;
   subscribe=(fn:()=>void)=>{this.listeners.add(fn);return()=>{this.listeners.delete(fn);};};
   private publish(update: Partial<PlaybackSnapshot>,error=this.state.error) {
-    if(update.connectionState && update.connectionState!=='ONLINE'){this.preview=null;if(update.connectionState!=='CONNECTING')this.restoreSelectionUnlock=false;}
+    if(update.connectionState && update.connectionState!=='ONLINE'){this.preview=null;update={...update,appPauseState:'unknown'};if(update.connectionState!=='CONNECTING')this.restoreSelectionUnlock=false;}
     const previous=this.state.snapshot;
     const next={...previous,...update,commandState:this.state.commandState};
     const semantic=(s: PlaybackSnapshot)=>JSON.stringify({...s,timestamp:0,revision:0});
@@ -75,8 +76,8 @@ export class OscBridge {
       if(raw && this.commandNonce && raw.ackNonce===this.commandNonce && this.pendingAction==='pause' && this.state.commandState==='pending' && this.now()-this.pendingAt<=this.timeout()) {
         this.commandNonce=null;this.pendingAction=null;
         if(raw.result==='OK') {
-          if(this.preview){const value=advanceFade(this.preview.value,this.now()-this.preview.anchor);this.preview={value:{...value,paused:!value.paused},anchor:this.now()};}
-          this.state.commandState='idle';this.publish({},null);
+          if(this.preview){const value=advanceFade(this.preview.value,this.now()-this.preview.anchor);this.preview={value:{...value,paused:this.pendingPauseOn},anchor:this.now()};}
+          this.state.commandState='idle';this.publish({appPauseState:this.pendingPauseOn?'on':'off'},null);
         }else{this.state.commandState='unknown';this.publish({connectionState:'STALE',locked:true},'send-failed');}
         return;
       }
@@ -97,7 +98,7 @@ export class OscBridge {
       if (this.state.commandState==='pending' && this.pendingAction!=='pause' && fingerprint!==this.beforeCommand) {this.state.commandState='idle';this.pendingAction=null;}
       const restoreUnlocked=this.restoreSelectionUnlock;this.restoreSelectionUnlock=false;
       const unknown=this.state.commandState==='unknown';
-      this.publish({cues:parsed.cues,sequence:{...this.state.snapshot.sequence,name:parsed.name},currentCueId:parsed.current,nextCueId:parsed.next,playbackState:parsed.running?'running':'off',timestamp:this.receivedAt,connectionState:unknown?'STALE':'ONLINE',...(unknown?{locked:true}:restoreUnlocked?{locked:false}:{})},unknown?'timeout':null);
+      this.publish({cues:parsed.cues,sequence:{...this.state.snapshot.sequence,name:parsed.name},currentCueId:parsed.current,nextCueId:parsed.next,playbackState:parsed.running?'running':'off',timestamp:this.receivedAt,connectionState:unknown?'STALE':'ONLINE',...(!parsed.running || previous.currentCueId!==parsed.current?{appPauseState:'unknown' as const}:{}),...(unknown?{locked:true}:restoreUnlocked?{locked:false}:{})},unknown?'timeout':null);
     });
     socket.on('error',()=>{if(this.socket===socket) this.publish({connectionState:'OFFLINE',locked:true},'send-failed');});
     try {await new Promise<void>((resolve,reject)=>{socket.once('error',reject);socket.bind(0,'0.0.0.0',()=>{socket.removeListener('error',reject);resolve();});});}
@@ -151,8 +152,9 @@ export class OscBridge {
     this.beforeCommand=JSON.stringify([s.currentCueId,s.playbackState==='running']);this.pendingAt=this.now();this.pendingAction=command.action;this.state.commandState='pending';this.publish({});
     const socket=this.socket;
     const address=socket.address();if(typeof address==='string')throw new Error('No UDP port');
+    this.pendingPauseOn=s.appPauseState!=='on';
     this.commandNonce=command.action==='pause'?randomBytes(16).toString('hex'):null;
-    const packet=encodeOscCommand(this.config.prefix,command.action==='pause'?pauseRequest(this.config,address.port,this.commandNonce!):playbackCommand(this.config,command.action));
+    const packet=encodeOscCommand(this.config.prefix,command.action==='pause'?pauseRequest(this.config,address.port,this.commandNonce!,this.pendingPauseOn):playbackCommand(this.config,command.action));
     await new Promise<void>(resolve=>socket.send(packet,this.config!.port,this.config!.host,error=>{if(error && this.socket===socket){this.state.commandState='unknown';this.publish({connectionState:'OFFLINE',locked:true},'send-failed');}resolve();}));
     // UDP send completion is deliberately NOT a playback acknowledgement.
     return {accepted:true};

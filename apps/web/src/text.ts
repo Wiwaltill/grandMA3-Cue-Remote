@@ -11,12 +11,13 @@ export const text = {
   follow:'Aktueller Cue folgen', following:'Auto-Follow aktiv', manual:'Manuelle Ansicht',
   lock:'Bedienung sperren', unlock:'Bedienung entsperren', locked:'Gesperrt', unlocked:'Entsperrt',
   lockReason:'Bedienung gesperrt. Zum Fortfahren oben entsperren.', ready:'Pultstatus frisch · Gewählte Sequenz bereit.', offReady:'Sequenz ist Off · GO+ wird an das Pult gesendet.',
+  fadeRunning:'Fade läuft', fadeHeld:'Fade angehalten', fadeEstimate:'Zeitvorschau aus gespeichertem Fade; kein gemessener Pultwert.', pauseActive:'Pause aktiv', resume:'Fortsetzen', pauseStateHint:'Zuletzt von MA bestätigte App-Pause. Externe Pause-Änderungen werden nicht erkannt.', pauseUnknownHint:'Pause-Zustand unbekannt. Der nächste Tastendruck setzt Pause gezielt ein.',
   goPlus:'GO+', goMinus:'GO−', previous:'Vorheriger Cue', pause:'Pause', pauseHint:'Pause / Fortsetzen',
-  footer:'OSC · PULTSTATUS', version:'v0.2.3', noNext:'Kein weiterer Cue', unavailable:'Status unklar · Bedienung gesperrt',
+  footer:'OSC · PULTSTATUS', version:'v0.2.4', noNext:'Kein weiterer Cue', unavailable:'Status unklar · Bedienung gesperrt',
   connectionNotice:'grandMA3 OSC · Gewählte Sequenz', unknown:'Status unbekannt',
   pending:'Befehl gesendet · Warte auf Rückmeldung des Pults.', unknownResult:'Ergebnis unbekannt · Gesperrt. Neu synchronisieren; Befehl wird nicht wiederholt.',
   resync:'Neu synchronisieren', error:'Befehl nicht ausgeführt. Bitte Status prüfen.', cooldown:'Doppelklickschutz aktiv',
-  fadePreview:'FADE-VORSCHAU · BERECHNET', fadeWaiting:'Vorschau startet beim nächsten bestätigten Cue-Wechsel.', fadeUnavailable:'Keine frischen Pultdaten.', fadePaused:'Vorschau angehalten', fadeComplete:'Vorschau abgeschlossen',
+  fadePreview:'Fade', fadeWaiting:'—', fadeUnavailable:'Keine frischen Pultdaten.', fadePaused:'Angehalten', fadeComplete:'Abgeschlossen',
 } as const;
 export const fadeLabel = (fade?: number) => fade === undefined ? '—' : `${fade.toFixed(1)} s`;
 export const fadeRemainingLabel = (remaining: number,total: number) => `Rest ca. ${(remaining/1000).toFixed(1)} s · Gesamt ${(total/1000).toFixed(1)} s`;

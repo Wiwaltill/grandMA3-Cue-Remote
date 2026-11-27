@@ -31,7 +31,7 @@ Primärbelege: offizielle MA-Dokumentation für OSC, DataPool, Go+, Go−, Pause
 
 GO wird einmal gesendet und setzt Pending; erst geänderter autoritativer Current/Running-Status beendet Pending. UDP-Sendebestätigung ist kein Playback-Erfolg.
 
-Pause ist das dokumentierte MA-Toggle `Pause DataPool <n> Sequence <n>`. Weil dabei Current unverändert bleiben kann, führt MA den fest generierten Befehl über seine synchrone Cmd-Funktion aus und antwortet mit separater Befehlsnonce und Ausführungsresultat. Nur ein zur ausstehenden Pause passendes `OK` beendet Pending. Dadurch wird keine erfundene globale Paused-Eigenschaft benötigt. Der Button bleibt Pause/Fortsetzen, ohne eine unbestätigte Pult-Pauseleuchte vorzutäuschen.
+Pause verwendet die dokumentierte Syntax `Pause On/Off DataPool <n> Sequence <n>` zum eindeutigen Setzen. Die Bridge wählt On, wenn keine bestätigte App-Pause aktiv ist, sonst Off. Weil dabei Current unverändert bleiben kann, führt MA den fest generierten Befehl über seine synchrone Cmd-Funktion aus und antwortet mit separater Befehlsnonce und Ausführungsresultat. Nur ein zur ausstehenden Pause passendes `OK` beendet Pending. Dadurch wird keine erfundene globale Paused-Eigenschaft benötigt. PlaybackSnapshot.appPauseState speichert ausschließlich die letzte bestätigte App-Pause (on/off/unknown), auch ohne Fade-Vorschau. Erst das passende OK aktualisiert sie. Off, Cue-Wechsel, Resync, Zielwechsel und fehlende frische Daten verwerfen sie. Externe Pause-Änderungen bleiben unbekannt; die Anzeige ist keine kontinuierlich aus MA gelesene Paused-Eigenschaft.
 
 Pro Sequenz höchstens ein ausstehender Bedienbefehl. Request-Deduplizierung, erwartete Revision, Ziel, Lock und Frische werden serverseitig geprüft. Nach 3 Sekunden ohne passenden Status/Bestätigung ist das Ergebnis unbekannt: STALE, Lock, keine Queue, kein automatischer Retry. Neue Freigabe erst nach explizitem vollständigem Resync und bewusstem Entsperren. UDP garantiert keine Ende-zu-Ende-Exactly-once-Semantik.
 
@@ -41,9 +41,9 @@ Auf ausdrücklichen Benutzerwunsch wird eine klar bezeichnete Rechenvorschau ang
 
 Eine Vorschau entsteht ausschließlich nach einem bestätigten Current-Wechsel bei zuvor frischem Status. Beim eigenen GO wird dessen Auslösezeitpunkt erst nach bestätigtem Wechsel als Startschätzung verwendet; bei externem Cue-Wechsel die Mitte zwischen den beiden Statuszeitpunkten. Dauer ist die bekannte gespeicherte Fade-Zeit. Nullzeit ergibt sofort 100 %, unbekannte Dauer keinen Balken. Bei initial bereits laufendem Cue wird kein neuer Übergang erfunden.
 
-Die Bridge führt eine gemeinsame Berechnungsbasis für alle Clients. Eine aus der App mit MA-Ausführungsbestätigung verarbeitete Pause hält diese Berechnung an; der nächste bestätigte Toggle setzt sie fort. Der Client interpoliert zwischen Statusantworten, ohne daraus Playback-Status abzuleiten. Reduced Motion unterdrückt die Zwischenanimation. Bei Disconnect, Stale, unbekanntem Ergebnis oder Resync wird die Vorschau verworfen.
+Die Bridge führt eine gemeinsame Berechnungsbasis für alle Clients. Eine aus der App mit MA-Ausführungsbestätigung verarbeitete Pause hält diese Berechnung an; das nächste bestätigte Pause Off setzt sie fort. Der Client interpoliert zwischen Statusantworten, ohne daraus Playback-Status abzuleiten. Reduced Motion unterdrückt die Zwischenanimation. Bei Disconnect, Stale, unbekanntem Ergebnis oder Resync wird die Vorschau verworfen.
 
-Grenzen: Delay, individuelle Attributzeiten, Timing-/Rate-Master, abweichende GO−-Zeiten und extern betätigte Pause sind nicht vollständig nachgeführt. Der Balken heißt immer berechnet und ersetzt weder Current-Feedback noch Frischeprüfung.
+Grenzen: Delay, individuelle Attributzeiten, Timing-/Rate-Master, abweichende GO−-Zeiten und extern betätigte Pause sind nicht vollständig nachgeführt. Die große Berechnet-Beschriftung entfällt auf Benutzerwunsch; Tooltip und Einstellungen erklären die Zeitvorschau. GO+ verwendet sie für eine gelbe Warnung mit langsamem Pulsieren. Die Warnung sperrt keine Befehle und ersetzt weder Current-Feedback noch Frischeprüfung.
 
 ## HTTP, IPC und Betrieb
 

@@ -40,3 +40,6 @@ Auf Benutzerwunsch Demo-Modus/Adapter/Reset und deren Produktzugänge entfernt. 
 
 ## v0.2.3 – Web-Einstellungen und kompakte Hauptseite
 DataPool/Sequenz aus der nativen Netzwerkkonfiguration entfernt und als gemeinsame Zielwahl auf eine kleine Web-Einstellungsseite verschoben. Hauptseite nutzt die Viewporthöhe, Cueliste scrollt intern. Nach erfolgreichem Zielwechsel automatische Freigabe nur bei zuvor frischer entsperrter Bedienung; manuelle Sperren und Ausfälle bleiben gesperrt. Keine Playback-Befehle beim Zielwechsel.
+
+## v0.2.4 - Fade-Warnung und Pause-Anzeige
+Auf Benutzerwunsch große Berechnet-Beschriftung durch dezentes Fade mit Tooltip-/Einstellungshinweis ersetzt. GO+ gelb und langsam pulsierend während der berechneten Fade-Dauer, statisch bei Pause, danach grün. Warnung ohne zusätzliche GO-Sperre. Pause On/Off mit bestätigter gemeinsamer App-Aktiv-Anzeige, unabhängig von vorhandener Fade-Vorschau; unbekannt nach Statusverlust/Resync/Ziel-/Cue-Wechsel. Externe Pult-Pause bleibt nicht auslesbar.

@@ -26,6 +26,8 @@ export function App({transport, onResync}: {transport: PlaybackTransport; onResy
   const current = state.cues[index];
   const next = state.cues.find(c => c.id === state.nextCueId);
   const available = state.connectionState === 'ONLINE';
+  const fading=available && !!state.fadePreview && state.fadePreview.elapsedMs<state.fadePreview.durationMs;
+  const paused=available && state.appPauseState==='on';
   const blocked = state.locked || !available || cooldown || (state.commandState!==undefined && state.commandState!=='idle');
   const sequenceNumber = parseSequenceNumber(sequenceDraft);
   const poolNumber=parseSequenceNumber(poolDraft);
@@ -66,7 +68,7 @@ export function App({transport, onResync}: {transport: PlaybackTransport; onResy
       <p className={!poolNumber || !sequenceNumber?'warning':''}>{!poolNumber || !sequenceNumber?t.targetInvalid:t.sequenceHint}</p>
       </section><p role="status">{error || (!available?t.unavailable:'')}</p>
       <button className="settings-resync" onClick={()=>void onResync()}>{t.resync}</button>
-      <p className="settings-description">{t.connectionNotice} · {t.version}</p>
+      <p className="settings-description">{t.fadeEstimate} {t.pauseStateHint}</p><p className="settings-description">{t.connectionNotice} · {t.version}</p>
     </main> : <>
     <main>
       <section className="cue-cards" aria-label={`${t.current} / ${t.next}`} aria-live="polite">
@@ -84,9 +86,9 @@ export function App({transport, onResync}: {transport: PlaybackTransport; onResy
         </div>
         <aside className="control-panel"><div className="progress-section"><div className="eyebrow">{t.position}</div><div className="position"><strong>{String(index+1).padStart(2,'0')}</strong><span>/ {String(state.cues.length).padStart(2,'0')}</span></div><progress aria-label={t.position} value={index+1} max={state.cues.length}/><p>{current?.name ?? (available?t.off:t.unknown)}</p></div>
           <div className="controls"><p className={`control-status ${state.locked?'warning':''}`} role="status">{state.commandState==='unknown'?t.unknownResult:!available?t.unavailable:state.locked?t.lockReason:state.commandState==='pending'?t.pending:sequencePending?t.sequencePending:error || (cooldown?t.cooldown:state.playbackState==='off'?t.offReady:t.ready)}</p>
-            <button className="go-plus" disabled={playbackBlocked} onClick={() => execute('goPlus')}><span className="go-label">{t.goPlus}<span aria-hidden="true">→</span></span><span className="go-target">{next?`${next.number} · ${next.name}`:t.noNext}</span></button>
+            <button className={`go-plus ${fading?'is-fading':''} ${fading && state.fadePreview?.paused?'fade-held':''}`} title={fading?t.fadeEstimate:undefined} disabled={playbackBlocked} onClick={() => execute('goPlus')}><span className="go-label">{t.goPlus}<span aria-hidden="true">→</span></span><span className="go-target">{fading && <span className="fade-indicator">{state.fadePreview?.paused?t.fadeHeld:t.fadeRunning} · </span>}{next?`${next.number} · ${next.name}`:t.noNext}</span></button>
 
-            <div className="secondary-controls"><button className="go-minus" disabled={playbackBlocked} onClick={() => execute('goMinus')}><span aria-hidden="true">←</span><strong>{t.goMinus}</strong><span>{t.previous}</span></button><button className="pause" disabled={playbackBlocked} onClick={() => execute('pause')}><span aria-hidden="true">Ⅱ</span><strong>{t.pause}</strong><span>{t.pauseHint}</span></button></div>
+            <div className="secondary-controls"><button className="go-minus" disabled={playbackBlocked} onClick={() => execute('goMinus')}><span aria-hidden="true">←</span><strong>{t.goMinus}</strong><span>{t.previous}</span></button><button className={`pause ${paused?'is-active':''}`} aria-pressed={state.appPauseState==='unknown' || !available?undefined:paused} aria-label={paused?t.resume:t.pause} title={state.appPauseState==='unknown' || !state.appPauseState?t.pauseUnknownHint:t.pauseStateHint} disabled={playbackBlocked} onClick={() => execute('pause')}><span aria-hidden="true">Ⅱ</span><strong>{paused?t.pauseActive:t.pause}</strong><span>{t.pauseHint}</span></button></div>
             <button className="resync" onClick={() => void onResync()}>{t.resync}</button>
           </div>
         </aside>

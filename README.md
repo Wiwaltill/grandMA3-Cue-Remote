@@ -2,7 +2,7 @@
 
 Lokale, iPad-optimierte Sequenz-Fernbedienung mit grafischer macOS-Serversteuerung. React/TypeScript, Node und Electron; ohne Cloud oder Telemetrie.
 
-## v0.2.3 – kompakte Playback-Seite und Web-Einstellungen
+## v0.2.4 - Fade-Warnung und sichtbare Pause
 
 Die App verbindet sich mit **grandMA3 onPC 2.5.1.1**, liest Sequenzname, Cue-Liste, bekannte Fade-Zeiten und Current-Status aus MA und sendet gezieltes GO+/GO− und Pause/Fortsetzen an den ausgewählten DataPool und die eingetragene Sequenznummer. Die Weboberfläche enthält Lock, Auto-Follow, Listenpositionsfortschritt und eine klar als berechnet markierte Fade-Vorschau. Der Demo-Modus ist entfernt. Sie simuliert im Live-Modus keinen Playback-Erfolg.
 
@@ -42,9 +42,9 @@ Cue-Nummern bleiben Strings; die Anwendung validiert Eingaben und akzeptiert max
 
 ## Pause und Fade-Vorschau
 
-**Pause** liegt neben **GO−** und entspricht dem MA-Toggle: ein Tastendruck pausiert, der nächste setzt fort. Der Server lässt den Button erst nach einer echten `Cmd`-Ausführungsbestätigung `OK` aus MA wieder frei. Eine UDP-Sendebestätigung allein reicht nicht. Kommt keine gültige Bestätigung, bleibt das Ergebnis unbekannt und die Bedienung wird gesperrt; keine automatische Wiederholung.
+**Pause** liegt neben **GO−**: Ein Tastendruck setzt gezielt Pause On, der nächste Pause Off. Erst nach MA-Bestätigung erscheint der Button gelb mit **Pause aktiv**; erneutes Drücken setzt fort. Der Zustand zeigt die zuletzt bestätigte App-Pause für alle Clients. Externe Pause-Änderungen am Pult werden nicht erkannt. Bei unklarem Status, Resync, Off oder Cue-/Zielwechsel wird die Anzeige unbekannt; der nächste Druck setzt wieder gezielt Pause On. Der Server lässt den Button erst nach einer echten `Cmd`-Ausführungsbestätigung `OK` aus MA wieder frei. Eine UDP-Sendebestätigung allein reicht nicht. Kommt keine gültige Bestätigung, bleibt das Ergebnis unbekannt und die Bedienung wird gesperrt; keine automatische Wiederholung.
 
-**FADE-VORSCHAU · BERECHNET** erscheint in der Current-Karte und als blauer Balken in der aktuellen Cue-Zeile. Die Vorschau startet erst nach einem bestätigten Wechsel des aktuellen Cues und verwendet dessen gespeicherte Fade-Zeit. Bei einem durch die App ausgelösten GO wird der Auslösezeitpunkt als Rechenbasis benutzt, sobald MA den Wechsel bestätigt; bei externen Cue-Wechseln die Mitte zwischen den beiden empfangenen Statuszeitpunkten. Es gibt keinen vorgetäuschten Playback-Start aufgrund eines verschickten Pakets.
+**Fade** erscheint dezent in der Current-Karte und als blauer Balken in der aktuellen Cue-Zeile. Die große Berechnet-Beschriftung entfällt auf Benutzerwunsch; Tooltip und Einstellungen erklären die Zeitvorschau. **GO+ wird während der geschätzten Fade-Dauer gelb und pulsiert langsam**, mit dem Text „Fade läuft“. Bei Pause bleibt er gelb ohne Pulsieren; nach Ablauf wieder grün. Die Anzeige ist eine Warnung, keine zusätzliche GO-Sperre. Bei reduzierten Animationen bleibt sie statisch. Die Vorschau startet erst nach einem bestätigten Wechsel des aktuellen Cues und verwendet dessen gespeicherte Fade-Zeit. Bei einem durch die App ausgelösten GO wird der Auslösezeitpunkt als Rechenbasis benutzt, sobald MA den Wechsel bestätigt; bei externen Cue-Wechseln die Mitte zwischen den beiden empfangenen Statuszeitpunkten. Es gibt keinen vorgetäuschten Playback-Start aufgrund eines verschickten Pakets.
 
 Eine in der App von MA bestätigte Pause hält die Berechnung an; der nächste bestätigte Pause-Tastendruck setzt sie fort. Bei Verbindungsverlust, unbekanntem Befehlsergebnis oder Resynchronisation wird die Vorschau verworfen. Beim Verbinden mit einem bereits laufenden Cue wird kein angeblich gerade gestarteter Fade erfunden.
 
