@@ -15,7 +15,7 @@ Der frühere Demo-Adapter und alle Produktzugänge dazu sind seit v0.2.2 auf Ben
 
 SequenceRef enthält DataPool, ID, Nummer und Name. Cue enthält ID, Cue-Nummer als String, Name und optionale allgemeine/individuelle Fade-/Delay-Zeiten sowie MA-Duration, validierten Trigger (Go/Follow/Time/Sound/BPM/Unknown) und optionale numerische Triggerzeit. PlaybackSnapshot enthält Sequenz, Cues, bestätigten Current, Next als Listennachfolger, Running/Off, Verbindungsstatus, Revision, Zeitstempel, Lock und Befehlsstatus. Die optionale FadePreview ist ausdrücklich eine Berechnung, kein autoritativer MA-Fade-Prozentwert.
 
-Command enthält Request-ID, Zielreferenz, erwartete Revision und ausschließlich goPlus, goMinus oder pause. Die gemeinsame DataPool-/Sequenzwahl verlangt die erwartete Revision und sperrt bis zum neuen vollständigen Pultstatus. Eine vor dem Wechsel frische, entsperrte Bedienung wird ausschließlich nach gültigem neuen Snapshot wieder freigegeben. Manuelle Sperre, Fehler, Timeout, Serverstopp und Resync widerrufen diese Freigabe. Zielwahl ist auch im gesperrten Zustand möglich; sie hebt bestehende Sperren nicht auf. Keine frei eingebbaren MA-/Lua-Kommandos. Cue-Nummern bleiben Strings; Next folgt der gelieferten Listenreihenfolge (Off → erster Cue, Listenende → null). Goto folgt später.
+Command enthält Request-ID, Zielreferenz, erwartete Revision und ausschließlich goPlus oder goMinus. Die gemeinsame DataPool-/Sequenzwahl verlangt die erwartete Revision und sperrt bis zum neuen vollständigen Pultstatus. Eine vor dem Wechsel frische, entsperrte Bedienung wird ausschließlich nach gültigem neuen Snapshot wieder freigegeben. Manuelle Sperre, Fehler, Timeout, Serverstopp und Resync widerrufen diese Freigabe. Zielwahl ist auch im gesperrten Zustand möglich; sie hebt bestehende Sperren nicht auf. Keine frei eingebbaren MA-/Lua-Kommandos. Cue-Nummern bleiben Strings; Next folgt der gelieferten Listenreihenfolge (Off → erster Cue, Listenende → null). Goto folgt später.
 
 ## OSC und Status
 
@@ -27,11 +27,9 @@ Status-Polling erfolgt alle 500 ms, HTTP-Statusaktualisierung alle 250 ms. Volls
 
 Primärbelege: offizielle MA-Dokumentation für OSC, DataPool, Go+, Go−, Pause und Cmd; außerdem `gma3_2.5.1/shared/resource/lib_plugins/requirements/{socket,json}.lua`, `systemtests/gma3_api_meta.lua`, `systemtests/db/system_test_sequence_pause.lua`, `system_test_sequence_off.lua` und `system_test_sequence_set.lua`. Die mit HelpLua exportierte API-Liste wurde geprüft. MA-Dateien werden nicht in das Repository kopiert.
 
-## Pause und Befehlsbestätigung
+## Befehlsbestätigung
 
 GO wird einmal gesendet und setzt Pending; erst geänderter autoritativer Current/Running-Status beendet Pending. UDP-Sendebestätigung ist kein Playback-Erfolg.
-
-Pause verwendet die dokumentierte Syntax `Pause On/Off DataPool <n> Sequence <n>` zum eindeutigen Setzen. Die Bridge wählt On, wenn keine bestätigte App-Pause aktiv ist, sonst Off. Weil dabei Current unverändert bleiben kann, führt MA den fest generierten Befehl über seine synchrone Cmd-Funktion aus und antwortet mit separater Befehlsnonce und Ausführungsresultat. Nur ein zur ausstehenden Pause passendes `OK` beendet Pending. Dadurch wird keine erfundene globale Paused-Eigenschaft benötigt. Seit v0.2.7 speichert PlaybackSnapshot.pauseState kurzzeitig bestätigte explizite Pause-Zustände (on/off/unknown), sowohl aus MA-OSC-Playback-Feedback als auch aus nonce-geprüfter App-Ausführungsbestätigung. Die Anzeige ist kein kontinuierlicher Paused-Snapshot.
 
 Pro Sequenz höchstens ein ausstehender Bedienbefehl. Request-Deduplizierung, erwartete Revision, Ziel, Lock und Frische werden serverseitig geprüft. Nach 3 Sekunden ohne passenden Status/Bestätigung ist das Ergebnis unbekannt: STALE, Lock, keine Queue, kein automatischer Retry. Neue Freigabe erst nach explizitem vollständigem Resync und bewusstem Entsperren. UDP garantiert keine Ende-zu-Ende-Exactly-once-Semantik.
 
@@ -41,7 +39,7 @@ Auf ausdrücklichen Benutzerwunsch wird eine klar bezeichnete Rechenvorschau ang
 
 Eine Vorschau entsteht ausschließlich nach einem bestätigten Current-Wechsel bei zuvor frischem Status. Beim eigenen GO wird dessen Auslösezeitpunkt erst nach bestätigtem Wechsel als Startschätzung verwendet; bei externem Cue-Wechsel die Mitte zwischen den beiden Statuszeitpunkten. Dauer ist die maximale MA-Duration aller Cue-Parts, einschließlich Delay und individueller gespeicherter/gekochter MAtricks-Zeiten. Die Dauer wird nicht aus getrennten maximalen Fade- und Delay-Werten addiert. Nullzeit ergibt sofort 100 %, unbekannte Dauer keinen Balken. Bei initial bereits laufendem Cue wird kein neuer Übergang erfunden.
 
-Die Bridge führt eine gemeinsame Berechnungsbasis für alle Clients. Eine aus der App mit MA-Ausführungsbestätigung verarbeitete Pause hält diese Berechnung an; das nächste bestätigte Pause Off setzt sie fort. Der Client interpoliert zwischen Statusantworten, ohne daraus Playback-Status abzuleiten. Reduced Motion unterdrückt die Zwischenanimation. Bei Disconnect, Stale, unbekanntem Ergebnis oder Resync wird die Vorschau verworfen.
+Die Bridge führt eine gemeinsame Berechnungsbasis für alle Clients. Der Client interpoliert zwischen Statusantworten, ohne daraus Playback-Status abzuleiten. Reduced Motion unterdrückt die Zwischenanimation. Bei Disconnect, Stale, unbekanntem Ergebnis oder Resync wird die Vorschau verworfen.
 
 Grenzen: dynamische Timing-/Rate-Master, abweichende GO−-Zeiten und extern betätigte Pause sind nicht vollständig nachgeführt. Die große Berechnet-Beschriftung entfällt auf Benutzerwunsch; Tooltip und Einstellungen erklären die Zeitvorschau. GO+ verwendet sie für eine gelbe Warnung mit langsamem Pulsieren. Die Warnung sperrt keine Befehle und ersetzt weder Current-Feedback noch Frischeprüfung.
 
@@ -63,14 +61,6 @@ Das fest generierte Lua liest TrigType als Display-Text am Cue und TrigTime als 
 
 Alle externen/autonomen Cue-Wechsel werden ausschließlich aus dem bestätigten Current verarbeitet. HTTP-Polling kann kurze Zwischen-Cues unterhalb des Abfrageintervalls überspringen; die App behauptet keine lückenlose Triggerhistorie. Next bleibt Listennachfolger, keine Vorhersage von Loop/Off-Sonderzielen.
 
-## Untersuchung externer Pause (27. November 2026)
+## Pause seit v0.2.8 entfernt
 
-Kein verifizierter Pause-Snapshot gefunden. IsRunningPlayback und HasActivePlayback bleiben auch bei Pause true; enumerierte Sequenzeigenschaften und Fadertexte unterscheiden Pause nicht. Die dokumentierten OSC-Playback-Ausgaben sind Aktionen, keine zustandsvolle Resynchronisation. Deshalb keine automatische externe Pause-Erkennung aus ungesicherten Toggles. Realtests und Grenzen im [Untersuchungsbericht](tests/PAUSE-INVESTIGATION.md). Ergänzung seit v0.2.7: verifiziertes explizites OSC-Pause-On/Off-Feedback mit kurzer Gültigkeit; Toggle bleibt unbekannt.
-
-## OSC-Playback-Pause seit v0.2.7
-
-Separater optionaler UDP-Empfänger an config.replyHost/config.feedbackPort, konfigurierbar per nativer UI (Standard 9001; 0 aus). feedbackPrefix unabhängig vom Command-Präfix. Die Bridge schreibt keine MA-Ausgabekonfiguration. Snapshot-Query liefert feedbackAddress aus q:Addr(); keine fest angenommene Pooladresse. Feedback darf nur bei frischem ONLINE-Zustand, passender Quell-IP, exakter Adresse/Präfix und gültigem OSC-String/Int/String-Frame wirken. Keine Commands aus empfangenen Paketen.
-
-Reale 2.5.1.1-Pakete: Pause int 1 = On, 0 = Off, 2 = Toggle/unknown. Keine Toggle-Parität. Keine dauerhafte Fortschreibung aus einem UDP-Ereignis: maximal drei Sekunden (Transporttimeout) ab expliziter Bestätigung, danach unknown trotz frischer Snapshots. Unbekannt verwirft die Rechenvorschau. Explizites On/Off friert sie am Empfangszeitpunkt ein bzw. setzt sie fort; keine Rekonstruktion einer verworfenen Zeitbasis. Empfangslatenz begrenzt Genauigkeit.
-
-Eine Ereignisgeneration verhindert, dass ein verspätetes Cmd-OK ein inzwischen empfangenes widersprüchliches/mehrdeutiges Ereignis überschreibt. Neue Verbindung, Ziel-/Cue-Wechsel, Resync und Offline/Stale widerrufen Nachweise. Keine Aktualisierung der Statusfrische durch Playback-Events. UDP-Reihenfolge und Verlust sind nicht lückenlos erkennbar; kurzzeitiger Nachweis mit sichtbarem Unknown ist ausdrücklicher Fallback, keine Exactly-once-/Snapshot-Zusage.
+Auf Benutzerwunsch kein Pause-Befehl, kein Pause-Zustandsmodell, kein OSC-Playback-Feedbackempfänger und keine zugehörige Netzwerkkonfiguration mehr im Produkt. Das Web-API validiert ausschließlich goPlus/goMinus; alte Pause-Requests werden abgewiesen. Die historische Untersuchung bleibt in tests/PAUSE-INVESTIGATION.md erhalten. Externe Pause am Pult wird durch die berechnete Fade-Vorschau nicht erkannt.

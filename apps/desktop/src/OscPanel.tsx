@@ -5,7 +5,7 @@ import { desktopText } from './text.ts';
 const t=desktopText.osc;
 export function OscPanel({api}: {api?: DesktopApi}) {
   const [addresses,setAddresses]=useState<string[]>(['127.0.0.1']);
-  const [config,setConfig]=useState<OscConfig>({host:'127.0.0.1',replyHost:'127.0.0.1',port:8000,prefix:'',dataPool:'1',sequenceNumber:'1',feedbackPort:9001,feedbackPrefix:'cue-remote'});
+  const [config,setConfig]=useState<OscConfig>({host:'127.0.0.1',replyHost:'127.0.0.1',port:8000,prefix:'',dataPool:'1',sequenceNumber:'1'});
   const [live,setLive]=useState<LiveState | null>(null);
   const [pending,setPending]=useState(false);
   const [error,setError]=useState('');
@@ -22,7 +22,7 @@ export function OscPanel({api}: {api?: DesktopApi}) {
     if(!api || pending)return;setPending(true);setError('');
     try{setLive(connected?await api.disconnectOsc():await api.connectOsc(config));}catch{setError(desktopText.ipcError);}finally{setPending(false);}
   }
-  function field(key: keyof OscConfig,value: string) {setConfig(c=>({...c,[key]:key==='port' || key==='feedbackPort'?Number(value):value}));}
+  function field(key: keyof OscConfig,value: string) {setConfig(c=>({...c,[key]:key==='port'?Number(value):value}));}
   return <section className="osc-panel"><h2>{t.title}</h2><p className="hint">{t.intro}</p>
     <div className={`osc-status ${phase.toLowerCase()}`} role="status">{label}{live?.version?` · ${live.version}`:''}{live?.commandState==='pending'?` · ${t.pending}`:live?.commandState==='unknown'?` · ${t.unknown}`:''}</div>
     <fieldset className="osc-fields" disabled={!api || pending || connected}>
@@ -30,10 +30,8 @@ export function OscPanel({api}: {api?: DesktopApi}) {
       <label>{t.reply}<select value={config.replyHost} onChange={e=>field('replyHost',e.target.value)}>{addresses.map(ip=><option key={ip}>{ip}</option>)}</select></label>
       <label>{t.port}<input type="number" min={1024} max={65535} value={config.port} onChange={e=>field('port',e.target.value)}/></label>
       <label>{t.prefix}<input value={config.prefix} maxLength={32} onChange={e=>field('prefix',e.target.value)}/></label>
-      <label>{t.feedbackPort}<input type="number" min={0} max={65535} value={config.feedbackPort??0} onChange={e=>field('feedbackPort',e.target.value)}/></label>
-      <label>{t.feedbackPrefix}<input value={config.feedbackPrefix??''} maxLength={32} onChange={e=>field('feedbackPrefix',e.target.value)}/></label>
     </fieldset>
-    <p className="hint">{t.setup}</p><p className="hint">{t.feedbackSetup}</p><p className="hint">{t.next}</p>
+    <p className="hint">{t.setup}</p><p className="hint">{t.next}</p>
     <p className="osc-error" role="status">{error || (live?.error?t.errors[live.error]:'')}</p>
     <button className={connected?'stop':'start'} disabled={!api || pending} onClick={()=>void change()}>{connected?t.disconnect:t.connect}</button>
   </section>;

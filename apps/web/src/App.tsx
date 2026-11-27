@@ -27,7 +27,6 @@ export function App({transport, onResync}: {transport: PlaybackTransport; onResy
   const next = state.cues.find(c => c.id === state.nextCueId);
   const available = state.connectionState === 'ONLINE';
   const fading=available && !!state.fadePreview && state.fadePreview.elapsedMs<state.fadePreview.durationMs;
-  const paused=available && state.pauseState==='on';
   const blocked = state.locked || !available || cooldown || (state.commandState!==undefined && state.commandState!=='idle');
   const sequenceNumber = parseSequenceNumber(sequenceDraft);
   const poolNumber=parseSequenceNumber(poolDraft);
@@ -38,7 +37,7 @@ export function App({transport, onResync}: {transport: PlaybackTransport; onResy
     if (following && !settings) rowRef.current?.scrollIntoView({block:'nearest',behavior:'smooth'});
   }, [state.currentCueId, following,settings]);
   useEffect(() => () => clearTimeout(timer.current), []);
-  async function execute(action: 'goPlus' | 'goMinus' | 'pause') {
+  async function execute(action: 'goPlus' | 'goMinus') {
     const result = await transport.execute({requestId:Array.from(crypto.getRandomValues(new Uint8Array(16)),byte=>byte.toString(16).padStart(2,'0')).join(''),sequenceRef:state.sequence,action,expectedRevision:state.revision});
     if (!result.accepted) { setError(t.error); return; }
     setError(''); setCooldown(true);
@@ -68,12 +67,12 @@ export function App({transport, onResync}: {transport: PlaybackTransport; onResy
       <p className={!poolNumber || !sequenceNumber?'warning':''}>{!poolNumber || !sequenceNumber?t.targetInvalid:t.sequenceHint}</p>
       </section><p role="status">{error || (!available?t.unavailable:'')}</p>
       <button className="settings-resync" onClick={()=>void onResync()}>{t.resync}</button>
-      <p className="settings-description">{t.fadeEstimate} {t.pauseStateHint}</p><p className="settings-description">{t.connectionNotice} · {t.version}</p>
+      <p className="settings-description">{t.fadeEstimate}</p><p className="settings-description">{t.connectionNotice} · {t.version}</p>
     </main> : <>
     <main>
       <section className="cue-cards" aria-label={`${t.current} / ${t.next}`} aria-live="polite">
-        <article className="cue-card current"><div className="card-label"><span><i />{t.current}</span><span aria-hidden="true">●</span></div><div className="cue-detail"><strong className="cue-number">{current?.number ?? '—'}</strong><div><h2>{current?.name ?? (available?t.off:t.unknown)}</h2><span className="fade" title={timingDetails(current)}>{t.total} <b>{timingLabel(current)}</b></span><small className="timing-detail">{timingDetails(current)}</small>{triggerLabel(current) && <span className="trigger-badge">{triggerLabel(current)}</span>}</div></div><FadeProgress preview={state.fadePreview} available={available} uncertain={state.playbackState==='running' && state.pauseState==='unknown'}/></article>
-        <article className="cue-card next"><div className="card-label"><span><i />{t.next}</span><span aria-hidden="true">↗</span></div><div className="cue-detail"><strong className="cue-number">{next?.number ?? '—'}</strong><div><h2>{next?.name ?? (state.cues.length?t.end:t.emptyList)}</h2><span className="fade" title={timingDetails(next)}>{t.total} <b>{timingLabel(next)}</b></span><small className="timing-detail">{timingDetails(next)}</small>{triggerLabel(next) && <span className="trigger-badge">{triggerLabel(next)}</span>}</div></div>{next?.trigger==='Follow' && available && <p className="follow-notice">{paused?t.followPaused:state.playbackState==='running'?followHint(next):t.followOff}</p>}</article>
+        <article className="cue-card current"><div className="card-label"><span><i />{t.current}</span><span aria-hidden="true">●</span></div><div className="cue-detail"><strong className="cue-number">{current?.number ?? '—'}</strong><div><h2>{current?.name ?? (available?t.off:t.unknown)}</h2><span className="fade" title={timingDetails(current)}>{t.total} <b>{timingLabel(current)}</b></span><small className="timing-detail">{timingDetails(current)}</small>{triggerLabel(current) && <span className="trigger-badge">{triggerLabel(current)}</span>}</div></div><FadeProgress preview={state.fadePreview} available={available}/></article>
+        <article className="cue-card next"><div className="card-label"><span><i />{t.next}</span><span aria-hidden="true">↗</span></div><div className="cue-detail"><strong className="cue-number">{next?.number ?? '—'}</strong><div><h2>{next?.name ?? (state.cues.length?t.end:t.emptyList)}</h2><span className="fade" title={timingDetails(next)}>{t.total} <b>{timingLabel(next)}</b></span><small className="timing-detail">{timingDetails(next)}</small>{triggerLabel(next) && <span className="trigger-badge">{triggerLabel(next)}</span>}</div></div>{next?.trigger==='Follow' && available && <p className="follow-notice">{state.playbackState==='running'?followHint(next):t.followOff}</p>}</article>
       </section>
       <section className="workspace">
         <div className="list-panel"><div className="panel-title"><h2>{t.list} <span>{state.cues.length.toString().padStart(2,'0')}</span></h2><button className={`follow ${following?'active':''}`} aria-pressed={following} onClick={() => setFollowing(!following)}>{following?'◎':'↧'} {following?t.following:t.follow}</button></div>
@@ -85,10 +84,10 @@ export function App({transport, onResync}: {transport: PlaybackTransport; onResy
           </div><div className="list-bottom"><span><i className="green-dot" />{following?t.following:t.manual}</span><span>{t.footer}</span></div>
         </div>
         <aside className="control-panel"><div className="progress-section"><div className="eyebrow">{t.position}</div><div className="position"><strong>{String(index+1).padStart(2,'0')}</strong><span>/ {String(state.cues.length).padStart(2,'0')}</span></div><progress aria-label={t.position} value={index+1} max={state.cues.length}/><p>{current?.name ?? (available?t.off:t.unknown)}</p></div>
-          <div className="controls"><p className={`control-status ${state.locked?'warning':''}`} role="status">{state.commandState==='unknown'?t.unknownResult:!available?t.unavailable:state.locked?t.lockReason:state.commandState==='pending'?t.pending:sequencePending?t.sequencePending:error || (cooldown?t.cooldown:state.playbackState==='off'?t.offReady:state.pauseState==='unknown' && !state.fadePreview?t.fadeUnknown:t.ready)}</p>
-            <button className={`go-plus ${fading?'is-fading':''} ${fading && state.fadePreview?.paused?'fade-held':''}`} title={fading?t.fadeEstimate:undefined} disabled={playbackBlocked} onClick={() => execute('goPlus')}><span className="go-label">{t.goPlus}<span aria-hidden="true">→</span></span><span className="go-target">{fading && <span className="fade-indicator">{state.fadePreview?.paused?t.fadeHeld:t.fadeRunning} · </span>}{next?`${next.number} · ${next.name}`:t.noNext}</span></button>
+          <div className="controls"><p className={`control-status ${state.locked?'warning':''}`} role="status">{state.commandState==='unknown'?t.unknownResult:!available?t.unavailable:state.locked?t.lockReason:state.commandState==='pending'?t.pending:sequencePending?t.sequencePending:error || (cooldown?t.cooldown:state.playbackState==='off'?t.offReady:t.ready)}</p>
+            <button className={`go-plus ${fading?'is-fading':''}`} title={fading?t.fadeEstimate:undefined} disabled={playbackBlocked} onClick={() => execute('goPlus')}><span className="go-label">{t.goPlus}<span aria-hidden="true">→</span></span><span className="go-target">{fading && <span className="fade-indicator">{t.fadeRunning} · </span>}{next?`${next.number} · ${next.name}`:t.noNext}</span></button>
 
-            <div className="secondary-controls"><button className="go-minus" disabled={playbackBlocked} onClick={() => execute('goMinus')}><span aria-hidden="true">←</span><strong>{t.goMinus}</strong><span>{t.previous}</span></button><button className={`pause ${paused?'is-active':state.pauseState!=='off'?'is-unknown':''}`} aria-pressed={!available || state.pauseState!=='on' && state.pauseState!=='off'?undefined:paused} aria-label={paused?t.resume:state.pauseState==='off' && available?t.pause:t.pauseUnknown} title={state.pauseState==='unknown' || !state.pauseState?t.pauseUnknownHint:t.pauseStateHint} disabled={playbackBlocked} onClick={() => execute('pause')}><span aria-hidden="true">Ⅱ</span><strong>{paused?t.pauseActive:state.pauseState==='off' && available?t.pause:t.pauseUnknown}</strong><span>{t.pauseHint}</span></button></div>
+            <div className="secondary-controls"><button className="go-minus" disabled={playbackBlocked} onClick={() => execute('goMinus')}><span aria-hidden="true">←</span><strong>{t.goMinus}</strong><span>{t.previous}</span></button></div>
             <button className="resync" onClick={() => void onResync()}>{t.resync}</button>
           </div>
         </aside>

@@ -52,3 +52,6 @@ Trigger und Triggerzeit aus MA, Follow-Markierungen in Current/Next und Cueliste
 
 ## v0.2.7 - OSC-Playback-Pause
 Zusätzlicher konfigurierbarer Feedback-Empfänger. MA-Pause On/Off real verifiziert (OSC Pause 1/0); Toggle 2 bleibt unbekannt. Bekannter Zustand nur kurzzeitig, danach unbekannt und Vorschau verworfen. Dynamische Objektadresse, Quell-IP-/Frameprüfung, keine automatische Showkonfiguration. Ende-zu-Ende mit onPC und isolierten UDP-/Browsertests geprüft.
+
+## v0.2.8 - Pause entfernt
+Auf Benutzerwunsch Pause-Button, Zustandsanzeige, MA-Pause-Kommandos und separaten OSC-Playback-Feedbackempfänger samt Konfiguration entfernt. GO+/GO−, Follow und MA-Duration-Zeitvorschau bleiben. API lehnt alte Pause-Requests ab. Frühere Pause-Meilensteine sind historisch und kein aktueller Produktumfang.

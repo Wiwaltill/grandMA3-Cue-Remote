@@ -1,4 +1,6 @@
-# Untersuchung: tatsächlicher Pause-Zustand in MA 2.5.1.1
+# Historische Untersuchung: Pause in MA 2.5.1.1
+
+Seit v0.2.8 sind Pause und der zusätzliche OSC-Playback-Feedbackempfänger auf Benutzerwunsch aus dem Produkt entfernt. Folgende Ergebnisse dokumentieren ausschließlich die frühere Implementierung.
 
 Stand: 27. November 2026. Ergebnis: **Kein verifizierter, erneut abfragbarer Pause-Snapshot gefunden. Diese erste Untersuchung wird durch die unten dokumentierte OSC-Ergänzung v0.2.7 erweitert.** Dies ist keine Aussage, dass intern kein solcher Zustand existiert.
 

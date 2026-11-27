@@ -98,6 +98,7 @@ test('live HTTP API requires operator token, rejects cross-origin mutations and 
     const invalidTarget=await fetch(url+'/api/target',{method:'POST',headers,body:JSON.stringify({dataPool:'1; Off',number:'2',expectedRevision:0})});
     assert.deepEqual(await invalidTarget.json(),{accepted:false,reason:'invalid'});
     assert.equal((await fetch(url+'/api/target',{method:'POST',headers,body:JSON.stringify({dataPool:1,number:'2',expectedRevision:0})})).status,400);
+    const removedPause=await fetch(url+'/api/commands',{method:'POST',headers,body:JSON.stringify({action:'pause',requestId:'removed-pause'})});assert.deepEqual(await removedPause.json(),{accepted:false,reason:'invalid'});
     assert.equal((await fetch(url+'/api/connect',{method:'POST',headers,body:'{}'})).status,400);
     assert.equal((await fetch(url+'/api/sequence',{method:'POST',headers,body:'null'})).status,400);
     assert.equal((await fetch(url+'/api/lock',{method:'POST',headers,body:JSON.stringify({locked:false})})).status,200);

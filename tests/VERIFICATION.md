@@ -1,4 +1,4 @@
-# Abnahme v0.2.7
+# Abnahme v0.2.8
 
 Stand: 27. November 2026. Entwicklungsfassung, keine Freigabe für laufende Shows.
 
@@ -6,7 +6,7 @@ Stand: 27. November 2026. Entwicklungsfassung, keine Freigabe für laufende Show
 
 - TypeScript strict für React, Node-Bridge, Electron-Main und Preload erfolgreich.
 - ESLint erfolgreich.
-- 29 Tests erfolgreich: 2 Fade-Berechnungstests, 20 OSC-/UDP-Tests, 7 Server-/HTTP-Tests.
+- 24 Tests erfolgreich: 2 Fade-Berechnungstests, 15 OSC-/UDP-Tests, 7 Server-/HTTP-Tests.
 - Produktionsbuild und macOS-arm64-App-Bundle erfolgreich; lokale Ad-hoc-Signatur wird beim Packaging mit codesign geprüft.
 - npm-Lockfile vorhanden; OSC benötigt keine zusätzliche Runtime-Bibliothek.
 
@@ -99,3 +99,9 @@ Reale Pakete und Ende-zu-Ende-Bridge gegen onPC geprüft; siehe Ergänzung im [U
 Vier neue automatisierte Tests: strikter Parser inkl. Fremdziel/Präfix/abgeschnittener/überlanger Daten, explizite On/Off-Idempotenz und doppelte Toggles, Ablauf trotz frischer Heartbeats plus Reconnect, sowie verspätetes Cmd-OK nach neuerem mehrdeutigem Feedback. Bestehende Konfigurationsvalidierung um Feedback-Port/Präfix erweitert. 29 Tests erfolgreich. Quell-IP-Prüfung im Receiver; keine kryptographische Authentifizierung von OSC-Ereignissen, nur vertrauenswürdiges Show-LAN.
 
 Browsercheck mit isoliertem simuliertem MA: initial Pause unbekannt ohne false-pressed-Zustand, nach App-OK Pause aktiv und stehender Fade; nach drei Sekunden wieder Pause unbekannt und kein weiterlaufender/abgeschlossener Balken. 390x844 ohne Dokumentüberlauf, Buttons sichtbar. Native Mac-Fenster und manuelles Anlegen der Ausgabezeile per GUI nicht interaktiv geprüft; Text/IPC/Build geprüft.
+
+## v0.2.8 - Pause entfernt
+
+Pause-spezifische Tests und deren Testadapter entfernt. Bestehende Timing-/Follow-/Sicherheitsprüfungen bleiben; UDP- und HTTP-Regression prüfen zusätzlich, dass alte Pause-Requests als invalid abgewiesen werden und keine Nachricht an MA auslösen. Keine echten Pultbefehle für diese Entfernung erforderlich. Historische Pause-Tests oben beschreiben frühere Versionen.
+
+Browserprüfung v0.2.8 mit isoliertem Empfänger: nur GO+ und GO− als Playback-Buttons, keine Pause-Statusanzeige. GO− nutzt die ganze Breite. Bei 390x844 Dokumentbreite und -höhe gleich Viewport, kein Seitenscrollen. Follow-Markierung und Next weiter sichtbar. Native Mac-Fenster und echtes iPad/Safari weiterhin nicht interaktiv geprüft; App-Bundle gebaut und Signaturprüfung erfolgreich.
