@@ -25,3 +25,7 @@ DEMO / CONNECTING / ONLINE / STALE / OFFLINE. ONLINE nur bei bestätigtem frisch
 ## Lokale Serversteuerung
 
 Ein separates macOS-Fenster dient dem Betrieb, die Playback-Oberfläche bleibt unverändert. Dunkles Design mit eindeutigem DEMO-Hinweis. Sichtbarer Serverstatus (gestoppt, wird gestartet, läuft, wird gestoppt, Fehler), Portfeld und explizite LAN-Freigabe. Große Buttons „Server starten“/„Server stoppen“ und „Weboberfläche öffnen“. Bei laufendem Server Konfiguration sperren; während Statuswechseln Aktionen deaktivieren. Lokale und LAN-Webadressen werden erst nach erfolgreichem Start angezeigt. Serverstatus ist kein Pultverbindungsstatus. Schließen beendet die App inklusive Server.
+
+## Sequenznummer
+
+Unter der Kopfzeile steht ein touchgeeignetes Feld „Sequenznummer“ mit „Übernehmen“. Nur positive ganze Zahlen werden angenommen. Unbestätigte oder ungültige Eingaben sperren Playback und Reset; „Verwerfen“ stellt die übernommene Nummer wieder her. Bei Bedienungssperre oder unklarem Verbindungsstatus kann die Sequenz nicht gewechselt werden. Demo-Auswahl und Beispiel-Cues sind ausdrücklich gekennzeichnet. Ein Wechsel löst kein Playback aus.

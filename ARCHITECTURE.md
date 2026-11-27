@@ -43,3 +43,9 @@ Die Desktop-Steuerung wird lokal per `loadFile` geladen und bleibt auch bei gest
 Der Server läuft im Hauptprozess, ohne Shell oder Kindprozess. Das Schließen der App beendet ihn, und ein Single-Instance-Lock verhindert parallele App-Instanzen. Start erfolgt nur durch den UI-Button. Der Status wird nach erfolgreichem Listen-Ereignis als laufend gemeldet. Das bedeutet ausschließlich HTTP-Verfügbarkeit der Demo, niemals ONLINE-Status eines Pults.
 
 Der Packager erzeugt ein eigenständiges macOS-arm64-App-Bundle mit eingebetteter Electron-Laufzeit, gebauten Oberflächen und einer lokalen Ad-hoc-Signatur. Der GitHub-Workflow stellt es als ZIP-Artefakt bereit. DMG, Apple-Developer-Signatur, Notarisierung und Live-Konfiguration bleiben offen.
+
+## Sequenznummer aus der UI
+
+Die Weboberfläche hält eine noch nicht übernommene Eingabe getrennt vom autoritativen Snapshot. `parseSequenceNumber` in `packages/shared` validiert Dezimalziffern, positive sichere Ganzzahlen und normalisiert führende Nullen. Dies ist eine Anwendungsvalidierung und keine Aussage über den tatsächlichen MA-Poolbereich. Ein späterer Live-Server muss Bereich, Existenz, DataPool und Rechte selbst prüfen.
+
+`PlaybackTransport.selectSequenceNumber` verlangt die erwartete Revision. Der Demo-Adapter prüft zusätzlich Sperre, DEMO-Status und Doppelklickschutz und veröffentlicht beim Wechsel eine neue virtuelle Sequenzreferenz mit Off-Status und explizitem Next. Alte Befehle mit vorheriger Sequenzreferenz werden abgewiesen. Es wird weder GO gesendet noch realer Pultstatus simuliert. Reset behält die Auswahl bei. Die Auswahl ist aktuell pro Browser-Tab flüchtig; echte Sequenzdaten und Netzwerk-Synchronisation bleiben offen.

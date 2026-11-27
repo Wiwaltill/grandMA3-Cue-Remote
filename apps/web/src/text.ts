@@ -1,6 +1,11 @@
 export const text = {
   brand:'MA3', title:'CUE REMOTE', subtitle:'PLAYBACK CONTROL', demo:'DEMO', demoNotice:'Lokale Simulation · Keine Verbindung zu einem Pult',
   sequence:'SEQUENZ', current:'CURRENT CUE', next:'NEXT CUE', fade:'Fade', off:'Off', end:'Ende der Sequenz',
+  sequenceNumber:'Sequenznummer', applySequence:'Übernehmen', discardSequence:'Verwerfen',
+  sequenceHint:'Demo-Auswahl · Beispiel-Cues, keine Pultdaten. Wechsel startet Off.',
+  sequenceInvalid:'Diese Sequenznummer ist ungültig. Bitte eine positive ganze Zahl eingeben.',
+  sequencePending:'Sequenznummer zuerst übernehmen oder Eingabe verwerfen.',
+  sequenceOff:'Demo-Sequenz ist Off · GO+ startet den ersten Cue.',
   list:'Cueliste', number:'CUE', name:'NAME', status:'STATUS', position:'POSITION IN DER CUELISTE',
   follow:'Aktueller Cue folgen', following:'Auto-Follow aktiv', manual:'Manuelle Ansicht',
   lock:'Bedienung sperren', unlock:'Bedienung entsperren', locked:'Gesperrt', unlocked:'Entsperrt',

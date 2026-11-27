@@ -25,3 +25,6 @@ Electron-App, Serverkonfiguration und Start/Stop, arm64-DMG via GitHub Actions, 
 
 ## Vorgezogen: grafischer Demo-Serverbetrieb
 Desktop-Startfenster mit Server starten/stoppen, bestätigtem HTTP-Status, Portwahl, expliziter LAN-Freigabe, Browser öffnen und eigenständigem arm64-App-Bundle. Bedienung per Doppelklick ohne Terminal. Lokaler Build und Servertests vorhanden; native GUI-Abnahme noch offen. Dieser Teil ersetzt nicht die spätere DMG-/Signierungs- oder Hardware-Abnahme von v1.0.0.
+
+## Vorgezogen: Sequenznummer eingeben
+Auf Benutzerwunsch ist die Eingabe/Übernahme der Sequenznummer in der Web-UI vorhanden, derzeit ausschließlich für virtuelle Demo-Sequenzen. Validierung, Sperre bei unbestätigter Eingabe und Wechsel ohne automatisches Playback sind umgesetzt. Reale Auswahl, Existenzprüfung und Cuedaten aus grandMA3 bleiben bei v0.3.0 und der Live-Anbindung.

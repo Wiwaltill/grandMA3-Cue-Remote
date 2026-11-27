@@ -14,4 +14,5 @@ export interface PlaybackTransport {
   subscribe(listener: () => void): () => void;
   execute(command: Command): CommandResult;
   setLocked(locked: boolean): void;
+  selectSequenceNumber(number: string, expectedRevision: number): CommandResult;
 }

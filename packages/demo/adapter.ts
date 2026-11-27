@@ -1,3 +1,4 @@
+import { parseSequenceNumber } from '../shared/sequence.ts';
 import type { Command, CommandResult, Cue, PlaybackSnapshot, PlaybackTransport } from '../shared/playback.ts';
 export const demoCues: readonly Cue[] = [
   {id:'house',number:'01',name:'Einlass',fade:3},
@@ -34,10 +35,23 @@ export class DemoAdapter implements PlaybackTransport {
   }
   setLocked = (locked: boolean) => this.publish({locked});
   reset = () => {
-    const locked = this.snapshot.locked;
-    this.snapshot = {...this.initial(this.snapshot.revision+1),locked};
+    const {locked,sequence} = this.snapshot;
+    this.snapshot = {...this.initial(this.snapshot.revision+1),locked,sequence};
     this.requests.clear(); this.lastCommand = -Infinity;
     this.listeners.forEach(listener => listener());
+  };
+  selectSequenceNumber = (value: string, expectedRevision: number): CommandResult => {
+    const number = parseSequenceNumber(value);
+    if (!number) return {accepted:false,reason:'invalid'};
+    const s = this.snapshot;
+    if (s.locked) return {accepted:false,reason:'locked'};
+    if (s.connectionState !== 'DEMO') return {accepted:false,reason:'unavailable'};
+    if (expectedRevision !== s.revision) return {accepted:false,reason:'revision'};
+    if (this.now()-this.lastCommand < 450) return {accepted:false,reason:'busy'};
+    if (number === s.sequence.number) return {accepted:true};
+    // A new virtual demo sequence starts Off. Selecting is never a playback command.
+    this.publish({sequence:{...s.sequence,id:`demo-sequence-${number}`,number},currentCueId:null,nextCueId:s.cues[0]?.id ?? null,playbackState:'off'});
+    return {accepted:true};
   };
   execute = (command: Command): CommandResult => {
     const s = this.snapshot;

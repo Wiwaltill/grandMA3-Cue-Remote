@@ -8,6 +8,8 @@ Responsive React/TypeScript-Weboberfläche mit Current/Next, zehn realistischen 
 
 Die Anwendung ist ausschließlich eine klar gekennzeichnete lokale Simulation. Sie verbindet sich mit keinem Pult. Es gibt noch keine Pult-Bridge, keinen OSC-/Lua-Transport oder Live-Modus. Die macOS-App enthält einen lokalen HTTP-Server ausschließlich für die gebaute Demo. Jeder Browser-Tab hat seine eigene Demo-Sitzung. Nach Laden startet die Demo auf Cue 04. GO+ endet bei Applaus ohne automatischen Loop; GO− stoppt am ersten Cue. Die Sperre blockiert auch Reset. Es gibt einen 450-ms-Doppelklickschutz und keine Befehlswarteschlange.
 
+Die **Sequenznummer** kann oben in der Weboberfläche eingegeben und mit **Übernehmen** ausgewählt werden. Während einer nicht übernommenen Eingabe sind GO+/GO− und Reset gesperrt; **Verwerfen** stellt die aktuelle Auswahl wieder her. Ein Wechsel setzt die lokale Demo-Sequenz auf **Off**, ohne Playback auszulösen. GO+ startet danach den ersten Beispiel-Cue. Demo Reset behält die gewählte Sequenznummer bei. Die Auswahl gilt für den jeweiligen Browser-Tab bis zum Neuladen. Die angezeigten Cues bleiben Beispieldaten; es wird keine Sequenz aus grandMA3 geladen.
+
 ## Bedienung ohne Terminal (macOS Apple Silicon)
 
 Die Desktop-App enthält die Laufzeit und die gebaute Weboberfläche. Zur Bedienung ist keine Node-/npm-Installation nötig.
@@ -51,7 +53,7 @@ npm run preview
 
 Der Build liegt in `dist/`. Die Vorschau öffnet man unter [http://127.0.0.1:4173](http://127.0.0.1:4173). Für spätere Änderungen dieselben vier Prüfungen vornehmen; GitHub Actions führt sie ebenfalls aus.
 
-Die zehn Playback-Tests decken Übergänge, Dezimal-Cues, Listenende/-anfang, expliziten Demo-Loop, Off-Zustand, Sperre/Reset, Request-Duplikate, Doppelklickschutz, konkurrierende Revisionen, Sequenzvalidierung, unklare Verbindungszustände und Abonnements ab. Sechs zusätzliche Servertests prüfen Konfiguration, HTTP-Auslieferung, Start/Stopp/Neustart, Portkonflikte, doppelte Aktionen und die Begrenzung auf Demo-Dateien. Alle 16 Tests verwenden Nodes eingebauten Test-Runner ohne zusätzliche Test-Laufzeit.
+Die zwölf Playback-Tests decken Übergänge, Dezimal-Cues, Listenende/-anfang, expliziten Demo-Loop, Off-Zustand, Sperre/Reset, Request-Duplikate, Doppelklickschutz, konkurrierende Revisionen, Sequenzvalidierung, unklare Verbindungszustände und Abonnements ab. Sechs zusätzliche Servertests prüfen Konfiguration, HTTP-Auslieferung, Start/Stopp/Neustart, Portkonflikte, doppelte Aktionen und die Begrenzung auf Demo-Dateien. Alle 18 Tests verwenden Nodes eingebauten Test-Runner ohne zusätzliche Test-Laufzeit.
 
 Browser-Abnahme: GO+/GO−, Sperre/Entsperren, Reset mit Bestätigung, Current/Next sowie Layout ohne horizontalen Überlauf bei 390×844, 768×1024 und 1024×768 prüfen. Bei manuellem Scrollen wird Auto-Follow deaktiviert; über „Aktueller Cue folgen“ wieder aktivieren. GO am Listenende und GO− am Anfang müssen deaktiviert sein. Alle Bedienelemente sind mindestens 44 CSS-Pixel hoch und per Tastatur erreichbar.
 

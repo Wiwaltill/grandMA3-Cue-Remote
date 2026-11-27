@@ -67,3 +67,31 @@ test('subscriptions share confirmed state and unsubscribe cleanly; reset advance
   h.go();stop();h.adapter.reset();assert.equal(a,1);assert.equal(b,2);
   assert.equal(h.adapter.getSnapshot().revision,2);assert.equal(h.adapter.getSnapshot().currentCueId,'opening');
 });
+
+test('sequence selection validates input, starts Off, and rejects old-target commands', () => {
+  const h=harness();const old=h.command();const revision=h.adapter.getSnapshot().revision;
+  for (const invalid of ['', '0', '-1', '2.5', '1e3', '1; Go+', '9007199254740992']) {
+    assert.deepEqual(h.adapter.selectSequenceNumber(invalid,revision),{accepted:false,reason:'invalid'});
+  }
+  assert.equal(h.adapter.getSnapshot().revision,revision);
+  assert.deepEqual(h.adapter.selectSequenceNumber('0042',revision),{accepted:true});
+  const selected=h.adapter.getSnapshot();
+  assert.equal(selected.sequence.number,'42');assert.equal(selected.currentCueId,null);
+  assert.equal(selected.nextCueId,'house');assert.equal(selected.playbackState,'off');
+  assert.deepEqual(h.adapter.execute(old),{accepted:false,reason:'sequence'});
+  assert.deepEqual(h.go(),{accepted:true});assert.equal(h.adapter.getSnapshot().currentCueId,'house');
+  h.adapter.reset();assert.equal(h.adapter.getSnapshot().sequence.number,'42');
+});
+test('sequence selection respects lock, status, revision and pending playback guard', () => {
+  const h=harness();h.adapter.setLocked(true);
+  assert.deepEqual(h.adapter.selectSequenceNumber('42',h.adapter.getSnapshot().revision),{accepted:false,reason:'locked'});
+  h.adapter.setLocked(false);
+  assert.deepEqual(h.adapter.selectSequenceNumber('42',0),{accepted:false,reason:'revision'});
+  h.go();assert.deepEqual(h.adapter.selectSequenceNumber('42',h.adapter.getSnapshot().revision),{accepted:false,reason:'busy'});
+  h.advance();const s=h.adapter.getSnapshot();
+  assert.deepEqual(h.adapter.selectSequenceNumber('1',s.revision),{accepted:true});assert.equal(h.adapter.getSnapshot(),s);
+  for (const connectionState of ['STALE','OFFLINE','CONNECTING','ONLINE'] as const) {
+    const adapter=new DemoAdapter({initialSnapshot:{...s,connectionState}});
+    assert.deepEqual(adapter.selectSequenceNumber('42',s.revision),{accepted:false,reason:'unavailable'});
+  }
+});
