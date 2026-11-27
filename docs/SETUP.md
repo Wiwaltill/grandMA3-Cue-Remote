@@ -72,11 +72,11 @@ Die Anwendung besitzt ausschließlich die echte Pultanbindung, keinen Demo-Modus
 
 ## App beziehen
 
-Den fertigen Download gibt es unter [GitHub Releases](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/tag/v0.2.11): **MA3-Cue-Remote-v0.2.11-macOS-arm64.zip** herunterladen, im Finder entpacken und die enthaltene **MA3 Cue Remote.app** nach **Programme** ziehen. macOS 13 oder neuer und Apple Silicon sind erforderlich. Das ZIP enthält außerdem Projekt- und Drittanbieter-Lizenzhinweise. **SHA256SUMS.txt** enthält die Prüfsumme.
+Den fertigen Download gibt es unter [GitHub Releases](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/tag/v0.2.11): **MA3-Cue-Remote-v0.2.11-macOS-arm64.dmg** herunterladen und öffnen, **MA3 Cue Remote.app** auf die enthaltene Verknüpfung **Programme** ziehen, das Image auswerfen und die App aus **Programme** öffnen. Alternativ das ZIP herunterladen und entpacken. macOS 13 oder neuer und Apple Silicon sind erforderlich. DMG und ZIP enthalten außerdem Projekt- und Drittanbieter-Lizenzhinweise. **SHA256SUMS.txt** enthält die ZIP-Prüfsumme, die separate **.dmg.sha256**-Datei die DMG-Prüfsumme.
 
 Lokal liegt das App-Bundle unter `release/MA3 Cue Remote-darwin-arm64/MA3 Cue Remote.app`. Für Entwicklungsbuilds erstellt der Workflow [macOS App](https://github.com/Wiwaltill/grandMA3-Cue-Remote/actions/workflows/desktop.yml) weiterhin ein ZIP-Artefakt.
 
-Die App besitzt eine lokale Ad-hoc-Signatur; Apple-Developer-Signatur, Notarisierung und DMG stehen noch aus. macOS kann heruntergeladene Entwicklungsbuilds daher blockieren. Falls nötig unter **Systemeinstellungen → Datenschutz & Sicherheit → Dennoch öffnen** nach Prüfung der Herkunft freigeben; kein Terminal nötig. Die native Fenster-/Installationsabnahme und echtes iPad/Safari bleiben offen.
+Die App besitzt eine lokale Ad-hoc-Signatur; Apple-Developer-Signatur und Notarisierung stehen noch aus. macOS kann heruntergeladene Entwicklungsbuilds daher blockieren. Falls nötig unter **Systemeinstellungen → Datenschutz & Sicherheit → Dennoch öffnen** nach Prüfung der Herkunft freigeben; kein Terminal nötig. Die native Fenster-/Installationsabnahme und echtes iPad/Safari bleiben offen.
 
 ## Entwicklung und Prüfungen
 
@@ -90,6 +90,7 @@ npm test
 npm run build
 npm run desktop:dev
 npm run desktop:package
+npm run desktop:dmg
 ```
 
 `desktop:dev` baut und öffnet die Mac-App. `desktop:package` erzeugt auf macOS das arm64-App-Bundle. `npm run dev` und `npm run preview` dienen optional der reinen Webentwicklung; ohne Bridge/API bleibt die Bedienung gesperrt. `dist/` enthält die Webdateien, `dist-desktop/` die kompilierte Desktop-Anwendung.

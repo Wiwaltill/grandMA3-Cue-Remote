@@ -12,7 +12,7 @@ Lokale Sequenz-Fernbedienung für grandMA3 mit einer Mac-App als Server und eine
 [![CI](https://github.com/Wiwaltill/grandMA3-Cue-Remote/actions/workflows/ci.yml/badge.svg)](https://github.com/Wiwaltill/grandMA3-Cue-Remote/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/Lizenz-MIT-84929b?style=flat-square)](LICENSE)
 
-**[Mac-App herunterladen](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/download/v0.2.11/MA3-Cue-Remote-v0.2.11-macOS-arm64.zip)** · [Release Notes](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/tag/v0.2.11) · [Ausführliche Einrichtung](docs/SETUP.md)
+**[Mac-App als DMG herunterladen](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/download/v0.2.11/MA3-Cue-Remote-v0.2.11-macOS-arm64.dmg)** · [Release Notes](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/tag/v0.2.11) · [Ausführliche Einrichtung](docs/SETUP.md)
 
 </div>
 
@@ -45,7 +45,7 @@ Für den normalen Betrieb sind **kein Terminal, kein Node/npm und kein manuell i
 
 ### 1. Mac-App installieren
 
-Das [App-ZIP](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/download/v0.2.11/MA3-Cue-Remote-v0.2.11-macOS-arm64.zip) herunterladen und im Finder entpacken. Die enthaltene **MA3 Cue Remote.app** nach **Programme** ziehen und öffnen. Die SHA-256-Prüfsumme liegt im Release bei.
+Die [DMG herunterladen](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/download/v0.2.11/MA3-Cue-Remote-v0.2.11-macOS-arm64.dmg) und per Doppelklick öffnen. **MA3 Cue Remote.app** auf die enthaltene Verknüpfung **Programme** ziehen, das Image auswerfen und die App aus **Programme** öffnen. Alternativ ist das [App-ZIP](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/download/v0.2.11/MA3-Cue-Remote-v0.2.11-macOS-arm64.zip) verfügbar. SHA-256-Prüfsummen liegen im Release bei.
 
 Die App ist ad-hoc signiert, aber noch nicht mit einer Apple Developer ID signiert oder notarisiert. Falls macOS den Start blockiert, unter **Systemeinstellungen → Datenschutz & Sicherheit** die Meldung prüfen und die App nur bei vertrauter Herkunft über **Dennoch öffnen** freigeben. Dafür ist kein Terminal nötig.
 
@@ -110,7 +110,7 @@ npm test
 npm run build
 ```
 
-`npm run desktop:dev` öffnet die Entwicklungs-App; `npm run desktop:package` erstellt auf macOS das arm64-App-Bundle. Diese Befehle sind ausschließlich für die Entwicklung nötig.
+`npm run desktop:dev` öffnet die Entwicklungs-App; `npm run desktop:package` erstellt auf macOS das arm64-App-Bundle. `npm run desktop:dmg` baut zusätzlich ein geprüftes, komprimiertes DMG mit Programme-Verknüpfung und eigener `.dmg.sha256`-Datei. Diese Befehle sind ausschließlich für die Entwicklung nötig.
 
 ```text
 apps/web/         React-Oberfläche und HTTP-Transport

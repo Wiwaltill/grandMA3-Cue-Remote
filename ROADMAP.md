@@ -64,3 +64,6 @@ Gemeinsame native Abfrage für Fenster schließen und ⌘Q bei laufendem/starten
 
 ## v0.2.11 - sichtbares LoadedCue-Feedback
 Tatsächlichen LoadedCue aus jeder MA-Statusantwort übernehmen. Goldene GELADEN-Anzeige mit Nummer/Name, Tabellenmarkierung, Load-Button-Nummer und zutreffendes GO+-Ziel. Next bleibt Listennachfolger. Load erst nach MA-OK plus Ziel-LoadedCue bestätigt. Externe Ladeänderungen, Aufhebung, unbekannter Status und Reconnect getestet. Gegen die separate lokale Testshow verifiziert.
+
+## Ergänzung v0.2.11 – DMG
+Auf Benutzerwunsch zusätzliches komprimiertes arm64-DMG mit unverändertem Release-App-Bundle und Programme-Verknüpfung. Installation durch Ziehen im Finder, Prüfsumme und reproduzierbarer lokaler Build. Apple-Developer-Signatur, Notarisierung, native Installationsabnahme und automatischer DMG-Build via GitHub Actions bleiben offen.

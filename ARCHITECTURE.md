@@ -53,7 +53,7 @@ Server im Hauptprozess, keine Shell-/Kindprozesse; Bestätigtes App-Beenden tren
 
 ## Offene Abnahme
 
-Stabile MA-Handles bei Objektverschiebungen, große Shows, umfangreiche Sonderzeiten, TLS/erweiterte Rollen, echtes iPad/Safari, native Installations-/Fensterabnahme, Developer-ID-Signatur, Notarisierung und DMG. Lokale Ad-hoc-Signatur und arm64-Bundle sind vorhanden; GitHub baut ein ZIP-Artefakt. Keine Produktionsfreigabe für eine laufende Show.
+Stabile MA-Handles bei Objektverschiebungen, große Shows, umfangreiche Sonderzeiten, TLS/erweiterte Rollen, echtes iPad/Safari, native Installations-/Fensterabnahme, Developer-ID-Signatur und Notarisierung. Lokale Ad-hoc-Signatur und arm64-Bundle sind vorhanden; GitHub baut ein ZIP-Artefakt. Keine Produktionsfreigabe für eine laufende Show.
 
 ## Follow-Anzeige seit v0.2.6
 
@@ -82,3 +82,7 @@ Nach Bestätigung sperrt closing neue native IPC-Aufrufe; OSC wird getrennt. Lau
 Das dokumentierte q.LoadedCue liefert nil bei keinem geladenen Cue oder ein Cue-Handle. Dessen No im Display-Readout wird wie die Liste normalisiert und auf eine ID der gewählten Sequenz abgebildet. Leerer String bedeutet kein Load (null); fehlendes Feld bedeutet unbekannt (undefined); fremde/ungültige Referenzen verwerfen den Snapshot. Nicht aus Cmd-OK oder empfangenen Request-Daten ableiten. Bei Offline/Stale/Resync im Server und fehlendem HTTP-Kontakt im Client sofort verwerfen.
 
 Load und Goto fragen nach OK mit neuer Querynonce ab. Load verlangt den Ziel-LoadedCue, Goto den Ziel-Current. Laden eines bereits vorgeladenen Cues ist ebenfalls mit frischem Status bestätigbar. Next bleibt Listennachfolger; nur das GO+-Ziel bevorzugt den aktuellen LoadedCue. Alle Clients lesen dieselbe serverseitige Statusquelle. Externe Load-Änderungen und Aufhebung werden durch dieselbe Abfrage sichtbar, ohne weitere Pultbefehle zu senden.
+
+## DMG-Auslieferung
+
+`scripts/create-dmg.mjs` verpackt ein vorhandenes, versionsgeprüftes arm64-App-Bundle mit nativen macOS-Werkzeugen in ein komprimiertes read-only DMG. Es enthält eine Programme-Verknüpfung nach /Applications, Installationshinweise und Lizenzen. Die App wird weder geändert noch neu signiert. hdiutil prüft das Image; eine separate SHA-256-Datei begleitet den Download. `npm run desktop:dmg` baut zuvor das App-Bundle. Keine zusätzlichen Paketabhängigkeiten.

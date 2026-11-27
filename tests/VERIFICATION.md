@@ -45,7 +45,7 @@ Isolierter simulierter MA-Empfänger, kein Pultzugriff: Produktoberfläche enth�
 - Native Electron-Fenster-/IPC-Bedienung, Doppelstart und Installation aus einem heruntergeladenen Artefakt. Die verfügbaren Browserwerkzeuge steuern keine nativen macOS-Fenster; das Bundle ist gebaut und seine Signatur geprüft.
 - Goto und eine generische pultbestätigte Next-Abfrage sind spätere Aufgaben. Die aktuelle Next-Anzeige folgt auf Benutzerwunsch der Cueliste.
 - Umfangreiche Shows, größere Cue-Mengen, Zeitformate/Sonderzustände, gleichzeitige Objektverschiebungen und stabile MA-Handles.
-- Apple-Developer-Signatur, Notarisierung und DMG.
+- Apple-Developer-Signatur und Notarisierung; DMG seit der unten dokumentierten Release-Ergänzung vorhanden.
 - Ein lokal erfolgreicher Build bestätigt nicht automatisch den GitHub-Workflow-Lauf.
 
 Die eingebettete Node-Version der Desktop-Umgebung blockiert native Rollup-Module durch macOS-Library-Validation. Die Prüfungen nutzen deshalb eine unveränderte offizielle Node-24.22.3-Installation im temporären Verzeichnis. Bei regulär installiertem Node inklusive npm ist dieser Umweg nicht nötig.
@@ -127,3 +127,7 @@ Offizielle MA-Release-Notes 2.2 dokumentieren LoadedCue. Tatsächliche Abfrage a
 Drei neue Tests: externe Load-Wechsel, Aufhebung und Wiederherstellung nach Stale/Resync; MA-OK ohne LoadedCue-Zielnachweis endet unbekannt/gesperrt statt optimistischer Anzeige; null/undefined/ungültige Referenzen getrennt validieren. Bestehende Load-Tests auf echte Statusbestätigung erweitert. 35 Tests insgesamt.
 
 Isolierter Browsercheck: Load Cue 1.5 zeigt GELADEN 1.5/Solo separat neben Next 1/Opening, Tabellenbadge und Load-Button-Nummer. GO+ zeigt GELADEN: 1.5/Solo. Nach Start ist Current 1.5, Next 2 und GELADEN entfernt. Bei 390x844 kein Dokumentüberlauf. Native Mac-Dialogbedienung und echtes iPad/Safari weiterhin offen.
+
+## Release-Ergänzung v0.2.11: DMG
+
+Komprimiertes read-only DMG mit hdiutil erstellt und verifiziert. Image schreibgeschützt eingehängt: App rekursiv mit dem ursprünglichen ZIP-Release-Bundle verglichen (identisch), codesign --verify --deep --strict erfolgreich, Programme-Verknüpfung nach /Applications sowie Installations- und Lizenzdateien geprüft. Image anschließend ausgehängt. Eigene SHA-256-Datei erzeugt; ursprüngliches ZIP und Release-Tag bleiben unverändert. Typecheck, Lint, 35 Tests und Build erneut erfolgreich. Native Finder-Drag-and-drop-/Gatekeeper-Installation weiterhin nicht automatisiert abgenommen; keine Pultbefehle für diese Packaging-Änderung.
