@@ -1,4 +1,4 @@
-# Abnahme v0.2.5
+# Abnahme v0.2.6
 
 Stand: 27. November 2026. Entwicklungsfassung, keine Freigabe für laufende Shows.
 
@@ -6,7 +6,7 @@ Stand: 27. November 2026. Entwicklungsfassung, keine Freigabe für laufende Show
 
 - TypeScript strict für React, Node-Bridge, Electron-Main und Preload erfolgreich.
 - ESLint erfolgreich.
-- 23 Tests erfolgreich: 2 Fade-Berechnungstests, 14 OSC-/UDP-Tests, 7 Server-/HTTP-Tests.
+- 25 Tests erfolgreich: 2 Fade-Berechnungstests, 16 OSC-/UDP-Tests, 7 Server-/HTTP-Tests.
 - Produktionsbuild und macOS-arm64-App-Bundle erfolgreich; lokale Ad-hoc-Signatur wird beim Packaging mit codesign geprüft.
 - npm-Lockfile vorhanden; OSC benötigt keine zusätzliche Runtime-Bibliothek.
 
@@ -79,3 +79,11 @@ Rein lesende Prüfung in onPC 2.5.1.1: Benutzer nannte DataPool 1 / Cue 5; diese
 Regressionstests: Dauer 33 s bleibt auch nach 32 s aktiv; fehlende Duration erzeugt keinen Ersatzbalken aus CueFade. Zusätzliche Validierung aller neuen Felder gegen negative, nicht endliche und nicht numerische Werte. 23 Tests erfolgreich. Mehrpart-Auswertung im generierten Lua: Maximum jeder Part-Duration; keine Addition voneinander unabhängiger Timing-Maxima. Mehrpart-MAtricks, Normalized und dynamische Rate-Master nicht separat in einer veränderten realen Show programmiert/getestet.
 
 Isolierter Browsercheck mit denselben Zeitwerten: Current/Next Gesamt 33 s, individuelle Fade 3 s / Delay 30 s; Zeitspalte 33 s und Delay 30 s. Laufende Vorschau Gesamt 33 s und gelber GO+-Hinweis. Bei 390x844 Dokument ohne Überlauf/Seitenscrollen, alle drei Playback-Buttons sichtbar. Native Fenster- und echte iPad/Safari-Abnahme weiterhin offen.
+
+## Follow-Anzeige v0.2.6
+
+Rein lesende Property-Abfrage in onPC 2.5.1.1 bestätigt TRIGTYPE und TRIGTIME direkt am Cue. Korrigierte Bridge liefert für DataPool 1 / Sequenz 2 / Cue 5 trigger=Go und triggerTime=0. Kein Showtrigger geändert und kein reales Playback für diese Änderung ausgelöst. Follow-Bedeutung und Zusatzwartezeit anhand offizieller MA-Sequence-Sheet-Dokumentation geprüft. Ein echter Follow-Ablauf wurde nicht neu programmiert/getestet.
+
+Neue isolierte UDP-Tests prüfen Follow-Metadaten, Zusatzzeit 0, ungültige Zeiten, unbekannte Trigger und externe Current-Wechsel 1 -> 1.5 -> 2 -> Off bei null gesendeten GO-Befehlen. Ohne geänderte Rückmeldung wird Current nicht weitergeschaltet. Insgesamt 25 Tests.
+
+Browser mit isoliertem simuliertem MA: Next zeigt FOLLOW +3,0 s und Automatisch nach aktuellem Übergang +3,0 s. Nach einer vom Empfänger ausgelösten Statusänderung ist Current 1.5 / Next 2; Current- und Next-Zeile sowie GO+-Ziel stimmen. FOLLOW bleibt am aktuellen Cue als Eingangstrigger sichtbar. Bei 390x844 weiterhin kein horizontaler oder vertikaler Dokumentüberlauf, Playback-Buttons sichtbar. Native App-Fenster und echtes iPad/Safari weiterhin nicht interaktiv geprüft.

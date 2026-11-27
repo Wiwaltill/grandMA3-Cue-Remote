@@ -13,7 +13,7 @@ function decode(packet: Buffer) {
   return {address:string(),types:string(),command:string()};
 }
 async function until(predicate:()=>boolean) {const start=Date.now();while(!predicate()){if(Date.now()-start>2500)throw new Error('Condition timed out');await delay(10);}}
-const feedback=(number='1')=>({dataPool:'1',number,version:'2.5.1.1',name:'Test sequence',running:false,current:'',loaded:'',cues:[{number:'1',name:'Opening',fade:2,delay:0,duration:2},{number:'1.5',name:'Solo',fade:1,delay:0,duration:1},{number:'2',name:'Finale'}]});
+const feedback=(number='1')=>({dataPool:'1',number,version:'2.5.1.1',name:'Test sequence',running:false,current:'',loaded:'',cues:[{number:'1',name:'Opening',fade:2,delay:0,duration:2},{number:'1.5',name:'Solo',trigger:'Follow',triggerTime:2,fade:1,delay:0,duration:1},{number:'2',name:'Finale'}]});
 async function setup(options: {now?:()=>number;timeoutMs?:number}={}) {
   const socket=dgram.createSocket('udp4');await new Promise<void>(r=>socket.bind(0,'127.0.0.1',r));
   const address=socket.address();assert.notEqual(typeof address,'string');
@@ -41,7 +41,7 @@ async function setup(options: {now?:()=>number;timeoutMs?:number}={}) {
   try{await bridge.connect(target);await until(()=>bridge.getState().snapshot.connectionState==='ONLINE');}
   catch(error){bridge.disconnect();socket.close();throw error;}
   const command=(id='test-1'): Command=>{const s=bridge.getState().snapshot;return {requestId:id,sequenceRef:s.sequence,action:'goPlus',expectedRevision:s.revision};};
-  return {bridge,target,counters,control,command,cleanup:()=>{bridge.disconnect();socket.close();}};
+  return {bridge,target,counters,control,command,setPlayback:(number: string | null)=>{current=number??'';running=number!==null;},cleanup:()=>{bridge.disconnect();socket.close();}};
 }
 test('OSC string command encoding uses address, string type, UTF-8 and four-byte padding',()=>{
   const packet=encodeOscCommand('gma3','Go+ DataPool 2 Sequence 42');
@@ -204,4 +204,23 @@ test('transition preview and GO warning duration include MA individual delays; m
     g.control.timing='unknown';g.bridge.setLocked(false);await g.bridge.execute(g.command('unknown-duration'));
     await until(()=>g.bridge.getState().commandState==='idle');assert.equal(g.bridge.getState().snapshot.fadePreview,undefined);
   }finally{g.cleanup();}
+});
+
+test('Follow metadata and console-driven transitions update Current and Next without sending GO',async()=>{
+  const f=await setup();try{
+    let s=f.bridge.getState().snapshot;assert.equal(s.cues[1].trigger,'Follow');assert.equal(s.cues[1].triggerTime,2);
+    f.setPlayback('1');await until(()=>f.bridge.getState().snapshot.currentCueId==='1/1/1');
+    s=f.bridge.getState().snapshot;assert.equal(s.nextCueId,'1/1/1.5');
+    await delay(90);assert.equal(f.bridge.getState().snapshot.currentCueId,'1/1/1');assert.equal(f.counters.go,0,'Follow metadata must never schedule a local GO');
+    f.setPlayback('1.5');await until(()=>f.bridge.getState().snapshot.currentCueId==='1/1/1.5');
+    s=f.bridge.getState().snapshot;assert.equal(s.nextCueId,'1/1/2');assert.equal(s.cues.find(c=>c.id===s.currentCueId)?.trigger,'Follow');
+    f.setPlayback('2');await until(()=>f.bridge.getState().snapshot.currentCueId==='1/1/2');assert.equal(f.bridge.getState().snapshot.nextCueId,null);
+    f.setPlayback(null);await until(()=>f.bridge.getState().snapshot.playbackState==='off');assert.equal(f.counters.go,0);
+  }finally{f.cleanup();}
+});
+test('Follow times validate zero and reject malformed feedback; unknown triggers remain unknown',()=>{
+  const raw={...feedback(),cues:[{number:'1',name:'Cue',trigger:'Follow',triggerTime:0}]};
+  assert.equal(parseFeedback(raw,config)?.cues[0].triggerTime,0);
+  for(const triggerTime of [-1,Infinity,'2'])assert.equal(parseFeedback({...raw,cues:[{...raw.cues[0],triggerTime}]},config),null);
+  assert.equal(parseFeedback({...raw,cues:[{...raw.cues[0],trigger:'FutureMode'}]},config)?.cues[0].trigger,'Unknown');
 });

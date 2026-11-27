@@ -1,6 +1,6 @@
 import type { FadePreview } from './fade.js';
 export interface SequenceRef { id: string; dataPool: string; number: string; name: string }
-export interface Cue { id: string; number: string; name: string; fade?: number; delay?: number; individualFade?: number; individualDelay?: number; duration?: number }
+export interface Cue { id: string; number: string; name: string; fade?: number; delay?: number; individualFade?: number; individualDelay?: number; duration?: number; trigger?: 'Go' | 'Follow' | 'Time' | 'Sound' | 'BPM' | 'Unknown'; triggerTime?: number }
 export type ConnectionState = 'CONNECTING' | 'ONLINE' | 'STALE' | 'OFFLINE';
 export interface PlaybackSnapshot {
   sequence: SequenceRef; cues: readonly Cue[]; currentCueId: string | null;

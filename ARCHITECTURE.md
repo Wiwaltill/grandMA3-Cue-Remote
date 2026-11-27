@@ -13,7 +13,7 @@ Der frühere Demo-Adapter und alle Produktzugänge dazu sind seit v0.2.2 auf Ben
 
 ## Domänenmodell
 
-SequenceRef enthält DataPool, ID, Nummer und Name. Cue enthält ID, Cue-Nummer als String, Name und optionale allgemeine/individuelle Fade-/Delay-Zeiten sowie MA-Duration. PlaybackSnapshot enthält Sequenz, Cues, bestätigten Current, Next als Listennachfolger, Running/Off, Verbindungsstatus, Revision, Zeitstempel, Lock und Befehlsstatus. Die optionale FadePreview ist ausdrücklich eine Berechnung, kein autoritativer MA-Fade-Prozentwert.
+SequenceRef enthält DataPool, ID, Nummer und Name. Cue enthält ID, Cue-Nummer als String, Name und optionale allgemeine/individuelle Fade-/Delay-Zeiten sowie MA-Duration, validierten Trigger (Go/Follow/Time/Sound/BPM/Unknown) und optionale numerische Triggerzeit. PlaybackSnapshot enthält Sequenz, Cues, bestätigten Current, Next als Listennachfolger, Running/Off, Verbindungsstatus, Revision, Zeitstempel, Lock und Befehlsstatus. Die optionale FadePreview ist ausdrücklich eine Berechnung, kein autoritativer MA-Fade-Prozentwert.
 
 Command enthält Request-ID, Zielreferenz, erwartete Revision und ausschließlich goPlus, goMinus oder pause. Die gemeinsame DataPool-/Sequenzwahl verlangt die erwartete Revision und sperrt bis zum neuen vollständigen Pultstatus. Eine vor dem Wechsel frische, entsperrte Bedienung wird ausschließlich nach gültigem neuen Snapshot wieder freigegeben. Manuelle Sperre, Fehler, Timeout, Serverstopp und Resync widerrufen diese Freigabe. Zielwahl ist auch im gesperrten Zustand möglich; sie hebt bestehende Sperren nicht auf. Keine frei eingebbaren MA-/Lua-Kommandos. Cue-Nummern bleiben Strings; Next folgt der gelieferten Listenreihenfolge (Off → erster Cue, Listenende → null). Goto folgt später.
 
@@ -56,3 +56,9 @@ Server im Hauptprozess, keine Shell-/Kindprozesse; App-Schließen beendet Server
 ## Offene Abnahme
 
 Stabile MA-Handles bei Objektverschiebungen, große Shows, umfangreiche Sonderzeiten, TLS/erweiterte Rollen, echtes iPad/Safari, native Installations-/Fensterabnahme, Developer-ID-Signatur, Notarisierung und DMG. Lokale Ad-hoc-Signatur und arm64-Bundle sind vorhanden; GitHub baut ein ZIP-Artefakt. Keine Produktionsfreigabe für eine laufende Show.
+
+## Follow-Anzeige seit v0.2.6
+
+Das fest generierte Lua liest TrigType als Display-Text am Cue und TrigTime als native Sekunden. Vorhandene Felder und Werte anhand realer read-only Antworten aus 2.5.1.1 sowie offizieller Sequence-Sheet-Dokumentation geprüft. Unbekannte Trigger werden als Unknown normalisiert, ungültige numerische Triggerzeiten verwerfen den Snapshot. Keine MA-Kommandos aus Metadaten, kein lokaler Scheduler. Follow startet in MA nach Ende des vorherigen Übergangs plus positiver TrigTime, Time dagegen relativ zum Trigger des vorherigen Cues.
+
+Alle externen/autonomen Cue-Wechsel werden ausschließlich aus dem bestätigten Current verarbeitet. HTTP-Polling kann kurze Zwischen-Cues unterhalb des Abfrageintervalls überspringen; die App behauptet keine lückenlose Triggerhistorie. Next bleibt Listennachfolger, keine Vorhersage von Loop/Off-Sonderzielen.

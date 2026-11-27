@@ -2,7 +2,7 @@
 
 Lokale, iPad-optimierte Sequenz-Fernbedienung mit grafischer macOS-Serversteuerung. React/TypeScript, Node und Electron; ohne Cloud oder Telemetrie.
 
-## v0.2.5 - Gesamtdauer inklusive Delay und MAtricks
+## v0.2.6 - Follow-Cues anzeigen
 
 Die App verbindet sich mit **grandMA3 onPC 2.5.1.1**, liest Sequenzname, Cue-Liste, bekannte Fade-Zeiten und Current-Status aus MA und sendet gezieltes GO+/GO− und Pause/Fortsetzen an den ausgewählten DataPool und die eingetragene Sequenznummer. Die Weboberfläche enthält Lock, Auto-Follow, Listenpositionsfortschritt und eine klar als berechnet markierte Fade-Vorschau. Der Demo-Modus ist entfernt. Sie simuliert im Live-Modus keinen Playback-Erfolg.
 
@@ -40,6 +40,12 @@ Nach einem GO ist höchstens ein Bedienbefehl ausstehend. Zeigt MA binnen 3 Seku
 
 Cue-Nummern bleiben Strings; die Anwendung validiert Eingaben und akzeptiert maximal 500 Cues in einem Snapshot bis 60 KB. Unbekannte Fade-Werte werden als — angezeigt. Nicht vorhandene Sequenzen, unpassende MA-Versionen oder ungültige Snapshots geben die Bedienung nicht frei. Nummern werden gezielt adressiert; Schutz vor gleichzeitiger Objektverschiebung und stabile MA-Handles sind noch nicht abgenommen. Die Lösung bietet keine Ende-zu-Ende-Exactly-once-Garantie über UDP.
 
+## Follow-Cues
+
+Follow-Cues tragen in Current/Next und Cueliste eine **FOLLOW**-Markierung mit zusätzlicher Trigger-Wartezeit, beispielsweise **FOLLOW · +3,0 s** (Zeitanzeige technisch mit Dezimalpunkt). Steht der nächste Listeneintrag auf Follow und die Sequenz läuft, zeigt die Next-Karte **Automatisch nach aktuellem Übergang** mit der Zusatzwartezeit. Der Trigger gehört zum automatisch startenden Cue: Er beginnt nach vollständigem vorherigem Übergang inklusive individueller Zeiten und anschließender Zusatzwartezeit. Die allgemeine Fade-Vorschau bleibt auf die Übergangsdauer beschränkt; es gibt keinen erfundenen Follow-Countdown.
+
+**grandMA3 steuert die Automatik.** Die App setzt keine Trigger und sendet keinen zusätzlichen GO. Nach dem vom Pult bestätigten Wechsel aktualisieren sich Current, Next, Tabellenmarkierung und Listenposition. Bei Off oder unfrischen Daten wird kein bevorstehender automatischer Start behauptet. Time, Sound und BPM werden ebenfalls als Trigger gekennzeichnet; unbekannte Trigger/Zeitwerte bleiben unbekannt. Follow am Listenende/Wrap-Around wird vom Pult entschieden; Next bleibt wie vereinbart der Listennachfolger. Die Schaltfläche Auto-Follow steuert weiterhin nur das Scrollen der Cueliste.
+
 ## Pause und Fade-Vorschau
 
 **Pause** liegt neben **GO−**: Ein Tastendruck setzt gezielt Pause On, der nächste Pause Off. Erst nach MA-Bestätigung erscheint der Button gelb mit **Pause aktiv**; erneutes Drücken setzt fort. Der Zustand zeigt die zuletzt bestätigte App-Pause für alle Clients. Externe Pause-Änderungen am Pult werden nicht erkannt. Bei unklarem Status, Resync, Off oder Cue-/Zielwechsel wird die Anzeige unbekannt; der nächste Druck setzt wieder gezielt Pause On. Der Server lässt den Button erst nach einer echten `Cmd`-Ausführungsbestätigung `OK` aus MA wieder frei. Eine UDP-Sendebestätigung allein reicht nicht. Kommt keine gültige Bestätigung, bleibt das Ergebnis unbekannt und die Bedienung wird gesperrt; keine automatische Wiederholung.
@@ -74,12 +80,12 @@ npm run desktop:package
 
 `desktop:dev` baut und öffnet die Mac-App. `desktop:package` erzeugt auf macOS das arm64-App-Bundle. `npm run dev` und `npm run preview` dienen optional der reinen Webentwicklung; ohne Bridge/API bleibt die Bedienung gesperrt. `dist/` enthält die Webdateien, `dist-desktop/` die kompilierte Desktop-Anwendung.
 
-23 Tests decken Fade-Berechnung und Pause-Bestätigung, echte UDP-Pakete mit simuliertem MA, Frische, Timeout, Deduplizierung, konkurrierende Revisionen, Zielwechsel, Nonce-Prüfung, Authentifizierung, Origin, Serverstart/-stopp und Zugriffsbeschränkungen ab. CI sendet niemals an ein echtes Pult. Testdetails und offene Abnahmen: [Testbericht](tests/VERIFICATION.md).
+25 Tests decken Fade-Berechnung und Pause-Bestätigung, echte UDP-Pakete mit simuliertem MA, Frische, Timeout, Deduplizierung, konkurrierende Revisionen, Zielwechsel, Nonce-Prüfung, Authentifizierung, Origin, Serverstart/-stopp und Zugriffsbeschränkungen ab. CI sendet niemals an ein echtes Pult. Testdetails und offene Abnahmen: [Testbericht](tests/VERIFICATION.md).
 
 Struktur: `apps/web` für UI und HTTP-Transport, `packages/shared` für Typen/Validierung, `apps/desktop` für Electron, HTTP-Server und OSC-Bridge. UI enthält keine OSC-/Lua-Syntax. Keine zusätzlichen Runtime-Abhängigkeiten für OSC; UDP und Paketkodierung verwenden Node-Bordmittel.
 
 - [Roadmap](ROADMAP.md), [Design](DESIGN.md), [Architektur](ARCHITECTURE.md), [Entwicklungsanweisungen](AGENTS.md)
-- Primärquellen: [OSC 2.5](https://help.malighting.com/grandMA3/2.5/HTML/remote_inputs_osc.html), [DataPool-Adressierung](https://help2.malighting.com/grandMA3/2.5/HTML/keyword_datapool.html), [Go+](https://help.malighting.com/grandMA3/2.5/HTML/keyword_goplus.html), [Go−](https://help.malighting.com/grandMA3/2.5/HTML/keyword_gominus.html), [Lua Get](https://help.malighting.com/grandMA3/2.5/HTML/lua_object_get.html), [Pause](https://help.malighting.com/grandMA3/2.5/HTML/keyword_pause.html), [Cmd-Rückmeldung](https://help.malighting.com/grandMA3/2.0/HTML/lua_objectfree_cmd.html)
+- Primärquellen: [Sequence Sheet / Trigger](https://help.malighting.com/grandMA3/2.5/HTML/cue_sequence_sheet.html), [OSC 2.5](https://help.malighting.com/grandMA3/2.5/HTML/remote_inputs_osc.html), [DataPool-Adressierung](https://help2.malighting.com/grandMA3/2.5/HTML/keyword_datapool.html), [Go+](https://help.malighting.com/grandMA3/2.5/HTML/keyword_goplus.html), [Go−](https://help.malighting.com/grandMA3/2.5/HTML/keyword_gominus.html), [Lua Get](https://help.malighting.com/grandMA3/2.5/HTML/lua_object_get.html), [Pause](https://help.malighting.com/grandMA3/2.5/HTML/keyword_pause.html), [Cmd-Rückmeldung](https://help.malighting.com/grandMA3/2.0/HTML/lua_objectfree_cmd.html)
 - Toolchain: [Node-LTS](https://github.com/nodejs/Release), [Electron-Sicherheit](https://www.electronjs.org/docs/latest/tutorial/security), [Packager](https://electron.github.io/packager/main/), [Checkout](https://github.com/actions/checkout), [Setup Node](https://github.com/actions/setup-node), [Upload Artifact](https://github.com/actions/upload-artifact)
 
 Keine Tests auf laufenden Shows ohne ausdrückliche Freigabe. Lizenzentscheidung steht noch aus.

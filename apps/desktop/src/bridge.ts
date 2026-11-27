@@ -18,8 +18,8 @@ export function parseFeedback(value: unknown,config: OscConfig): {cues: Cue[];na
   if (raw.error || raw.dataPool!==config.dataPool || raw.number!==config.sequenceNumber || raw.version!=='2.5.1.1' || typeof raw.name!=='string' || raw.name.length>512 || typeof raw.running!=='boolean' || typeof raw.current!=='string' || !Array.isArray(raw.cues) || raw.cues.length>500) return null;
   const cues: Cue[]=[];const numbers=new Set<string>();
   for (const item of raw.cues) {
-    if (!item || typeof item!=='object' || typeof item.number!=='string' || !/^\d+(\.\d+)?$/.test(item.number) || item.number.length>32 || numbers.has(item.number) || typeof item.name!=='string' || item.name.length>512 || ['fade','delay','individualFade','individualDelay','duration'].some(k=>item[k]!==undefined && (typeof item[k]!=='number' || !Number.isFinite(item[k]) || item[k]<0))) return null;
-    numbers.add(item.number);cues.push({id:`${config.dataPool}/${config.sequenceNumber}/${item.number}`,number:item.number,name:item.name,...Object.fromEntries(['fade','delay','individualFade','individualDelay','duration'].filter(k=>item[k]!==undefined).map(k=>[k,item[k]]))});
+    if (!item || typeof item!=='object' || typeof item.number!=='string' || !/^\d+(\.\d+)?$/.test(item.number) || item.number.length>32 || numbers.has(item.number) || typeof item.name!=='string' || item.name.length>512 || ['fade','delay','individualFade','individualDelay','duration','triggerTime'].some(k=>item[k]!==undefined && (typeof item[k]!=='number' || !Number.isFinite(item[k]) || item[k]<0))) return null;
+    numbers.add(item.number);cues.push({id:`${config.dataPool}/${config.sequenceNumber}/${item.number}`,number:item.number,name:item.name,trigger:typeof item.trigger==='string' && ['Go','Follow','Time','Sound','BPM'].includes(item.trigger)?item.trigger as Cue['trigger']:'Unknown',...Object.fromEntries(['fade','delay','individualFade','individualDelay','duration','triggerTime'].filter(k=>item[k]!==undefined).map(k=>[k,item[k]]))});
   }
   const currentNumber=raw.current.trim();
   const current=raw.running?cues.find(c=>c.number===currentNumber)?.id ?? null:null;

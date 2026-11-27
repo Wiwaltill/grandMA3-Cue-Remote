@@ -46,3 +46,6 @@ Auf Benutzerwunsch große Berechnet-Beschriftung durch dezentes Fade mit Tooltip
 
 ## v0.2.5 - Cue-Delay und MAtricks-Zeiten
 Die Vorschau verwendet die maximale von MA gelieferte Duration aller Cue-Parts statt des Cue-Fades des ersten Parts. Cue-Delay und individuelle gespeicherte/gekochte MAtricks-Zeiten fließen damit in die Gesamtdauer ein. Allgemeine und individuelle Fade-/Delay-Werte werden angezeigt. Native Sekundenwerte statt formatierter Texte; fehlende Gesamtdauer erzeugt keinen Ersatz aus bloßem Fade. Gegen den vom Benutzer genannten Cue rein lesend verifiziert: allgemeine Zeiten 0, individuelle Fade 3 s, Delay 30 s, Duration 33 s.
+
+## v0.2.6 - Follow-Cues sichtbar
+Trigger und Triggerzeit aus MA, Follow-Markierungen in Current/Next und Cueliste. Next-Hinweis auf automatischen Start nach vorherigem Übergang plus Zusatzwartezeit. Automatik ausschließlich im Pult; Current/Next wechseln nach dessen bestätigter Rückmeldung. Keine lokale GO-Planung, keine Änderung der Showtrigger. Automatisierter Test und Browserprüfung mit isoliertem simuliertem MA; echte Triggerabfrage rein lesend geprüft.
