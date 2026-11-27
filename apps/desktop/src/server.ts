@@ -37,17 +37,25 @@ export class RemoteServer {
     this.update({phase:'starting',port:null,allowLan:config.allowLan,urls:[],error:null});
     try { await stat(join(this.root,'index.html')); }
     catch { return this.update({phase:'error',error:'missing-build'}); }
+    const allowedHosts=new Set<string>();
+    let cookieName='';
     const server = createServer(async (request,response) => {
       response.setHeader('X-Content-Type-Options','nosniff');
       response.setHeader('Cache-Control','no-store');
       response.setHeader('Content-Security-Policy',`default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src ${this.bridge ? "'self'" : "'none'"}; frame-ancestors 'none'; base-uri 'none'; form-action 'none'`);
+      if(!allowedHosts.has(request.headers.host ?? '')){response.writeHead(421);response.end();return;}
+      const origin=`http://${request.headers.host}`;
+      const sameOrigin=(!request.headers.origin || request.headers.origin===origin) && (!request.headers['sec-fetch-site'] || request.headers['sec-fetch-site']==='same-origin' || request.headers['sec-fetch-site']==='none');
       const apiPath=request.url?.split('?')[0] ?? '';
       if (this.bridge && apiPath.startsWith('/api/')) {
         const json=(code: number,value: unknown) => {response.writeHead(code,{'Content-Type':'application/json'});response.end(JSON.stringify(value));};
-        const supplied=request.headers.authorization ?? '';
-        const expected=`Bearer ${this.token}`;
-        if (Buffer.byteLength(supplied)!==Buffer.byteLength(expected) || !timingSafeEqual(Buffer.from(supplied),Buffer.from(expected))) {json(401,{error:'unauthorized'});return;}
-        if (request.headers.origin && request.headers.origin!==`http://${request.headers.host}`) {json(403,{error:'origin'});return;}
+        const matches=(value: string)=>Buffer.byteLength(value)===Buffer.byteLength(this.token) && timingSafeEqual(Buffer.from(value),Buffer.from(this.token));
+        const bearer=request.headers.authorization?.startsWith('Bearer ')?request.headers.authorization.slice(7):'';
+        const cookies=(request.headers.cookie??'').split(';').map(value=>value.trim());
+        const cookie=cookies.find(value=>value.startsWith(`${cookieName}=`))?.slice(cookieName.length+1)??'';
+        const bearerValid=matches(bearer);
+        if (!bearerValid && !matches(cookie)) {json(401,{error:'unauthorized'});return;}
+        if (!sameOrigin || (!bearerValid && request.method==='POST' && request.headers.origin!==origin)) {json(403,{error:'origin'});return;}
         if (apiPath==='/api/state' && request.method==='GET') {json(200,this.bridge.getState());return;}
         if (request.method!=='POST') {json(405,{error:'method'});return;}
         if (request.headers['content-type']!=='application/json') {json(415,{error:'content-type'});return;}
@@ -72,6 +80,9 @@ export class RemoteServer {
       try {
         const data = await readFile(join(this.root,file));
         const extension = file.slice(file.lastIndexOf('.'));
+        // Navigating to IP:port establishes the browser session without a secret URL.
+        // LAN access is explicitly granted in the native UI; the API still checks session and origin.
+        if(this.bridge && file==='index.html' && request.method==='GET' && sameOrigin && (!request.headers['sec-fetch-dest'] || request.headers['sec-fetch-dest']==='document'))response.setHeader('Set-Cookie',`${cookieName}=${this.token}; HttpOnly; SameSite=Strict; Path=/`);
         response.writeHead(200,{'Content-Type':mime[extension] ?? 'application/octet-stream','Content-Length':data.length});
         response.end(request.method === 'HEAD' ? undefined : data);
       } catch { response.writeHead(404); response.end(); }
@@ -87,6 +98,7 @@ export class RemoteServer {
       const address = server.address();
       if (!address || typeof address === 'string') throw new Error('No TCP address');
       const port = address.port;
+      cookieName=`cue-remote-${port}`;
       const urls = [`http://127.0.0.1:${port}`];
       if (config.allowLan) {
         for (const addresses of Object.values(networkInterfaces())) {
@@ -95,7 +107,9 @@ export class RemoteServer {
           }
         }
       }
-      return this.update({phase:'running',port,urls,...(this.bridge?{accessUrls:urls.map(url=>`${url}/#${this.token}`)}:{})});
+      for(const url of urls)allowedHosts.add(new URL(url).host);
+      allowedHosts.add(`localhost:${port}`);
+      return this.update({phase:'running',port,urls,...(this.bridge?{accessUrls:[...urls]}:{})});
     } catch (error) {
       this.server = null;
       return this.update({phase:'error',port:null,urls:[],error:(error as NodeJS.ErrnoException).code === 'EADDRINUSE'?'port-in-use':'start-failed'});

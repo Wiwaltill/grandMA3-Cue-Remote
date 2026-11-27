@@ -87,7 +87,8 @@ test('live HTTP API requires operator token, rejects cross-origin mutations and 
   const f=await fixture();const bridge=new OscBridge();const server=new RemoteServer(f.root,()=>{},bridge);
   try {
     const state=await server.start({port:0,allowLan:false});const url=state.urls[0];
-    const token=new URL(state.accessUrls![0]).hash.slice(1);const headers={Authorization:`Bearer ${token}`,'Content-Type':'application/json'};
+    const session=(await fetch(url)).headers.get('set-cookie')!.split(';')[0];
+    const token=session.slice(session.indexOf('=')+1);const headers={Authorization:`Bearer ${token}`,'Content-Type':'application/json'};
     assert.equal((await fetch(url+'/api/state')).status,401);
     const response=await fetch(url+'/api/state',{headers});assert.equal(response.status,200);
     assert.equal((await response.json()).snapshot.connectionState,'OFFLINE');
@@ -104,7 +105,64 @@ test('live HTTP API requires operator token, rejects cross-origin mutations and 
     assert.equal((await fetch(url+'/api/lock',{method:'POST',headers,body:JSON.stringify({locked:false})})).status,200);
     assert.equal(bridge.getState().snapshot.locked,true);
     await server.stop();const restarted=await server.start({port:0,allowLan:false});
-    assert.notEqual(new URL(restarted.accessUrls![0]).hash.slice(1),token);
+    assert.notEqual((await fetch(restarted.urls[0])).headers.get('set-cookie')!.split(';')[0],session);
     assert.equal((await fetch(restarted.urls[0]+'/api/state',{headers})).status,401);
+  }finally{await server.stop();bridge.disconnect();await f.cleanup();}
+});
+
+test('plain IP and port establish an HttpOnly browser session for multiple clients without a URL secret',async()=>{
+  const {OscBridge}=await import('../apps/desktop/src/bridge.ts');
+  const f=await fixture();const bridge=new OscBridge();const server=new RemoteServer(f.root,()=>{},bridge);
+  try{
+    const state=await server.start({port:0,allowLan:false});const url=state.urls[0];
+    assert.deepEqual(state.accessUrls,state.urls);assert.equal(new URL(state.accessUrls![0]).hash,'');
+    const page=await fetch(url);const cookie=page.headers.get('set-cookie')!;
+    assert.match(cookie,/^cue-remote-\d+=[a-f0-9]{64}; HttpOnly; SameSite=Strict; Path=\/$/);
+    const headers={Cookie:cookie.split(';')[0]};
+    assert.equal((await fetch(url+'/api/state')).status,401);
+    assert.equal((await fetch(url+'/api/state',{headers})).status,200);
+    assert.equal((await fetch(url+'/?page=settings')).headers.get('set-cookie'),cookie);
+    const jsonHeaders={...headers,'Content-Type':'application/json'};
+    assert.equal((await fetch(url+'/api/lock',{method:'POST',headers:jsonHeaders,body:'{"locked":false}'})).status,403);
+    const response=await fetch(url+'/api/lock',{method:'POST',headers:{...jsonHeaders,Origin:url},body:'{"locked":false}'});
+    assert.equal(response.status,200);assert.equal((await response.json()).snapshot.locked,true);
+    assert.equal((await fetch(url+'/assets/remote-test.js')).headers.get('set-cookie'),null);
+    assert.equal((await fetch(url,{method:'HEAD'})).headers.get('set-cookie'),null);
+  }finally{await server.stop();bridge.disconnect();await f.cleanup();}
+});
+
+test('shortcut reopens on the same port after restart and replaces the expired session without unlocking',async()=>{
+  const {OscBridge}=await import('../apps/desktop/src/bridge.ts');
+  const f=await fixture();const bridge=new OscBridge();const server=new RemoteServer(f.root,()=>{},bridge);
+  try{
+    const first=await server.start({port:0,allowLan:false});const url=first.urls[0];
+    const cookie=(await fetch(url)).headers.get('set-cookie')!.split(';')[0];
+    await server.stop();const second=await server.start({port:first.port,allowLan:false});
+    assert.equal(second.urls[0],url);
+    assert.equal((await fetch(url+'/api/state',{headers:{Cookie:cookie}})).status,401);
+    const renewed=(await fetch(url,{headers:{Cookie:cookie}})).headers.get('set-cookie')!.split(';')[0];
+    assert.notEqual(renewed,cookie);
+    const response=await fetch(url+'/api/state',{headers:{Cookie:renewed}});
+    assert.equal(response.status,200);assert.equal((await response.json()).snapshot.locked,true);
+  }finally{await server.stop();bridge.disconnect();await f.cleanup();}
+});
+
+test('browser sessions reject foreign origins, embedded bootstrap and unexpected Host headers',async()=>{
+  const {OscBridge}=await import('../apps/desktop/src/bridge.ts');
+  const f=await fixture();const bridge=new OscBridge();const server=new RemoteServer(f.root,()=>{},bridge);
+  try{
+    const {urls}=await server.start({port:0,allowLan:false});const url=urls[0];
+    const cookie=(await fetch(url)).headers.get('set-cookie')!.split(';')[0];
+    const foreignHeaders: Record<string,string>[]=[{Origin:'http://untrusted.test'},{'Sec-Fetch-Site':'cross-site'},{'Sec-Fetch-Site':'same-site'}];
+    for(const extra of foreignHeaders){
+      assert.equal((await fetch(url,{headers:extra})).headers.get('set-cookie'),null);
+      assert.equal((await fetch(url+'/api/state',{headers:{Cookie:cookie,...extra}})).status,403);
+      assert.equal((await fetch(url+'/api/lock',{method:'POST',headers:{Cookie:cookie,'Content-Type':'application/json',Origin:url,...extra},body:'{"locked":false}'})).status,403);
+    }
+    assert.equal((await fetch(url,{headers:{'Sec-Fetch-Dest':'iframe'}})).headers.get('set-cookie'),null);
+    const status=await new Promise<number|undefined>((resolve,reject)=>{
+      const req=request(url,{headers:{Host:'untrusted.test'}},res=>{res.resume();resolve(res.statusCode);});req.on('error',reject);req.end();
+    });assert.equal(status,421);
+    assert.equal(bridge.getState().snapshot.locked,true);
   }finally{await server.stop();bridge.disconnect();await f.cleanup();}
 });

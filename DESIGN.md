@@ -22,7 +22,7 @@ Bei unbekannter Fade-Zeit, initial bereits laufendem Cue oder fehlender Synchron
 
 CONNECTING / ONLINE / STALE / OFFLINE. ONLINE nur nach validierter frischer MA-Antwort. Unbekannte Werte als — anzeigen. Bei Sperre oder unklarem Status Bedienung deaktivieren und Grund zeigen. Keine optimistische Current-Aktualisierung durch Sendebestätigungen. Unbekanntes Befehlsergebnis sperrt bis zur expliziten vollständigen Resynchronisation und manuellen Freigabe.
 
-Die Mac-App trennt Webserver- und OSC-Status. Server starten/stoppen sowie Weboberfläche öffnen per UI. OSC-Felder: Ziel-IP, lokale Rückmelde-IP, Port und Präfix. Playback-Ziel ausschließlich in den Web-Einstellungen; initial DataPool 1 / Sequenz 1. „Verbinden“ fragt lesend ab, „Trennen“ beendet die Abfragen. Verbindungsdaten während einer Verbindung sperren. Webadressen mit Bedienerschlüssel erst nach Serverstart anzeigen; LAN-Freigabe standardmäßig aus. Keine Terminalbedienung für den normalen Betrieb.
+Die Mac-App trennt Webserver- und OSC-Status. Server starten/stoppen sowie Weboberfläche öffnen per UI. OSC-Felder: Ziel-IP, lokale Rückmelde-IP, Port und Präfix. Playback-Ziel ausschließlich in den Web-Einstellungen; initial DataPool 1 / Sequenz 1. „Verbinden“ fragt lesend ab, „Trennen“ beendet die Abfragen. Verbindungsdaten während einer Verbindung sperren. Einfache Webadressen aus IP und Port erst nach Serverstart anzeigen; kein sichtbarer Hash. Hinweis auf festen Port für Shortcuts und auf Bedienerzugang aller Geräte im freigegebenen Netz. LAN-Freigabe standardmäßig aus. Keine Terminalbedienung für den normalen Betrieb.
 
 ## Mac-App beenden
 

@@ -70,3 +70,6 @@ Auf Benutzerwunsch zusätzliches komprimiertes arm64-DMG mit unverändertem Rele
 
 ## Veröffentlichung v1.0.0
 Auf ausdrücklichen Benutzerwunsch wird der vorhandene Funktionsstand als regulärer v1.0.0-Release mit aktualisierter App-Version, arm64-DMG, ZIP und Prüfsummen veröffentlicht. Keine zusätzlichen Playback-Funktionen oder erweiterten Kompatibilitätszusagen. Die bisher dokumentierten offenen Show-/iPad-/Hardware- und nativen Installationsabnahmen sowie Developer-ID-Signatur, Notarisierung und automatischer DMG-Build bleiben offen; die Versionsfreigabe ersetzt diese Prüfungen nicht.
+
+## v1.0.1 – feste Shortcut-Adresse
+Auf Benutzerwunsch Zugriff über IP:Port ohne URL-Hash. Automatische Browser-Sitzung beim Seitenaufruf, erneuerbar nach Serverneustart durch Neuladen. Bekannte Hosts, Origin-Prüfung und serverseitige Playback-Sperren bleiben erforderlich. LAN-Freigabe gewährt Bedienerzugang an erreichbare Geräte des freigegebenen vertrauenswürdigen Netzes; keine geräteweise Paarung. Fester Port und stabile IP für Shortcuts dokumentiert.

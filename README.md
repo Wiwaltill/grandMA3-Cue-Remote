@@ -6,13 +6,13 @@
 
 Lokale Sequenz-Fernbedienung für grandMA3 mit einer Mac-App als Server und einer kompakten Weboberfläche für Tablet und Desktop.
 
-[![Version](https://img.shields.io/badge/Version-1.0.0-67dba0?style=flat-square)](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/tag/v1.0.0)
-[![macOS](https://img.shields.io/badge/macOS-13%2B%20%C2%B7%20Apple%20Silicon-9db9de?style=flat-square)](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/tag/v1.0.0)
+[![Version](https://img.shields.io/badge/Version-1.0.1-67dba0?style=flat-square)](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/tag/v1.0.1)
+[![macOS](https://img.shields.io/badge/macOS-13%2B%20%C2%B7%20Apple%20Silicon-9db9de?style=flat-square)](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/tag/v1.0.1)
 [![grandMA3](https://img.shields.io/badge/grandMA3%20onPC-2.5.1.1-f0c96a?style=flat-square)](#voraussetzungen)
 [![CI](https://github.com/Wiwaltill/grandMA3-Cue-Remote/actions/workflows/ci.yml/badge.svg)](https://github.com/Wiwaltill/grandMA3-Cue-Remote/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/Lizenz-MIT-84929b?style=flat-square)](LICENSE)
 
-**[Mac-App als DMG herunterladen](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/download/v1.0.0/MA3-Cue-Remote-v1.0.0-macOS-arm64.dmg)** · [Release Notes](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/tag/v1.0.0) · [Ausführliche Einrichtung](docs/SETUP.md)
+**[Mac-App als DMG herunterladen](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/download/v1.0.1/MA3-Cue-Remote-v1.0.1-macOS-arm64.dmg)** · [Release Notes](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/tag/v1.0.1) · [Ausführliche Einrichtung](docs/SETUP.md)
 
 </div>
 
@@ -39,13 +39,13 @@ Die Oberfläche ist dunkel, kontrastreich und responsiv. DataPool und Sequenz st
 
 Für den normalen Betrieb sind **kein Terminal, kein Node/npm und kein manuell installiertes Lua-Plugin** nötig. Die App läuft lokal, ohne Cloud oder Telemetrie.
 
-> **v1.0.0:** Regulärer Release mit geprüfter lokaler onPC-Anbindung. Die vollständige Show-, Installations- und iPad-Abnahme steht noch aus. Neue Setups zuerst mit einer separaten Testshow prüfen.
+> **v1.0.1:** Regulärer Release mit geprüfter lokaler onPC-Anbindung. Die vollständige Show-, Installations- und iPad-Abnahme steht noch aus. Neue Setups zuerst mit einer separaten Testshow prüfen.
 
 ## In wenigen Schritten verbunden
 
 ### 1. Mac-App installieren
 
-Die [DMG herunterladen](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/download/v1.0.0/MA3-Cue-Remote-v1.0.0-macOS-arm64.dmg) und per Doppelklick öffnen. **MA3 Cue Remote.app** auf die enthaltene Verknüpfung **Programme** ziehen, das Image auswerfen und die App aus **Programme** öffnen. Alternativ ist das [App-ZIP](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/download/v1.0.0/MA3-Cue-Remote-v1.0.0-macOS-arm64.zip) verfügbar. SHA-256-Prüfsummen liegen im Release bei.
+Die [DMG herunterladen](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/download/v1.0.1/MA3-Cue-Remote-v1.0.1-macOS-arm64.dmg) und per Doppelklick öffnen. **MA3 Cue Remote.app** auf die enthaltene Verknüpfung **Programme** ziehen, das Image auswerfen und die App aus **Programme** öffnen. Alternativ ist das [App-ZIP](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/download/v1.0.1/MA3-Cue-Remote-v1.0.1-macOS-arm64.zip) verfügbar. SHA-256-Prüfsummen liegen im Release bei.
 
 Die App ist ad-hoc signiert, aber noch nicht mit einer Apple Developer ID signiert oder notarisiert. Falls macOS den Start blockiert, unter **Systemeinstellungen → Datenschutz & Sicherheit** die Meldung prüfen und die App nur bei vertrauter Herkunft über **Dennoch öffnen** freigeben. Dafür ist kein Terminal nötig.
 
@@ -78,7 +78,9 @@ Die Zielwahl sendet keinen GO. Eine zuvor manuell gesetzte Sperre bleibt beim Se
 
 ### 5. Optional: auf dem iPad öffnen
 
-Vor dem Serverstart **Im lokalen Netzwerk freigeben** aktivieren und anschließend die angezeigte **Live-Adresse** im Tablet-Browser öffnen. Sie enthält einen Bedienerschlüssel: nur an berechtigte Bediener weitergeben. Nach einem Serverneustart die neue Adresse verwenden.
+Vor dem Serverstart **Im lokalen Netzwerk freigeben** aktivieren und anschließend die angezeigte Adresse im Tablet-Browser öffnen. **IP und Port reichen aus; kein Hash oder Zugriffsschlüssel in der Adresse nötig.** Geräte im freigegebenen Netz können die Oberfläche öffnen und entsperren. Deshalb nur in einem vertrauenswürdigen Show-Netz freigeben.
+
+Für einen Desktop-Shortcut einen **festen Serverport** in der Mac-App verwenden (zum Beispiel `4173` statt `0`) und diese Adresse als Lesezeichen oder Verknüpfung speichern. Die Mac-IP muss ebenfalls gleich bleiben, etwa durch eine DHCP-Reservierung. Nach Serverneustart die Seite neu öffnen oder laden: Die Browser-Sitzung wird automatisch erneuert. Cookies für diese lokale Adresse müssen erlaubt sein. Serverstart und Pultverbindung erfolgen weiterhin in der Mac-App.
 
 Beim Schließen der Mac-App oder **⌘Q** mit laufendem Server stehen **Abbrechen** und **Server und Verbindung beenden** zur Wahl. Ein geschlossenes Browserfenster allein beendet den Server nicht.
 
@@ -119,7 +121,7 @@ packages/shared/  Domänenmodell, Validierung und Fade-Berechnung
 tests/           Isolierte Domänen-, UDP-, HTTP- und Beenden-Tests
 ```
 
-**35 automatisierte Tests** prüfen unter anderem Load-Feedback, Cue-Wechsel, Frische, Timeouts, Reconnect, konkurrierende Clients und Server-Lebenszyklus. CI spricht nie ein echtes Pult an. Ergebnisse und offene Abnahmen stehen im [Testbericht](tests/VERIFICATION.md).
+**38 automatisierte Tests** prüfen unter anderem Load-Feedback, Cue-Wechsel, Frische, Timeouts, Reconnect, konkurrierende Clients und Server-Lebenszyklus. CI spricht nie ein echtes Pult an. Ergebnisse und offene Abnahmen stehen im [Testbericht](tests/VERIFICATION.md).
 
 ## Dokumentation
 

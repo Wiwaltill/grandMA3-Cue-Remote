@@ -1,12 +1,12 @@
-# Prüfstand v1.0.0
+# Prüfstand v1.0.1
 
-Stand: 27. November 2026. Regulärer GitHub-Release v1.0.0 auf Benutzerwunsch. Die Versionsfreigabe erweitert die unten dokumentierte Kompatibilität oder Show-Abnahme nicht.
+Stand: 27. November 2026. Regulärer GitHub-Release v1.0.1 auf Benutzerwunsch. Die Versionsfreigabe erweitert die unten dokumentierte Kompatibilität oder Show-Abnahme nicht.
 
 ## Automatisch
 
 - TypeScript strict für React, Node-Bridge, Electron-Main und Preload erfolgreich.
 - ESLint erfolgreich.
-- 35 Tests erfolgreich: 2 Fade-Berechnungstests, 22 OSC-/UDP-Tests, 7 Server-/HTTP-Tests und 4 Beenden-Ablauftests.
+- 38 Tests erfolgreich: 2 Fade-Berechnungstests, 22 OSC-/UDP-Tests, 10 Server-/HTTP-Tests und 4 Beenden-Ablauftests.
 - Produktionsbuild und macOS-arm64-App-Bundle erfolgreich; lokale Ad-hoc-Signatur wird beim Packaging mit codesign geprüft.
 - npm-Lockfile vorhanden; OSC benötigt keine zusätzliche Runtime-Bibliothek.
 
@@ -135,3 +135,9 @@ Komprimiertes read-only DMG mit hdiutil erstellt und verifiziert. Image schreibg
 ## Veröffentlichung v1.0.0
 
 App-/Web-Version und npm-Metadaten auf 1.0.0 angehoben; Playback-Verhalten unverändert. Typecheck, Lint und alle 35 Tests erneut erfolgreich. Web-/Desktop-Build, arm64-App-Paketierung und DMG-Erstellung erfolgreich. Die schreibgeschützt eingehängte DMG enthält Version 1.0.0; Signatur mit codesign --verify --deep --strict und Programme-Verknüpfung geprüft, App identisch mit dem gebauten Bundle. Keine erneuten Pultbefehle für die Versionsveröffentlichung. Die oben genannten offenen nativen Installations-, Show- und iPad-Prüfungen bleiben bestehen.
+
+## v1.0.1: feste Shortcut-Adresse
+
+HTTP-Tests prüfen Zugriff über IP:Port ohne Fragment, automatische HttpOnly-/SameSite=Strict-Sitzung, mehrere Clients, Erneuerung auf derselben Adresse nach Serverneustart, weiterhin gesetzten Lock sowie Ablehnung fremder Host-/Origin-/Fetch-Metadata-Header und eingebetteter Sitzungsinitialisierung. API-Zugriff ohne Sitzung bleibt abgewiesen. Bestehende Bearer-Clients weiterhin geprüft.
+
+Browserprüfung mit isoliertem simuliertem MA-Empfänger: neue Hauptseite ohne Hash geöffnet, ONLINE und Cueliste aus der Bridge erhalten, Bedienung zunächst gesperrt, explizites Entsperren über Cookie-authentifizierten POST erfolgreich. Kein echter Pultzugriff. Typecheck, Lint, alle 38 Tests, Build, App-Paketierung und DMG-Erstellung erfolgreich. Native macOS-Fensterbedienung und echtes iPad/Safari weiterhin offen.
