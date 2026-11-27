@@ -24,3 +24,5 @@ Die Basis v0.1.0 ist abgeschlossen. Aktuell die echte Pultanbindung in kleinen �
 - Serverstart, Serverstopp und Betriebseinstellungen müssen über eine grafische Benutzeroberfläche bedienbar sein. Ein von Codex gestarteter Terminalprozess ersetzt diese Produktanforderung nicht. Die macOS-App muss per Doppelklick startbar sein.
 - Benutzerentscheidung zur Next-Anzeige: immer den nächsten Eintrag der Cueliste anzeigen (bei Off den ersten Cue, am Listenende Ende der Cueliste). Diese Anzeige nicht an LoadedCue koppeln. Goto wird später umgesetzt; Playback-Erfolg bleibt rückmeldebasiert.
 - Pause neben GO− als MA-Pause/Fortsetzen-Toggle anbieten. Die ausdrücklich gewählte berechnete Fade-Vorschau sichtbar als berechnet markieren; sie ist kein gemessener Pult-Prozentwert.
+
+- Seit v0.2.3 DataPool/Sequenz ausschließlich in Web-Einstellungen. Nach erfolgreichem Zielwechsel zuvor frische entsperrte Bedienung automatisch freigeben; manuelle Sperren sowie Fehler-/Timeout-Sperren nie automatisch aufheben. Hauptseite kompakt mit intern scrollender Cueliste.

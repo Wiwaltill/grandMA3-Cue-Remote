@@ -8,5 +8,5 @@ document.title=t.pageTitle;
 let token=location.hash.slice(1);
 try{token=token || sessionStorage.getItem('cue-remote-token') || '';if(token)sessionStorage.setItem('cue-remote-token',token);}catch{/* private browsing can disable storage */}
 const transport=new HttpTransport(token);
-history.replaceState(null,'',location.pathname);
+history.replaceState(null,'',location.pathname+location.search);
 createRoot(document.getElementById('root')!).render(<StrictMode><App transport={transport} onResync={transport.resync}/></StrictMode>);

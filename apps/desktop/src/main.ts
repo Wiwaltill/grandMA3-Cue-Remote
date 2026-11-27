@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, shell, Menu } from 'electron';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { isOscConfig } from './osc.js';
 import { OscBridge, localAddresses } from './bridge.js';
 import { RemoteServer } from './server.js';
 
@@ -26,7 +27,7 @@ else {
     ipcMain.handle('server:stop',event => { authorized(event); return remoteServer.stop(); });
     ipcMain.handle('osc:get',event=>{authorized(event);return bridge.getState();});
     ipcMain.handle('osc:addresses',event=>{authorized(event);return localAddresses();});
-    ipcMain.handle('osc:connect',(event,config: unknown)=>{authorized(event);return bridge.connect(config);});
+    ipcMain.handle('osc:connect',(event,config: unknown)=>{authorized(event);const target=bridge.getState().snapshot.sequence;return bridge.connect(isOscConfig(config)?{...config,dataPool:target.dataPool,sequenceNumber:target.number}:config);});
     ipcMain.handle('osc:disconnect',event=>{authorized(event);return bridge.disconnect();});
     ipcMain.handle('server:open-web',async event=>{authorized(event);const url=remoteServer.getStatus().accessUrls?.[0];if(url)await shell.openExternal(url);});
     const createWindow = async () => {

@@ -30,8 +30,6 @@ export function OscPanel({api}: {api?: DesktopApi}) {
       <label>{t.reply}<select value={config.replyHost} onChange={e=>field('replyHost',e.target.value)}>{addresses.map(ip=><option key={ip}>{ip}</option>)}</select></label>
       <label>{t.port}<input type="number" min={1024} max={65535} value={config.port} onChange={e=>field('port',e.target.value)}/></label>
       <label>{t.prefix}<input value={config.prefix} maxLength={32} onChange={e=>field('prefix',e.target.value)}/></label>
-      <label>{t.pool}<input value={config.dataPool} inputMode="numeric" maxLength={16} onChange={e=>field('dataPool',e.target.value)}/></label>
-      <label>{t.sequence}<input value={config.sequenceNumber} inputMode="numeric" maxLength={16} onChange={e=>field('sequenceNumber',e.target.value)}/></label>
     </fieldset>
     <p className="hint">{t.setup}</p><p className="hint">{t.next}</p>
     <p className="osc-error" role="status">{error || (live?.error?t.errors[live.error]:'')}</p>

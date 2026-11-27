@@ -5,6 +5,11 @@ import { FadeProgress } from './FadeProgress.tsx';
 import { fadeLabel, text as t } from './text.ts';
 export function App({transport, onResync}: {transport: PlaybackTransport; onResync: () => Promise<void>}) {
   const state = useSyncExternalStore(transport.subscribe, transport.getSnapshot);
+  const [settings,setSettings]=useState(new URLSearchParams(location.search).get('page')==='settings');
+  function navigate(value: boolean){history.pushState(null,'',value?'?page=settings':location.pathname);setSettings(value);}
+  useEffect(()=>{const pop=()=>setSettings(new URLSearchParams(location.search).get('page')==='settings');addEventListener('popstate',pop);return()=>removeEventListener('popstate',pop);},[]);
+  const [poolDraft,setPoolDraft]=useState(state.sequence.dataPool);
+  useEffect(()=>setPoolDraft(state.sequence.dataPool),[state.sequence.dataPool]);
   const [following, setFollowing] = useState(true);
   const [cooldown, setCooldown] = useState(false);
   const [error, setError] = useState('');
@@ -23,11 +28,13 @@ export function App({transport, onResync}: {transport: PlaybackTransport; onResy
   const available = state.connectionState === 'ONLINE';
   const blocked = state.locked || !available || cooldown || (state.commandState!==undefined && state.commandState!=='idle');
   const sequenceNumber = parseSequenceNumber(sequenceDraft);
-  const sequencePending = sequenceNumber !== state.sequence.number;
+  const poolNumber=parseSequenceNumber(poolDraft);
+  const sequencePending = sequenceNumber !== state.sequence.number || poolNumber!==state.sequence.dataPool;
+  const selectionBlocked=state.connectionState==='OFFLINE' || cooldown || state.commandState!=='idle';
   const playbackBlocked = blocked || sequencePending;
   useEffect(() => {
-    if (following) rowRef.current?.scrollIntoView({block:'nearest',behavior:'smooth'});
-  }, [state.currentCueId, following]);
+    if (following && !settings) rowRef.current?.scrollIntoView({block:'nearest',behavior:'smooth'});
+  }, [state.currentCueId, following,settings]);
   useEffect(() => () => clearTimeout(timer.current), []);
   async function execute(action: 'goPlus' | 'goMinus' | 'pause') {
     const result = await transport.execute({requestId:Array.from(crypto.getRandomValues(new Uint8Array(16)),byte=>byte.toString(16).padStart(2,'0')).join(''),sequenceRef:state.sequence,action,expectedRevision:state.revision});
@@ -35,28 +42,32 @@ export function App({transport, onResync}: {transport: PlaybackTransport; onResy
     setError(''); setCooldown(true);
     timer.current = setTimeout(() => setCooldown(false),450);
   }
-  return <div className="app">
+  return <div className={`app ${settings?'settings-view':'playback-view'}`}>
     <header className="header">
       <div className="brand"><span className="brand-mark">{t.brand}</span><div><h1>{t.title}</h1><span className="eyebrow">{t.subtitle}</span></div></div>
       <div className="sequence"><span className="eyebrow">{t.dataPool} {state.sequence.dataPool} · {t.sequence} {state.sequence.number.padStart(2,'0')}</span><strong>{state.sequence.name}</strong></div>
-      <div className="header-actions"><span className="badge"><i />{state.connectionState}</span><button className={`lock ${state.locked ? 'is-locked' : ''}`} aria-label={state.locked?t.unlock:t.lock} aria-pressed={state.locked} onClick={() => transport.setLocked(!state.locked)}><span aria-hidden="true">{state.locked?'▣':'▢'}</span> {state.locked?t.locked:t.unlocked}</button></div>
+      <div className="header-actions"><button className="settings-link" aria-label={settings?t.back:t.settings} onClick={()=>navigate(!settings)}>{settings?'←':'⚙'}<span>{settings?t.back:t.settings}</span></button><span className="badge"><i />{state.connectionState}</span><button className={`lock ${state.locked ? 'is-locked' : ''}`} aria-label={state.locked?t.unlock:t.lock} aria-pressed={state.locked} onClick={() => transport.setLocked(!state.locked)}><span aria-hidden="true">{state.locked?'▣':'▢'}</span> {state.locked?t.locked:t.unlocked}</button></div>
     </header>
-    <div className="connection-banner"><span className="connection-icon" aria-hidden="true">◈</span>{t.connectionNotice}<span className="version">{t.version}</span></div>
-    <section className="sequence-picker" aria-label={t.sequenceNumber}>
-      <form onSubmit={async event => {
-        event.preventDefault();
-        if (blocked || !sequenceNumber) return;
-        const result = await transport.selectSequenceNumber(sequenceNumber,state.revision);
-        if (!result.accepted) {setError(t.error);return;}
-        setSequenceDraft(transport.getSnapshot().sequence.number);setError('');setFollowing(true);
+    {settings ? <main className="settings-page">
+      <h2>{t.settings}</h2><p className="settings-description">{t.settingsDescription}</p>
+      <section className="sequence-picker" aria-label={t.targetSettings}>
+      <form onSubmit={async event=>{
+        event.preventDefault();if(selectionBlocked || !sequenceNumber || !poolNumber)return;
+        const result=await transport.selectTarget(poolNumber,sequenceNumber,state.revision);
+        if(!result.accepted){setError(t.error);return;}
+        const selected=transport.getSnapshot().sequence;
+        setSequenceDraft(selected.number);setPoolDraft(selected.dataPool);setError('');setFollowing(true);
       }}>
-        <label htmlFor="sequence-number">{t.sequenceNumber}</label>
-        <input id="sequence-number" type="text" inputMode="numeric" maxLength={16} value={sequenceDraft} disabled={blocked} aria-invalid={!sequenceNumber} aria-describedby="sequence-hint" onChange={event => {setSequenceDraft(event.target.value);setError('');}}/>
-        <button type="submit" disabled={blocked || !sequenceNumber || !sequencePending}>{t.applySequence}</button>
-        {sequencePending && <button type="button" className="discard-sequence" onClick={() => {setSequenceDraft(state.sequence.number);setError('');}}>{t.discardSequence}</button>}
+        <label htmlFor="data-pool">{t.dataPoolNumber}<input id="data-pool" inputMode="numeric" maxLength={16} value={poolDraft} disabled={selectionBlocked} aria-invalid={!poolNumber} onChange={e=>setPoolDraft(e.target.value)}/></label>
+        <label htmlFor="sequence-number">{t.sequenceNumber}<input id="sequence-number" inputMode="numeric" maxLength={16} value={sequenceDraft} disabled={selectionBlocked} aria-invalid={!sequenceNumber} onChange={e=>setSequenceDraft(e.target.value)}/></label>
+        <button type="submit" disabled={selectionBlocked || !poolNumber || !sequenceNumber || !sequencePending}>{t.applySequence}</button>
+        {sequencePending && <button type="button" className="discard-sequence" onClick={()=>{setSequenceDraft(state.sequence.number);setPoolDraft(state.sequence.dataPool);setError('');}}>{t.discardSequence}</button>}
       </form>
-      <p id="sequence-hint" role="status" className={!sequenceNumber?'warning':''}>{!sequenceNumber?t.sequenceInvalid:t.sequenceHint}</p>
-    </section>
+      <p className={!poolNumber || !sequenceNumber?'warning':''}>{!poolNumber || !sequenceNumber?t.targetInvalid:t.sequenceHint}</p>
+      </section><p role="status">{error || (!available?t.unavailable:'')}</p>
+      <button className="settings-resync" onClick={()=>void onResync()}>{t.resync}</button>
+      <p className="settings-description">{t.connectionNotice} · {t.version}</p>
+    </main> : <>
     <main>
       <section className="cue-cards" aria-label={`${t.current} / ${t.next}`} aria-live="polite">
         <article className="cue-card current"><div className="card-label"><span><i />{t.current}</span><span aria-hidden="true">●</span></div><div className="cue-detail"><strong className="cue-number">{current?.number ?? '—'}</strong><div><h2>{current?.name ?? (available?t.off:t.unknown)}</h2><span className="fade">{t.fade} <b>{fadeLabel(current?.fade)}</b></span></div></div><FadeProgress preview={state.fadePreview} available={available}/></article>
@@ -81,6 +92,6 @@ export function App({transport, onResync}: {transport: PlaybackTransport; onResy
         </aside>
       </section>
     </main>
-
+    </>}
   </div>;
 }

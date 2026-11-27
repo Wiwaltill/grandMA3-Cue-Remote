@@ -37,3 +37,6 @@ Benutzerentscheidung umgesetzt: NEXT CUE ist immer der Listennachfolger nach dem
 
 ## v0.2.2 – ausschließlich Pultanbindung, Pause und Fade-Vorschau
 Auf Benutzerwunsch Demo-Modus/Adapter/Reset und deren Produktzugänge entfernt. Pause/Fortsetzen neben GO− mit echter MA-Cmd-Ausführungsbestätigung. Berechnete Fade-Vorschau in Current und aktueller Cue-Zeile; sichtbar als berechnet gekennzeichnet. Kein verifizierter tatsächlicher Fade-Prozentwert, keine vollständige Nachführung externer Pause/Timing-Master. Dies ist die ausdrücklich gewählte Rechenvorschau. Tests, Installation und tatsächliche Grenzen dokumentieren.
+
+## v0.2.3 – Web-Einstellungen und kompakte Hauptseite
+DataPool/Sequenz aus der nativen Netzwerkkonfiguration entfernt und als gemeinsame Zielwahl auf eine kleine Web-Einstellungsseite verschoben. Hauptseite nutzt die Viewporthöhe, Cueliste scrollt intern. Nach erfolgreichem Zielwechsel automatische Freigabe nur bei zuvor frischer entsperrter Bedienung; manuelle Sperren und Ausfälle bleiben gesperrt. Keine Playback-Befehle beim Zielwechsel.

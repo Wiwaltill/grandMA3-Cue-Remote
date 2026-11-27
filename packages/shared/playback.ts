@@ -17,5 +17,6 @@ export interface PlaybackTransport {
   subscribe(listener: () => void): () => void;
   execute(command: Command): CommandResult | Promise<CommandResult>;
   setLocked(locked: boolean): void | Promise<void>;
+  selectTarget(dataPool: string, number: string, expectedRevision: number): CommandResult | Promise<CommandResult>;
   selectSequenceNumber(number: string, expectedRevision: number): CommandResult | Promise<CommandResult>;
 }

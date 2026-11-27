@@ -31,7 +31,7 @@ async function setup(options: {now?:()=>number;timeoutMs?:number}={}) {
       const port=Number(command.match(/j\.encode\(t\),'127\.0\.0\.1',(\d+)/)?.[1]);
       const nonce=command.match(/nonce='([a-f0-9]{32})'/)?.[1];
       const number=command.match(/number='(\d+)'/)?.[1] ?? '1';
-      if(port && nonce)socket.send(JSON.stringify({...feedback(number),current,running,nonce:control.spoof?'0'.repeat(32):nonce}),port,'127.0.0.1');
+      if(port && nonce)socket.send(JSON.stringify({...feedback(number),dataPool:command.match(/dataPool='(\d+)'/)?.[1] ?? '1',current,running,nonce:control.spoof?'0'.repeat(32):nonce}),port,'127.0.0.1');
     } else {
       counters.go++;if(control.advance){running=true;current='1.5';}
     }
@@ -94,7 +94,7 @@ test('sequence selection resynchronizes without GO and old target/revision are r
     assert.deepEqual(await f.bridge.execute({...old,sequenceRef:{...old.sequenceRef,number:'9'}}),{accepted:false,reason:'sequence'});
     assert.deepEqual(await f.bridge.selectSequenceNumber('2',old.expectedRevision),{accepted:true});
     await until(()=>f.bridge.getState().snapshot.connectionState==='ONLINE');
-    assert.equal(f.bridge.getState().snapshot.sequence.number,'2');assert.equal(f.bridge.getState().snapshot.locked,true);assert.equal(f.counters.go,0);
+    assert.equal(f.bridge.getState().snapshot.sequence.number,'2');assert.equal(f.bridge.getState().snapshot.locked,false);assert.equal(f.counters.go,0);
     f.bridge.setLocked(false);assert.deepEqual(await f.bridge.execute(old),{accepted:false,reason:'sequence'});
   }finally{f.cleanup();}
 });
@@ -143,5 +143,37 @@ test('missing Pause acknowledgement locks controls without retry despite fresh u
     await until(()=>f.bridge.getState().commandState==='unknown');
     assert.equal(f.bridge.getState().snapshot.locked,true);assert.equal(f.counters.pause,1);
     assert.equal(f.counters.go,0);assert.equal(f.bridge.getState().snapshot.fadePreview,undefined);
+  }finally{f.cleanup();}
+});
+
+test('target selection preserves manual lock and validates both target numbers',async()=>{
+  const f=await setup();try{
+    const revision=f.bridge.getState().snapshot.revision;
+    assert.deepEqual(await f.bridge.selectTarget('0','2',revision),{accepted:false,reason:'invalid'});
+    assert.deepEqual(await f.bridge.selectTarget('2; Off','2',revision),{accepted:false,reason:'invalid'});
+    assert.deepEqual(await f.bridge.selectTarget('2','2',revision-1),{accepted:false,reason:'revision'});
+    assert.deepEqual(await f.bridge.selectTarget('2','3',revision),{accepted:true});
+    assert.equal(f.bridge.getState().snapshot.connectionState,'CONNECTING');
+    assert.equal(f.bridge.getState().snapshot.locked,true);
+    await until(()=>f.bridge.getState().snapshot.connectionState==='ONLINE');
+    assert.equal(f.bridge.getState().snapshot.sequence.dataPool,'2');
+    assert.equal(f.bridge.getState().snapshot.sequence.number,'3');
+    assert.equal(f.bridge.getState().snapshot.locked,true);
+    assert.equal(f.counters.go,0);
+  }finally{f.cleanup();}
+});
+test('failed target synchronization or explicit lock cancels automatic unlock',async()=>{
+  const f=await setup();try{
+    f.bridge.setLocked(false);f.control.reply=false;
+    await f.bridge.selectTarget('2','4',f.bridge.getState().snapshot.revision);
+    assert.equal((await f.bridge.execute(f.command())).accepted,false);
+    await until(()=>f.bridge.getState().snapshot.connectionState==='STALE');
+    f.control.reply=true;await until(()=>f.bridge.getState().snapshot.connectionState==='ONLINE');
+    assert.equal(f.bridge.getState().snapshot.locked,true);
+    f.bridge.setLocked(false);
+    await f.bridge.selectTarget('1','2',f.bridge.getState().snapshot.revision);
+    f.bridge.setLocked(true);
+    await until(()=>f.bridge.getState().snapshot.connectionState==='ONLINE');
+    assert.equal(f.bridge.getState().snapshot.locked,true);assert.equal(f.counters.go,0);
   }finally{f.cleanup();}
 });

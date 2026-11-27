@@ -32,6 +32,7 @@ export class HttpTransport implements PlaybackTransport {
     catch{this.offline();return {accepted:false,reason:'unavailable'};}
   };
   setLocked=async(locked: boolean)=>{try{await this.request('/api/lock',{locked});await this.refresh();}catch{this.offline();}};
+  selectTarget=async(dataPool: string,number: string,expectedRevision: number): Promise<CommandResult>=>{try{const result=await this.request('/api/target',{dataPool,number,expectedRevision});await this.refresh();return result;}catch{this.offline();return {accepted:false,reason:'unavailable'};}};
   selectSequenceNumber=async(number: string,expectedRevision: number): Promise<CommandResult>=>{try{const result=await this.request('/api/sequence',{number,expectedRevision});await this.refresh();return result;}catch{this.offline();return {accepted:false,reason:'unavailable'};}};
   resync=async()=>{try{await this.request('/api/resync',{});await this.refresh();}catch{this.offline();}};
 }

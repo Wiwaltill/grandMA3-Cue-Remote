@@ -41,6 +41,7 @@ export class OscBridge {
   private pendingAction: Command['action'] | null=null;
   private commandNonce: string | null=null;
   private preview: {value: FadePreview;anchor: number} | null=null;
+  private restoreSelectionUnlock=false;
   private beforeCommand='';
   private requests=new Set<string>();
   private listeners=new Set<()=>void>();
@@ -55,7 +56,7 @@ export class OscBridge {
   getConfig=()=>this.config?{...this.config}:null;
   subscribe=(fn:()=>void)=>{this.listeners.add(fn);return()=>{this.listeners.delete(fn);};};
   private publish(update: Partial<PlaybackSnapshot>,error=this.state.error) {
-    if(update.connectionState && update.connectionState!=='ONLINE')this.preview=null;
+    if(update.connectionState && update.connectionState!=='ONLINE'){this.preview=null;if(update.connectionState!=='CONNECTING')this.restoreSelectionUnlock=false;}
     const previous=this.state.snapshot;
     const next={...previous,...update,commandState:this.state.commandState};
     const semantic=(s: PlaybackSnapshot)=>JSON.stringify({...s,timestamp:0,revision:0});
@@ -63,9 +64,9 @@ export class OscBridge {
     this.state={...this.state,error,snapshot:next};
     this.listeners.forEach(fn=>fn());
   }
-  async connect(config: unknown): Promise<LiveState> {
+  async connect(config: unknown,restoreUnlocked=false): Promise<LiveState> {
     if (!isOscConfig(config) || !localAddresses().includes(config.replyHost)) {this.publish({locked:true},'invalid-config');return this.getState();}
-    this.disconnect();this.config={...config};this.state.commandState='idle';
+    this.disconnect();this.restoreSelectionUnlock=restoreUnlocked;this.config={...config};this.state.commandState='idle';
     this.publish({...emptySnapshot(),revision:this.state.snapshot.revision,sequence:{id:`${config.dataPool}/${config.sequenceNumber}`,dataPool:config.dataPool,number:config.sequenceNumber,name:'—'},connectionState:'CONNECTING'},null);
     const socket=dgram.createSocket('udp4');this.socket=socket;
     socket.on('message',(message,info)=>{
@@ -94,8 +95,9 @@ export class OscBridge {
       this.receivedAt=this.now();this.state.version=parsed.version;
       const fingerprint=JSON.stringify([parsed.current,parsed.running]);
       if (this.state.commandState==='pending' && this.pendingAction!=='pause' && fingerprint!==this.beforeCommand) {this.state.commandState='idle';this.pendingAction=null;}
+      const restoreUnlocked=this.restoreSelectionUnlock;this.restoreSelectionUnlock=false;
       const unknown=this.state.commandState==='unknown';
-      this.publish({cues:parsed.cues,sequence:{...this.state.snapshot.sequence,name:parsed.name},currentCueId:parsed.current,nextCueId:parsed.next,playbackState:parsed.running?'running':'off',timestamp:this.receivedAt,connectionState:unknown?'STALE':'ONLINE',...(unknown?{locked:true}:{})},unknown?'timeout':null);
+      this.publish({cues:parsed.cues,sequence:{...this.state.snapshot.sequence,name:parsed.name},currentCueId:parsed.current,nextCueId:parsed.next,playbackState:parsed.running?'running':'off',timestamp:this.receivedAt,connectionState:unknown?'STALE':'ONLINE',...(unknown?{locked:true}:restoreUnlocked?{locked:false}:{})},unknown?'timeout':null);
     });
     socket.on('error',()=>{if(this.socket===socket) this.publish({connectionState:'OFFLINE',locked:true},'send-failed');});
     try {await new Promise<void>((resolve,reject)=>{socket.once('error',reject);socket.bind(0,'0.0.0.0',()=>{socket.removeListener('error',reject);resolve();});});}
@@ -118,21 +120,23 @@ export class OscBridge {
     this.nonce=randomBytes(16).toString('hex');this.queriedAt=this.now();
     socket.send(encodeOscCommand(config.prefix,snapshotQuery(config,address.port,this.nonce)),config.port,config.host,error=>{if(error && this.socket===socket)this.publish({connectionState:'OFFLINE',locked:true},'send-failed');});
   }
-  resync=(): LiveState=>{if(this.socket){this.state.commandState='idle';this.pendingAction=null;this.commandNonce=null;this.receivedAt=0;this.publish({connectionState:'CONNECTING',locked:true},null);this.query();}return this.getState();};
+  resync=(): LiveState=>{this.restoreSelectionUnlock=false;if(this.socket){this.state.commandState='idle';this.pendingAction=null;this.commandNonce=null;this.receivedAt=0;this.publish({connectionState:'CONNECTING',locked:true},null);this.query();}return this.getState();};
   disconnect=(): LiveState=>{
+    this.restoreSelectionUnlock=false;
     if(this.timer)clearInterval(this.timer);this.timer=null;
     const socket=this.socket;this.socket=null;try{socket?.close();}catch{/* already closed */}
     this.config=null;this.nonce=null;this.commandNonce=null;this.pendingAction=null;this.receivedAt=0;this.state.commandState='idle';
     this.publish({connectionState:'OFFLINE',locked:true},null);return this.getState();
   };
-  setLocked=(locked: boolean)=>{if(locked || (this.state.snapshot.connectionState==='ONLINE' && this.state.commandState==='idle' && this.now()-this.receivedAt<=this.timeout()))this.publish({locked});};
-  selectSequenceNumber=async(number: string,expectedRevision: number): Promise<CommandResult>=>{
-    if(parseSequenceNumber(number)!==number)return {accepted:false,reason:'invalid'};
-    if(!this.config || this.state.snapshot.connectionState!=='ONLINE')return {accepted:false,reason:'unavailable'};
-    if(this.state.snapshot.locked)return {accepted:false,reason:'locked'};
+  setLocked=(locked: boolean)=>{this.restoreSelectionUnlock=false;if(locked || (this.state.snapshot.connectionState==='ONLINE' && this.state.commandState==='idle' && this.now()-this.receivedAt<=this.timeout()))this.publish({locked});};
+  selectSequenceNumber=(number: string,expectedRevision: number)=>this.selectTarget(this.state.snapshot.sequence.dataPool,number,expectedRevision);
+  selectTarget=async(dataPool: string,number: string,expectedRevision: number): Promise<CommandResult>=>{
+    if(parseSequenceNumber(number)!==number || parseSequenceNumber(dataPool)!==dataPool)return {accepted:false,reason:'invalid'};
+    if(!this.config)return {accepted:false,reason:'unavailable'};
     if(expectedRevision!==this.state.snapshot.revision)return {accepted:false,reason:'revision'};
     if(this.state.commandState!=='idle')return {accepted:false,reason:'busy'};
-    await this.connect({...this.config,sequenceNumber:number});return {accepted:true};
+    const restoreUnlocked=!this.state.snapshot.locked && this.state.snapshot.connectionState==='ONLINE' && this.now()-this.receivedAt<=this.timeout();
+    await this.connect({...this.config,dataPool,sequenceNumber:number},restoreUnlocked);return {accepted:true};
   };
   execute=async(command: Command): Promise<CommandResult>=>{
     const s=this.state.snapshot;

@@ -54,6 +54,7 @@ export class RemoteServer {
         let body='';try{for await(const chunk of request){body+=chunk.toString();if(Buffer.byteLength(body)>4096){json(413,{error:'size'});return;}}}catch{if(!response.destroyed)json(400,{error:'aborted'});return;}
         let data: Record<string,unknown>;try {data=JSON.parse(body);if(!data || typeof data!=='object')throw new Error();}catch{json(400,{error:'json'});return;}
         if(apiPath==='/api/commands'){json(200,await this.bridge.execute(data as unknown as Command));return;}
+        if(apiPath==='/api/target' && typeof data.dataPool==='string' && typeof data.number==='string' && Number.isInteger(data.expectedRevision)){json(200,await this.bridge.selectTarget(data.dataPool,data.number,data.expectedRevision as number));return;}
         if(apiPath==='/api/sequence' && typeof data.number==='string' && Number.isInteger(data.expectedRevision)){json(200,await this.bridge.selectSequenceNumber(data.number,data.expectedRevision as number));return;}
         if(apiPath==='/api/lock' && typeof data.locked==='boolean'){this.bridge.setLocked(data.locked);json(200,this.bridge.getState());return;}
         if(apiPath==='/api/resync'){json(200,this.bridge.resync());return;}

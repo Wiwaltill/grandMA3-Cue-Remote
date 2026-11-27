@@ -2,7 +2,7 @@
 
 Lokale, iPad-optimierte Sequenz-Fernbedienung mit grafischer macOS-Serversteuerung. React/TypeScript, Node und Electron; ohne Cloud oder Telemetrie.
 
-## v0.2.2 – Pause und berechnete Fade-Vorschau
+## v0.2.3 – kompakte Playback-Seite und Web-Einstellungen
 
 Die App verbindet sich mit **grandMA3 onPC 2.5.1.1**, liest Sequenzname, Cue-Liste, bekannte Fade-Zeiten und Current-Status aus MA und sendet gezieltes GO+/GO− und Pause/Fortsetzen an den ausgewählten DataPool und die eingetragene Sequenznummer. Die Weboberfläche enthält Lock, Auto-Follow, Listenpositionsfortschritt und eine klar als berechnet markierte Fade-Vorschau. Der Demo-Modus ist entfernt. Sie simuliert im Live-Modus keinen Playback-Erfolg.
 
@@ -16,10 +16,10 @@ Die macOS-arm64-App enthält Laufzeit und Weboberfläche. Für die normale Bedie
 
 1. `MA3 Cue Remote.app` im Finder per Doppelklick öffnen und **Server starten** anklicken.
 2. In grandMA3 eine **separate Testshow** öffnen. Unter **Menu → In & Out → OSC** das passende **Interface** wählen, **Enable Input** einschalten und eine Zeile mit **Mode UDP**, beispielsweise **Port 8000**, und **Receive Command: Yes** konfigurieren. Das Präfix darf leer sein oder beispielsweise `gma3` lauten; beide Seiten müssen übereinstimmen. Die allgemeine Receive-Einstellung ist für Command-Eingang nicht ausschlaggebend.
-3. Im Abschnitt **grandMA3 onPC · OSC** der Mac-App Ziel-IPv4, OSC-Port, Präfix **ohne Schrägstriche**, lokale Rückmelde-IP, DataPool und Sequenznummer eingeben. Bei onPC auf demselben Mac die IPv4 der in MA ausgewählten Schnittstelle verwenden. `127.0.0.1` wird nur funktionieren, wenn MA diese Verbindung tatsächlich annimmt; im hier getesteten Setup war die lokale Schnittstellen-IP erforderlich.
+3. Im Abschnitt **grandMA3 onPC · OSC** der Mac-App Ziel-IPv4, OSC-Port, Präfix **ohne Schrägstriche**, lokale Rückmelde-IP eingeben. Bei onPC auf demselben Mac die IPv4 der in MA ausgewählten Schnittstelle verwenden. `127.0.0.1` wird nur funktionieren, wenn MA diese Verbindung tatsächlich annimmt; im hier getesteten Setup war die lokale Schnittstellen-IP erforderlich.
 4. **Verbinden** anklicken. Die App fragt ausschließlich lesend ab. Erst eine frische, gültige MA-Antwort für die gewählte Sequenz ergibt **Pultstatus empfangen / ONLINE**.
 5. **Weboberfläche öffnen** anklicken. Die Bedienung beginnt gesperrt. Nach Prüfung von DataPool, Sequenz und Cue-Liste oben **entsperren**, dann GO+/GO− oder Pause/Fortsetzen bedienen.
-6. Sequenznummer bei Bedarf direkt in der Weboberfläche ändern und **Übernehmen** anklicken. Ein Wechsel sendet keinen GO, sondern sperrt bis zum vollständigen neuen Pultstatus. Danach erneut entsperren. Noch nicht übernommene Eingaben sperren Playback; **Verwerfen** stellt die aktuelle Auswahl wieder her.
+6. In der Weboberfläche **Einstellungen** (Zahnrad) öffnen, **DataPool** und **Sequenznummer** eingeben und **Übernehmen** anklicken. Beide Angaben werden gemeinsam übernommen, ohne GO. Während der vollständigen Synchronisation bleibt Playback gesperrt. War die Bedienung vorher entsperrt, wird sie nach gültiger frischer Antwort automatisch wieder frei. Eine manuelle Sperre bleibt erhalten; bei Fehler oder Timeout ist bewusstes Entsperren nötig. Auch eine nicht vorhandene Zielsequenz lässt sich in Einstellungen korrigieren. Nicht übernommene Eingaben sperren Playback bis Übernehmen oder Verwerfen. **Playback** führt zurück; die Hauptseite enthält keine Eingabefelder und scrollt bei üblichen Tablet-/Desktopgrößen nicht, nur die Cueliste. Sehr niedrige Fenster und starke Vergrößerung dürfen für erreichbare Bedienelemente scrollen.
 7. **Trennen** beendet die OSC-Abfragen. **Server stoppen** beendet den Webserver und sperrt Playback. Schließen der Mac-App beendet beides.
 
 Es ist kein manuell einzufügendes Lua-Plugin und kein zusätzliches OSC-Sendeprogramm nötig. Die Bridge sendet fest erzeugte, rein lesende Lua-Abfragen über den offiziellen OSC-Command-Eingang. Die verwendeten `socket`-/`json`-Module und Objektzugriffe wurden gegen die installierte Version und echte Rückmeldungen geprüft. Sie sind nicht als universelle Zusage für andere MA-Versionen zu verstehen; die aktuelle Live-Bridge akzeptiert nur 2.5.1.1.
@@ -30,7 +30,7 @@ Vor dem Webserverstart bewusst **Im lokalen Netzwerk freigeben** aktivieren. Dan
 
 Standardbindung des HTTP-Servers ist 127.0.0.1. Die OSC-Rückmeldung wird nur von der konfigurierten Ziel-IP und mit passender zufälliger Abfragenonce angenommen. Kein Zugriff aus der Cloud. LAN-HTTP ist für ein vertrauenswürdiges separates Show-Netz vorgesehen; keine Internet-Portweiterleitung.
 
-Alle Live-Clients sehen denselben Bridge-Status und dieselbe Sperre. Der Server prüft Zugriffsschlüssel, Origin, Zielsequenz, erwartete Revision, Statusfrische und Request-ID. Er akzeptiert nur GO+/GO− und Pause, Sequenzwahl im konfigurierten DataPool, Lock und Resynchronisation. Es gibt keine frei eingebbaren MA-/Lua-Kommandos im Web-API.
+Alle Live-Clients sehen denselben Bridge-Status und dieselbe Sperre. Der Server prüft Zugriffsschlüssel, Origin, Zielsequenz, erwartete Revision, Statusfrische und Request-ID. Er akzeptiert nur GO+/GO− und Pause, validierte DataPool-/Sequenzwahl, Lock und Resynchronisation. Es gibt keine frei eingebbaren MA-/Lua-Kommandos im Web-API.
 
 ## Fehler und Resynchronisation
 
@@ -74,7 +74,7 @@ npm run desktop:package
 
 `desktop:dev` baut und öffnet die Mac-App. `desktop:package` erzeugt auf macOS das arm64-App-Bundle. `npm run dev` und `npm run preview` dienen optional der reinen Webentwicklung; ohne Bridge/API bleibt die Bedienung gesperrt. `dist/` enthält die Webdateien, `dist-desktop/` die kompilierte Desktop-Anwendung.
 
-19 Tests decken Fade-Berechnung und Pause-Bestätigung, echte UDP-Pakete mit simuliertem MA, Frische, Timeout, Deduplizierung, konkurrierende Revisionen, Zielwechsel, Nonce-Prüfung, Authentifizierung, Origin, Serverstart/-stopp und Zugriffsbeschränkungen ab. CI sendet niemals an ein echtes Pult. Testdetails und offene Abnahmen: [Testbericht](tests/VERIFICATION.md).
+21 Tests decken Fade-Berechnung und Pause-Bestätigung, echte UDP-Pakete mit simuliertem MA, Frische, Timeout, Deduplizierung, konkurrierende Revisionen, Zielwechsel, Nonce-Prüfung, Authentifizierung, Origin, Serverstart/-stopp und Zugriffsbeschränkungen ab. CI sendet niemals an ein echtes Pult. Testdetails und offene Abnahmen: [Testbericht](tests/VERIFICATION.md).
 
 Struktur: `apps/web` für UI und HTTP-Transport, `packages/shared` für Typen/Validierung, `apps/desktop` für Electron, HTTP-Server und OSC-Bridge. UI enthält keine OSC-/Lua-Syntax. Keine zusätzlichen Runtime-Abhängigkeiten für OSC; UDP und Paketkodierung verwenden Node-Bordmittel.
 

@@ -1,4 +1,4 @@
-# Abnahme v0.2.2
+# Abnahme v0.2.3
 
 Stand: 27. November 2026. Entwicklungsfassung, keine Freigabe für laufende Shows.
 
@@ -6,7 +6,7 @@ Stand: 27. November 2026. Entwicklungsfassung, keine Freigabe für laufende Show
 
 - TypeScript strict für React, Node-Bridge, Electron-Main und Preload erfolgreich.
 - ESLint erfolgreich.
-- 19 Tests erfolgreich: 2 Fade-Berechnungstests, 10 OSC-/UDP-Tests, 7 Server-/HTTP-Tests.
+- 21 Tests erfolgreich: 2 Fade-Berechnungstests, 12 OSC-/UDP-Tests, 7 Server-/HTTP-Tests.
 - Produktionsbuild und macOS-arm64-App-Bundle erfolgreich; lokale Ad-hoc-Signatur wird beim Packaging mit codesign geprüft.
 - npm-Lockfile vorhanden; OSC benötigt keine zusätzliche Runtime-Bibliothek.
 
@@ -55,3 +55,11 @@ Die eingebettete Node-Version der Desktop-Umgebung blockiert native Rollup-Modul
 Zusätzlicher Regressionstest prüft Off → erster Cue, laufender Cue → nächster Listeneintrag einschließlich Dezimal-Cues, Ende → kein Listeneintrag sowie eine leere Liste. Ein abweichender geladener Cue überschreibt den Listennachfolger nicht. Die frühere unbekannte Next-Anzeige des oben dokumentierten Ersttests ist damit ersetzt. Für diese reine Anzeigeänderung werden keine Befehle an ein echtes Pult gesendet.
 
 Browserprüfung mit isoliertem simuliertem MA-Empfänger: Current 1 → Next 1.5 / Solo, nach GO+ Current 1.5 → Next 2 / Finale, nach weiterem GO+ Current 2 → Ende der Cueliste. Next-Karte, blaue Tabellenmarkierung und GO+-Beschriftung waren konsistent. Kein echtes Pult wurde dabei angesprochen.
+
+## Web-Einstellungen und kompakte Hauptseite v0.2.3
+
+Isolierte UDP-Tests prüfen gemeinsame DataPool-/Sequenzwahl, Validierung beider Nummern, erwartete Revision, Sperre während Synchronisation und Ablehnung alter Playback-Ziele. Eine zuvor frische entsperrte Bedienung wird erst nach gültigem vollständigem Snapshot automatisch freigegeben. Manuelle Sperren bleiben bestehen. Timeout während Zielwechsel oder ein expliziter Lock vor der Antwort widerrufen automatische Freigabe. Keine GO-Nachricht durch Zielwahl. HTTP-Prüfungen ergänzen Origin- und Eingabeprüfung des neuen target-Endpunkts.
+
+Browserprüfung ausschließlich mit isoliertem simuliertem MA-Empfänger: Zahnrad öffnet Einstellungen; DataPool 2 und Sequenz 4 gemeinsam übernommen, anschließend ONLINE und weiterhin entsperrt. Manuellen Lock gesetzt, Sequenz 5 übernommen: weiterhin gesperrt. Reload auf ?page=settings erhält Seite und ausgewähltes Ziel. Hauptseite ohne Eingabefelder; Dokumentgröße entspricht Viewport bei 390×844, 820×1180, 1024×768 und 1280×720. Cueliste hat eigenen Scrollbereich; GO+/GO−/Pause bleiben sichtbar. Bei sehr niedrigen Fenstern wird bewusst Seitenscrollen zugelassen.
+
+Keine erneuten Befehle an ein echtes Pult für diese Änderung. Netzwerk-/OSC-Syntax unverändert. Native Mac-Fensterbedienung und echtes iPad/Safari bleiben offen; arm64-App und Signaturprüfung durch Packaging geprüft.
