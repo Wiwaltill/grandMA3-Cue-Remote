@@ -4,7 +4,7 @@ import dgram from 'node:dgram';
 import type { AddressInfo } from 'node:net';
 import { setTimeout as delay } from 'node:timers/promises';
 import { OscBridge, parseFeedback } from '../apps/desktop/src/bridge.ts';
-import { encodeOscCommand, isOscConfig, playbackCommand } from '../apps/desktop/src/osc.ts';
+import { encodeOscCommand, isOscConfig, playbackCommand, pauseRequest } from '../apps/desktop/src/osc.ts';
 import type { OscConfig } from '../packages/shared/live.ts';
 import type { Command } from '../packages/shared/playback.ts';
 const config: OscConfig={host:'127.0.0.1',replyHost:'127.0.0.1',port:8000,prefix:'',dataPool:'1',sequenceNumber:'1'};
@@ -14,13 +14,18 @@ function decode(packet: Buffer) {
 }
 async function until(predicate:()=>boolean) {const start=Date.now();while(!predicate()){if(Date.now()-start>2500)throw new Error('Condition timed out');await delay(10);}}
 const feedback=(number='1')=>({dataPool:'1',number,version:'2.5.1.1',name:'Test sequence',running:false,current:'',loaded:'',cues:[{number:'1',name:'Opening',fade:2},{number:'1.5',name:'Solo',fade:1},{number:'2',name:'Finale'}]});
-async function setup() {
+async function setup(options: {now?:()=>number;timeoutMs?:number}={}) {
   const socket=dgram.createSocket('udp4');await new Promise<void>(r=>socket.bind(0,'127.0.0.1',r));
   const address=socket.address();assert.notEqual(typeof address,'string');
-  const counters={go:0,query:0};const control={reply:true,advance:true,spoof:false};let current='',running=false;
+  const counters={go:0,query:0,pause:0};const control={reply:true,advance:true,spoof:false,ackPause:true};let current='',running=false;
   socket.on('message',packet=>{
     const {command}=decode(packet);
-    if(command.startsWith('Lua ')) {
+    if(command.includes('ackNonce=')){
+      counters.pause++;
+      const nonce=command.match(/ackNonce='([a-f0-9]{32})'/)?.[1];
+      const port=Number(command.match(/,'127\.0\.0\.1',(\d+)/)?.[1]);
+      if(control.ackPause && nonce && port)socket.send(JSON.stringify({ackNonce:nonce,result:'OK'}),port,'127.0.0.1');
+    } else if(command.startsWith('Lua ')) {
       counters.query++;
       if(!control.reply)return;
       const port=Number(command.match(/j\.encode\(t\),'127\.0\.0\.1',(\d+)/)?.[1]);
@@ -31,7 +36,7 @@ async function setup() {
       counters.go++;if(control.advance){running=true;current='1.5';}
     }
   });
-  const bridge=new OscBridge({pollMs:30,timeoutMs:300});
+  const bridge=new OscBridge({pollMs:30,timeoutMs:300,...options});
   const target={...config,port:(address as AddressInfo).port};
   try{await bridge.connect(target);await until(()=>bridge.getState().snapshot.connectionState==='ONLINE');}
   catch(error){bridge.disconnect();socket.close();throw error;}
@@ -43,6 +48,8 @@ test('OSC string command encoding uses address, string type, UTF-8 and four-byte
   assert.deepEqual(decode(packet),{address:'/gma3/cmd',types:',s',command:'Go+ DataPool 2 Sequence 42'});
   assert.equal(packet.length%4,0);assert.equal(decode(encodeOscCommand('','Ä')).command,'Ä');
   assert.equal(playbackCommand({...config,dataPool:'2',sequenceNumber:'42'},'goMinus'),'Go- DataPool 2 Sequence 42');
+  assert.equal(playbackCommand(config,'pause'),'Pause DataPool 1 Sequence 1');
+  assert.match(pauseRequest(config,12345,'a'.repeat(32)),/Cmd\('Pause DataPool 1 Sequence 1'\)/);
 });
 test('OSC configuration rejects injection, multicast, invalid ports and noncanonical targets',()=>{
   assert.equal(isOscConfig(config),true);
@@ -105,4 +112,36 @@ test('Next follows list order through Off, decimal cues and list end, ignoring l
   assert.equal(parseFeedback({...base,running:true,current:'1.5',loaded:'1'},config)?.next,'1/1/2');
   assert.equal(parseFeedback({...base,running:true,current:'2',loaded:'1'},config)?.next,null);
   assert.equal(parseFeedback({...base,cues:[]},config)?.next,null);
+});
+
+test('Pause waits for MA execution acknowledgement and freezes/resumes the calculated fade preview',async()=>{
+  let now=10000;const f=await setup({now:()=>now,timeoutMs:3000});
+  try{
+    assert.equal(f.bridge.getState().snapshot.fadePreview,undefined,'do not invent progress on initial connection');
+    f.bridge.setLocked(false);await f.bridge.execute(f.command('start-fade'));
+    await until(()=>f.bridge.getState().commandState==='idle');
+    assert.equal(f.bridge.getState().snapshot.fadePreview?.durationMs,1000);
+    now+=150;assert.equal(f.bridge.getState().snapshot.fadePreview?.elapsedMs,150);
+    const pause={...f.command('pause-1'),action:'pause' as const};
+    assert.deepEqual(await f.bridge.execute(pause),{accepted:true});
+    assert.equal(f.bridge.getState().commandState,'pending');
+    await until(()=>f.bridge.getState().commandState==='idle');
+    assert.equal(f.bridge.getState().snapshot.fadePreview?.paused,true);
+    now+=200;assert.equal(f.bridge.getState().snapshot.fadePreview?.elapsedMs,150);
+    assert.deepEqual(await f.bridge.execute(pause),{accepted:false,reason:'duplicate'});
+    await f.bridge.execute({...f.command('pause-2'),action:'pause'});
+    await until(()=>f.bridge.getState().commandState==='idle');
+    now+=100;assert.equal(f.bridge.getState().snapshot.fadePreview?.elapsedMs,250);
+    assert.equal(f.counters.pause,2);assert.equal(f.counters.go,1);
+    f.bridge.resync();assert.equal(f.bridge.getState().snapshot.fadePreview,undefined);
+  }finally{f.cleanup();}
+});
+test('missing Pause acknowledgement locks controls without retry despite fresh unchanged snapshots',async()=>{
+  const f=await setup();try{
+    f.control.ackPause=false;f.bridge.setLocked(false);
+    await f.bridge.execute({...f.command('pause-no-ack'),action:'pause'});
+    await until(()=>f.bridge.getState().commandState==='unknown');
+    assert.equal(f.bridge.getState().snapshot.locked,true);assert.equal(f.counters.pause,1);
+    assert.equal(f.counters.go,0);assert.equal(f.bridge.getState().snapshot.fadePreview,undefined);
+  }finally{f.cleanup();}
 });

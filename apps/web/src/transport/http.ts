@@ -22,7 +22,7 @@ export class HttpTransport implements PlaybackTransport {
     catch{this.offline();}finally{this.polling=false;}
   };
   subscribe=(listener:()=>void)=>{
-    this.listeners.add(listener);if(!this.timer){void this.refresh();this.timer=setInterval(()=>void this.refresh(),500);}
+    this.listeners.add(listener);if(!this.timer){void this.refresh();this.timer=setInterval(()=>void this.refresh(),250);}
     return()=>{this.listeners.delete(listener);if(!this.listeners.size && this.timer){clearInterval(this.timer);this.timer=null;}};
   };
   execute=async(command: Command): Promise<CommandResult>=>{

@@ -5,15 +5,14 @@ export interface ServerStatus {
   port: number | null;
   allowLan: boolean;
   urls: string[];
-  liveUrls?: string[];
+  accessUrls?: string[];
   error: 'port-in-use' | 'invalid-config' | 'missing-build' | 'start-failed' | null;
 }
 export interface DesktopApi {
   getStatus(): Promise<ServerStatus>;
   start(config: ServerConfig): Promise<ServerStatus>;
   stop(): Promise<ServerStatus>;
-  openDemo(): Promise<void>;
-  openLive(): Promise<void>;
+  openWeb(): Promise<void>;
   getLive(): Promise<LiveState>;
   getAddresses(): Promise<string[]>;
   connectOsc(config: OscConfig): Promise<LiveState>;

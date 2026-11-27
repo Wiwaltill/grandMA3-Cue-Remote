@@ -1,6 +1,6 @@
 # Roadmap
 
-v0.1.0 ist implementiert und lokal geprüft; die Abnahme auf echtem iPad/Safari steht noch aus. Auf Benutzerwunsch ist zusätzlich eine grafische macOS-Serversteuerung für die Demo vorgezogen. v0.2.0 enthält die OSC-Bridge mit echten Sequenz-Snapshots und wurde auf der freigegebenen lokalen Testshow geprüft. Die vollständige Live-/Hardware-Abnahme bleibt offen.
+v0.1.0 wurde als Demo implementiert (seit v0.2.2 aus dem Produkt entfernt); die Abnahme auf echtem iPad/Safari steht noch aus. Auf Benutzerwunsch ist zusätzlich eine grafische macOS-Serversteuerung für die Demo vorgezogen. v0.2.0 enthält die OSC-Bridge mit echten Sequenz-Snapshots und wurde auf der freigegebenen lokalen Testshow geprüft. Die vollständige Live-/Hardware-Abnahme bleibt offen.
 
 ## v0.1.0 – Demo (implementiert; Safari-Abnahme offen)
 Responsive React/TypeScript-Oberfläche, Current/Next, Cue-Tabelle, Fortschritt, GO+/GO−, Lock, Reset. Lokaler Demo-Adapter ohne Netzwerk zum Pult. Akzeptanz: Build, Tests und Bedienung in Safari; Demo eindeutig sichtbar.
@@ -34,3 +34,6 @@ Echte Cue-Liste und Current/Off kommen aus lesenden Lua-Abfragen über OSC; kein
 
 ## v0.2.1 – Next aus der Cueliste
 Benutzerentscheidung umgesetzt: NEXT CUE ist immer der Listennachfolger nach dem bestätigten Current. Dezimal-Cues bleiben erhalten; Karte, Tabelle und GO+-Beschriftung sind konsistent. Goto bleibt ein späterer Meilenstein. Kein zusätzlicher Playback-Befehl durch die Anzeige.
+
+## v0.2.2 – ausschließlich Pultanbindung, Pause und Fade-Vorschau
+Auf Benutzerwunsch Demo-Modus/Adapter/Reset und deren Produktzugänge entfernt. Pause/Fortsetzen neben GO− mit echter MA-Cmd-Ausführungsbestätigung. Berechnete Fade-Vorschau in Current und aktueller Cue-Zeile; sichtbar als berechnet gekennzeichnet. Kein verifizierter tatsächlicher Fade-Prozentwert, keine vollständige Nachführung externer Pause/Timing-Master. Dies ist die ausdrücklich gewählte Rechenvorschau. Tests, Installation und tatsächliche Grenzen dokumentieren.

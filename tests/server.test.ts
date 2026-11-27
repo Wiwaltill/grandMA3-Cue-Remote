@@ -4,13 +4,13 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { DemoServer, isServerConfig } from '../apps/desktop/src/server.ts';
+import { RemoteServer, isServerConfig } from '../apps/desktop/src/server.ts';
 
 async function fixture() {
   const root = await mkdtemp(join(tmpdir(),'cue-server-'));
   await mkdir(join(root,'assets'));
-  await writeFile(join(root,'index.html'),'<!doctype html><title>Demo</title>');
-  await writeFile(join(root,'assets','demo-test.js'),'export const demo = true;');
+  await writeFile(join(root,'index.html'),'<!doctype html><title>Remote</title>');
+  await writeFile(join(root,'assets','remote-test.js'),'export const remote = true;');
   return {root,cleanup:()=>rm(root,{recursive:true,force:true})};
 }
 test('server config accepts only explicit valid port and LAN scope',() => {
@@ -18,18 +18,18 @@ test('server config accepts only explicit valid port and LAN scope',() => {
   assert.equal(isServerConfig({port:0,allowLan:false}),true);
   assert.equal(isServerConfig({port:4173,allowLan:true}),true);
 });
-test('server starts only on request, serves built demo, stops and restarts',async () => {
+test('server starts only on request, serves built web app, stops and restarts',async () => {
   const f = await fixture(); const changes: string[] = [];
-  const server = new DemoServer(f.root,status=>changes.push(status.phase));
+  const server = new RemoteServer(f.root,status=>changes.push(status.phase));
   try {
     assert.equal(server.getStatus().phase,'stopped');
     const running = await server.start({port:0,allowLan:false});
     assert.equal(running.phase,'running');assert.equal(running.allowLan,false);assert.equal(running.urls.length,1);
     const response = await fetch(running.urls[0]);
-    assert.equal(response.status,200);assert.match(await response.text(),/<title>Demo/);
+    assert.equal(response.status,200);assert.match(await response.text(),/<title>Remote/);
     assert.equal(response.headers.get('cache-control'),'no-store');
     assert.match(response.headers.get('content-security-policy')!,/connect-src 'none'/);
-    const asset = await fetch(`${running.urls[0]}/assets/demo-test.js`);
+    const asset = await fetch(`${running.urls[0]}/assets/remote-test.js`);
     assert.equal(asset.status,200);assert.match(asset.headers.get('content-type')!,/javascript/);
     const head = await fetch(running.urls[0],{method:'HEAD'});assert.equal(await head.text(),'');
     assert.equal((await server.stop()).phase,'stopped');
@@ -39,7 +39,7 @@ test('server starts only on request, serves built demo, stops and restarts',asyn
   } finally {await server.stop();await f.cleanup();}
 });
 test('server rejects repository paths, desktop files and all mutating HTTP requests',async () => {
-  const f=await fixture();const server=new DemoServer(f.root);
+  const f=await fixture();const server=new RemoteServer(f.root);
   try {
     const {urls}=await server.start({port:0,allowLan:false});
     for (const path of ['/package.json','/apps/desktop/index.html','/assets/../package.json','/%2e%2e/package.json','/assets/%2e%2e/index.html','/assets/missing.js']) {
@@ -54,7 +54,7 @@ test('server rejects repository paths, desktop files and all mutating HTTP reque
   } finally {await server.stop();await f.cleanup();}
 });
 test('port collision is reported, never takes over the existing server, and allows retry',async () => {
-  const f=await fixture();const a=new DemoServer(f.root);const b=new DemoServer(f.root);
+  const f=await fixture();const a=new RemoteServer(f.root);const b=new RemoteServer(f.root);
   try {
     const first=await a.start({port:0,allowLan:false});
     const failure=await b.start({port:first.port,allowLan:false});
@@ -64,7 +64,7 @@ test('port collision is reported, never takes over the existing server, and allo
   } finally {await a.stop();await b.stop();await f.cleanup();}
 });
 test('duplicate start and stop actions are safe',async () => {
-  const f=await fixture();const server=new DemoServer(f.root);
+  const f=await fixture();const server=new RemoteServer(f.root);
   try {
     const [first,second]=await Promise.all([server.start({port:0,allowLan:false}),server.start({port:0,allowLan:true})]);
     assert.equal(first.phase,'running');assert.equal(second.phase,'starting');
@@ -75,7 +75,7 @@ test('duplicate start and stop actions are safe',async () => {
   } finally {await server.stop();await f.cleanup();}
 });
 test('missing build and malformed config are shown as errors without listening',async () => {
-  const server=new DemoServer(join(tmpdir(),'cue-remote-no-such-build'));
+  const server=new RemoteServer(join(tmpdir(),'cue-remote-no-such-build'));
   assert.equal((await server.start({port:80,allowLan:false})).error,'invalid-config');
   assert.equal((await server.start({port:0,allowLan:false})).error,'missing-build');
   assert.deepEqual(server.getStatus().urls,[]);
@@ -84,10 +84,10 @@ test('missing build and malformed config are shown as errors without listening',
 
 test('live HTTP API requires operator token, rejects cross-origin mutations and exposes no configuration or shell',async()=>{
   const {OscBridge}=await import('../apps/desktop/src/bridge.ts');
-  const f=await fixture();const bridge=new OscBridge();const server=new DemoServer(f.root,()=>{},bridge);
+  const f=await fixture();const bridge=new OscBridge();const server=new RemoteServer(f.root,()=>{},bridge);
   try {
     const state=await server.start({port:0,allowLan:false});const url=state.urls[0];
-    const token=new URL(state.liveUrls![0]).hash.slice(1);const headers={Authorization:`Bearer ${token}`,'Content-Type':'application/json'};
+    const token=new URL(state.accessUrls![0]).hash.slice(1);const headers={Authorization:`Bearer ${token}`,'Content-Type':'application/json'};
     assert.equal((await fetch(url+'/api/state')).status,401);
     const response=await fetch(url+'/api/state',{headers});assert.equal(response.status,200);
     assert.equal((await response.json()).snapshot.connectionState,'OFFLINE');
@@ -99,7 +99,7 @@ test('live HTTP API requires operator token, rejects cross-origin mutations and 
     assert.equal((await fetch(url+'/api/lock',{method:'POST',headers,body:JSON.stringify({locked:false})})).status,200);
     assert.equal(bridge.getState().snapshot.locked,true);
     await server.stop();const restarted=await server.start({port:0,allowLan:false});
-    assert.notEqual(new URL(restarted.liveUrls![0]).hash.slice(1),token);
+    assert.notEqual(new URL(restarted.accessUrls![0]).hash.slice(1),token);
     assert.equal((await fetch(restarted.urls[0]+'/api/state',{headers})).status,401);
   }finally{await server.stop();bridge.disconnect();await f.cleanup();}
 });

@@ -13,8 +13,8 @@ export function isServerConfig(value: unknown): value is ServerConfig {
   const config = value as ServerConfig;
   return typeof config.allowLan === 'boolean' && Number.isInteger(config.port) && (config.port === 0 || config.port >= 1024 && config.port <= 65535);
 }
-// Standalone mode serves only demo files. An injected bridge adds a narrowly scoped, authenticated live API.
-export class DemoServer {
+// Serves the remote UI and a narrowly scoped, authenticated playback API.
+export class RemoteServer {
   private server: Server | null = null;
   private token = randomBytes(32).toString('hex');
   private bridge: OscBridge | undefined;
@@ -94,7 +94,7 @@ export class DemoServer {
           }
         }
       }
-      return this.update({phase:'running',port,urls,...(this.bridge?{liveUrls:urls.map(url=>`${url}/?mode=live#${this.token}`)}:{})});
+      return this.update({phase:'running',port,urls,...(this.bridge?{accessUrls:urls.map(url=>`${url}/#${this.token}`)}:{})});
     } catch (error) {
       this.server = null;
       return this.update({phase:'error',port:null,urls:[],error:(error as NodeJS.ErrnoException).code === 'EADDRINUSE'?'port-in-use':'start-failed'});
@@ -103,12 +103,12 @@ export class DemoServer {
   async stop(): Promise<ServerStatus> {
     if (this.status.phase === 'starting' || this.status.phase === 'stopping') return this.getStatus();
     const server = this.server;this.bridge?.setLocked(true);
-    if (!server) return this.update({phase:'stopped',port:null,urls:[],liveUrls:[],error:null});
+    if (!server) return this.update({phase:'stopped',port:null,urls:[],accessUrls:[],error:null});
     this.update({phase:'stopping'});
     await new Promise<void>(resolve => {
       server.close(() => resolve()); server.closeAllConnections();
     });
     this.server = null;
-    return this.update({phase:'stopped',port:null,urls:[],liveUrls:[],error:null});
+    return this.update({phase:'stopped',port:null,urls:[],accessUrls:[],error:null});
   }
 }

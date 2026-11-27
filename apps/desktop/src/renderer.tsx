@@ -30,17 +30,16 @@ function Launcher() {
     finally {setPending(false);}
   }
   return <main className="launcher">
-    <header><span className="logo">MA3</span><div><h1>{t.title}</h1><span className="eyebrow">{t.label}</span></div><span className="demo-badge">{t.demo}</span></header>
+    <header><span className="logo">MA3</span><div><h1>{t.title}</h1><span className="eyebrow">{t.label}</span></div><span className="version-badge">{t.version}</span></header>
     <p className="intro">{t.intro}</p>
     <section className={`server-state ${phase}`} aria-live="polite"><span className="eyebrow">{t.status}</span><h2><i/>{t[phase]}</h2><p>{running?t.runningHint:t.stoppedHint}</p></section>
     <fieldset disabled={!api || !status || busy || running}><div className="port-field"><label htmlFor="port">{t.port}</label><input id="port" type="number" min="0" max="65535" step="1" value={port} aria-invalid={!validPort} aria-describedby="port-hint" onChange={event=>setPort(event.target.value)}/></div><p id="port-hint" className="hint">{t.portHint}</p>
       <label className="lan-option"><input type="checkbox" checked={allowLan} onChange={event=>setAllowLan(event.target.checked)}/><strong>{t.lan}</strong></label><p className="hint lan-hint">{t.lanHint}</p>
     </fieldset>
     <div role="status" className="feedback">{!api?t.standalone:error || (status?.error?t.errors[status.error]:!validPort?t.errors['invalid-config']:'')}</div>
-    <div className="actions"><button className={running?'stop':'start'} disabled={!api || !status || busy || (!running && !validPort)} onClick={()=>void action(()=>running?api!.stop():api!.start({port:Number(port),allowLan}))}>{phase==='starting'?t.starting:phase==='stopping'?t.stopping:running?t.stop:t.start}</button><button className="open" disabled={!running || busy} onClick={()=>void action(()=>api!.openDemo())}>{t.open}<span aria-hidden="true">↗</span></button></div>
-    {running && <button className="live-open" disabled={busy} onClick={()=>void action(()=>api!.openLive())}>{t.openLive} ↗</button>}
+    <div className="actions"><button className={running?'stop':'start'} disabled={!api || !status || busy || (!running && !validPort)} onClick={()=>void action(()=>running?api!.stop():api!.start({port:Number(port),allowLan}))}>{phase==='starting'?t.starting:phase==='stopping'?t.stopping:running?t.stop:t.start}</button><button className="open" disabled={!running || busy} onClick={()=>void action(()=>api!.openWeb())}>{t.open}<span aria-hidden="true">↗</span></button></div>
     <OscPanel api={api}/>
-    {running && <section className="addresses"><div className="eyebrow">{t.addresses}</div>{status?.urls.map((url,index)=><div className="address" key={url}><span>{index===0?t.localAddress:t.lanAddress}</span><code>{url}</code></div>)}{status?.liveUrls && <><p className="hint">{t.osc.pairing}</p>{status.liveUrls.map(url=><code className="live-url" key={url}>{url}</code>)}</>}</section>}
+    {running && <section className="addresses"><div className="eyebrow">{t.addresses}</div><p className="hint">{t.osc.pairing}</p>{status?.accessUrls?.map((url,index)=><div className="address" key={url}><span>{index===0?t.localAddress:t.lanAddress}</span><code className="access-url">{url}</code></div>)}</section>}
     <footer><span className={status?.allowLan && running?'network':''}>◈ {status?.allowLan && running?t.network:t.local}</span><p>{t.notice}</p><p>{t.quitHint}</p></footer>
   </main>;
 }

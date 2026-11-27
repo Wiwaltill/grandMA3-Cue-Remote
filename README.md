@@ -2,9 +2,9 @@
 
 Lokale, iPad-optimierte Sequenz-Fernbedienung mit grafischer macOS-Serversteuerung. React/TypeScript, Node und Electron; ohne Cloud oder Telemetrie.
 
-## v0.2.1 – echte OSC-Anbindung mit Next aus der Cueliste
+## v0.2.2 – Pause und berechnete Fade-Vorschau
 
-Die App verbindet sich mit **grandMA3 onPC 2.5.1.1**, liest Sequenzname, Cue-Liste, bekannte Fade-Zeiten und Current-Status aus MA und sendet gezieltes GO+/GO− an den ausgewählten DataPool und die eingetragene Sequenznummer. Die Weboberfläche enthält Lock, Auto-Follow und Listenpositionsfortschritt. Sie simuliert im Live-Modus keinen Playback-Erfolg.
+Die App verbindet sich mit **grandMA3 onPC 2.5.1.1**, liest Sequenzname, Cue-Liste, bekannte Fade-Zeiten und Current-Status aus MA und sendet gezieltes GO+/GO− und Pause/Fortsetzen an den ausgewählten DataPool und die eingetragene Sequenznummer. Die Weboberfläche enthält Lock, Auto-Follow, Listenpositionsfortschritt und eine klar als berechnet markierte Fade-Vorschau. Der Demo-Modus ist entfernt. Sie simuliert im Live-Modus keinen Playback-Erfolg.
 
 Echter Test auf dem Entwicklungs-Mac: Version und Sequenzdaten empfangen, GO+ über die Weboberfläche ausgelöst und anschließend Cue 1 vom Pult bestätigt. GO− ohne Zustandsänderung am Listenanfang führte korrekt zur Sperre „Ergebnis unbekannt“. Resynchronisation und Rückkehr zum ursprünglichen Off-Zustand wurden geprüft. Dies ist eine Entwicklungsfassung; die vollständige Show-/iPad-Abnahme steht aus.
 
@@ -18,7 +18,7 @@ Die macOS-arm64-App enthält Laufzeit und Weboberfläche. Für die normale Bedie
 2. In grandMA3 eine **separate Testshow** öffnen. Unter **Menu → In & Out → OSC** das passende **Interface** wählen, **Enable Input** einschalten und eine Zeile mit **Mode UDP**, beispielsweise **Port 8000**, und **Receive Command: Yes** konfigurieren. Das Präfix darf leer sein oder beispielsweise `gma3` lauten; beide Seiten müssen übereinstimmen. Die allgemeine Receive-Einstellung ist für Command-Eingang nicht ausschlaggebend.
 3. Im Abschnitt **grandMA3 onPC · OSC** der Mac-App Ziel-IPv4, OSC-Port, Präfix **ohne Schrägstriche**, lokale Rückmelde-IP, DataPool und Sequenznummer eingeben. Bei onPC auf demselben Mac die IPv4 der in MA ausgewählten Schnittstelle verwenden. `127.0.0.1` wird nur funktionieren, wenn MA diese Verbindung tatsächlich annimmt; im hier getesteten Setup war die lokale Schnittstellen-IP erforderlich.
 4. **Verbinden** anklicken. Die App fragt ausschließlich lesend ab. Erst eine frische, gültige MA-Antwort für die gewählte Sequenz ergibt **Pultstatus empfangen / ONLINE**.
-5. **Live-Weboberfläche öffnen** anklicken. Die Bedienung beginnt gesperrt. Nach Prüfung von DataPool, Sequenz und Cue-Liste oben **entsperren**, dann GO+/GO− bedienen.
+5. **Weboberfläche öffnen** anklicken. Die Bedienung beginnt gesperrt. Nach Prüfung von DataPool, Sequenz und Cue-Liste oben **entsperren**, dann GO+/GO− oder Pause/Fortsetzen bedienen.
 6. Sequenznummer bei Bedarf direkt in der Weboberfläche ändern und **Übernehmen** anklicken. Ein Wechsel sendet keinen GO, sondern sperrt bis zum vollständigen neuen Pultstatus. Danach erneut entsperren. Noch nicht übernommene Eingaben sperren Playback; **Verwerfen** stellt die aktuelle Auswahl wieder her.
 7. **Trennen** beendet die OSC-Abfragen. **Server stoppen** beendet den Webserver und sperrt Playback. Schließen der Mac-App beendet beides.
 
@@ -30,21 +30,27 @@ Vor dem Webserverstart bewusst **Im lokalen Netzwerk freigeben** aktivieren. Dan
 
 Standardbindung des HTTP-Servers ist 127.0.0.1. Die OSC-Rückmeldung wird nur von der konfigurierten Ziel-IP und mit passender zufälliger Abfragenonce angenommen. Kein Zugriff aus der Cloud. LAN-HTTP ist für ein vertrauenswürdiges separates Show-Netz vorgesehen; keine Internet-Portweiterleitung.
 
-Alle Live-Clients sehen denselben Bridge-Status und dieselbe Sperre. Der Server prüft Zugriffsschlüssel, Origin, Zielsequenz, erwartete Revision, Statusfrische und Request-ID. Er akzeptiert nur GO+/GO−, Sequenzwahl im konfigurierten DataPool, Lock und Resynchronisation. Es gibt keine frei eingebbaren MA-/Lua-Kommandos im Web-API.
+Alle Live-Clients sehen denselben Bridge-Status und dieselbe Sperre. Der Server prüft Zugriffsschlüssel, Origin, Zielsequenz, erwartete Revision, Statusfrische und Request-ID. Er akzeptiert nur GO+/GO− und Pause, Sequenzwahl im konfigurierten DataPool, Lock und Resynchronisation. Es gibt keine frei eingebbaren MA-/Lua-Kommandos im Web-API.
 
 ## Fehler und Resynchronisation
 
-Die Bridge fragt pro Sekunde einen vollständigen Snapshot ab. Ohne frische Antwort nach 3 Sekunden wird serverseitig gesperrt; der Client sperrt ebenfalls bei fehlendem Webserverkontakt. Ein gesendetes UDP-Paket ändert keinen angezeigten Cue.
+Die Bridge fragt alle 500 ms einen vollständigen Snapshot ab; der Browser aktualisiert den Status alle 250 ms. Ohne frische Antwort nach 3 Sekunden wird serverseitig gesperrt; der Client sperrt ebenfalls bei fehlendem Webserverkontakt. Ein gesendetes UDP-Paket ändert keinen angezeigten Cue.
 
 Nach einem GO ist höchstens ein Bedienbefehl ausstehend. Zeigt MA binnen 3 Sekunden keine Änderung von Current/Running, gilt das Ergebnis als **unbekannt**: Sperre, keine Queue und keine automatische Wiederholung. Das kann auch bei einem korrekt empfangenen GO am Listenanfang/-ende oder einer unveränderten Cue passieren. **Neu synchronisieren** liest erneut vollständig; anschließend bewusst entsperren. Es ist keine Behauptung, dass der Befehl nicht angekommen sei. Bei verlorenem Feedback bleibt die Sperre auch nach frischer Rückmeldung bestehen, bis ein Bediener entsperrt.
 
 Cue-Nummern bleiben Strings; die Anwendung validiert Eingaben und akzeptiert maximal 500 Cues in einem Snapshot bis 60 KB. Unbekannte Fade-Werte werden als — angezeigt. Nicht vorhandene Sequenzen, unpassende MA-Versionen oder ungültige Snapshots geben die Bedienung nicht frei. Nummern werden gezielt adressiert; Schutz vor gleichzeitiger Objektverschiebung und stabile MA-Handles sind noch nicht abgenommen. Die Lösung bietet keine Ende-zu-Ende-Exactly-once-Garantie über UDP.
 
-## Getrennter Demo-Modus
+## Pause und Fade-Vorschau
 
-**Demo öffnen** startet eine unabhängige lokale Simulation mit zehn Beispiel-Cues einschließlich `05.1`. Dieser Modus spricht niemals ein Pult an. Jeder Browser-Tab besitzt eine eigene Demo. Current/Next, Fade-Zeiten, GO+/GO−, Sperre, 450-ms-Doppelklickschutz und bestätigter Reset sind interaktiv. Die frei eingegebene Demo-Sequenznummer lädt keine Pultdaten. Ein Wechsel startet Off; Reset stellt Cue 04 wieder her und behält die Nummer bei. Neuladen verwirft die Demo-Sitzung.
+**Pause** liegt neben **GO−** und entspricht dem MA-Toggle: ein Tastendruck pausiert, der nächste setzt fort. Der Server lässt den Button erst nach einer echten `Cmd`-Ausführungsbestätigung `OK` aus MA wieder frei. Eine UDP-Sendebestätigung allein reicht nicht. Kommt keine gültige Bestätigung, bleibt das Ergebnis unbekannt und die Bedienung wird gesperrt; keine automatische Wiederholung.
 
-Der Fortschritt zeigt die **Listenposition**, keinen zeitlichen Fade-Verlauf. Keine externen Fonts, Telemetrie, Service Worker oder Offline-Befehlswarteschlange. Eine bereits geladene Demo kann nach Serverstopp weiter simulieren.
+**FADE-VORSCHAU · BERECHNET** erscheint in der Current-Karte und als blauer Balken in der aktuellen Cue-Zeile. Die Vorschau startet erst nach einem bestätigten Wechsel des aktuellen Cues und verwendet dessen gespeicherte Fade-Zeit. Bei einem durch die App ausgelösten GO wird der Auslösezeitpunkt als Rechenbasis benutzt, sobald MA den Wechsel bestätigt; bei externen Cue-Wechseln die Mitte zwischen den beiden empfangenen Statuszeitpunkten. Es gibt keinen vorgetäuschten Playback-Start aufgrund eines verschickten Pakets.
+
+Eine in der App von MA bestätigte Pause hält die Berechnung an; der nächste bestätigte Pause-Tastendruck setzt sie fort. Bei Verbindungsverlust, unbekanntem Befehlsergebnis oder Resynchronisation wird die Vorschau verworfen. Beim Verbinden mit einem bereits laufenden Cue wird kein angeblich gerade gestarteter Fade erfunden.
+
+Die Vorschau ist **kein gemessener MA-Fade-Prozentwert**. Delay, individuelle Attributzeiten, Timing-/Rate-Master und extern am Pult betätigte Pause sind nicht vollständig nachgeführt; GO− kann andere Rücklaufzeiten verwenden. Dafür wurde die berechnete Anzeige ausdrücklich gewählt. Unbekannte Fade-Zeiten erzeugen keinen geschätzten Balken. Der separate Listenfortschritt bleibt eine Positionsanzeige.
+
+Die Anwendung besitzt ausschließlich die echte Pultanbindung, keinen Demo-Modus und keinen Demo Reset. Keine externen Fonts, Telemetrie, Service Worker oder Offline-Befehlswarteschlange.
 
 ## App beziehen
 
@@ -66,14 +72,14 @@ npm run desktop:dev
 npm run desktop:package
 ```
 
-`desktop:dev` baut und öffnet die Mac-App. `desktop:package` erzeugt auf macOS das arm64-App-Bundle. `npm run dev` und `npm run preview` dienen optional der reinen Webentwicklung; ohne Bridge/API ist dort ausschließlich die Demo funktionsfähig. `dist/` enthält die Webdateien, `dist-desktop/` die kompilierte Desktop-Anwendung.
+`desktop:dev` baut und öffnet die Mac-App. `desktop:package` erzeugt auf macOS das arm64-App-Bundle. `npm run dev` und `npm run preview` dienen optional der reinen Webentwicklung; ohne Bridge/API bleibt die Bedienung gesperrt. `dist/` enthält die Webdateien, `dist-desktop/` die kompilierte Desktop-Anwendung.
 
-27 Tests decken Demo-Zustände, echte UDP-Pakete mit simuliertem MA, Frische, Timeout, Deduplizierung, konkurrierende Revisionen, Zielwechsel, Nonce-Prüfung, Authentifizierung, Origin, Serverstart/-stopp und Zugriffsbeschränkungen ab. CI sendet niemals an ein echtes Pult. Testdetails und offene Abnahmen: [Testbericht](tests/VERIFICATION.md).
+19 Tests decken Fade-Berechnung und Pause-Bestätigung, echte UDP-Pakete mit simuliertem MA, Frische, Timeout, Deduplizierung, konkurrierende Revisionen, Zielwechsel, Nonce-Prüfung, Authentifizierung, Origin, Serverstart/-stopp und Zugriffsbeschränkungen ab. CI sendet niemals an ein echtes Pult. Testdetails und offene Abnahmen: [Testbericht](tests/VERIFICATION.md).
 
-Struktur: `apps/web` für UI und HTTP-Transport, `packages/shared` für Typen/Validierung, `packages/demo` für die reine Simulation, `apps/desktop` für Electron, HTTP-Server und OSC-Bridge. UI enthält keine OSC-/Lua-Syntax. Keine zusätzlichen Runtime-Abhängigkeiten für OSC; UDP und Paketkodierung verwenden Node-Bordmittel.
+Struktur: `apps/web` für UI und HTTP-Transport, `packages/shared` für Typen/Validierung, `apps/desktop` für Electron, HTTP-Server und OSC-Bridge. UI enthält keine OSC-/Lua-Syntax. Keine zusätzlichen Runtime-Abhängigkeiten für OSC; UDP und Paketkodierung verwenden Node-Bordmittel.
 
 - [Roadmap](ROADMAP.md), [Design](DESIGN.md), [Architektur](ARCHITECTURE.md), [Entwicklungsanweisungen](AGENTS.md)
-- Primärquellen: [OSC 2.5](https://help.malighting.com/grandMA3/2.5/HTML/remote_inputs_osc.html), [DataPool-Adressierung](https://help2.malighting.com/grandMA3/2.5/HTML/keyword_datapool.html), [Go+](https://help.malighting.com/grandMA3/2.5/HTML/keyword_goplus.html), [Go−](https://help.malighting.com/grandMA3/2.5/HTML/keyword_gominus.html), [Lua Get](https://help.malighting.com/grandMA3/2.5/HTML/lua_object_get.html)
+- Primärquellen: [OSC 2.5](https://help.malighting.com/grandMA3/2.5/HTML/remote_inputs_osc.html), [DataPool-Adressierung](https://help2.malighting.com/grandMA3/2.5/HTML/keyword_datapool.html), [Go+](https://help.malighting.com/grandMA3/2.5/HTML/keyword_goplus.html), [Go−](https://help.malighting.com/grandMA3/2.5/HTML/keyword_gominus.html), [Lua Get](https://help.malighting.com/grandMA3/2.5/HTML/lua_object_get.html), [Pause](https://help.malighting.com/grandMA3/2.5/HTML/keyword_pause.html), [Cmd-Rückmeldung](https://help.malighting.com/grandMA3/2.0/HTML/lua_objectfree_cmd.html)
 - Toolchain: [Node-LTS](https://github.com/nodejs/Release), [Electron-Sicherheit](https://www.electronjs.org/docs/latest/tutorial/security), [Packager](https://electron.github.io/packager/main/), [Checkout](https://github.com/actions/checkout), [Setup Node](https://github.com/actions/setup-node), [Upload Artifact](https://github.com/actions/upload-artifact)
 
 Keine Tests auf laufenden Shows ohne ausdrückliche Freigabe. Lizenzentscheidung steht noch aus.

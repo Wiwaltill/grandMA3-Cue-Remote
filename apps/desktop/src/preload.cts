@@ -8,8 +8,7 @@ contextBridge.exposeInMainWorld('desktop', {
   getAddresses: () => ipcRenderer.invoke('osc:addresses'),
   connectOsc: (config: unknown) => ipcRenderer.invoke('osc:connect',config),
   disconnectOsc: () => ipcRenderer.invoke('osc:disconnect'),
-  openLive: () => ipcRenderer.invoke('server:open-live'),
-  openDemo: () => ipcRenderer.invoke('server:open'),
+  openWeb: () => ipcRenderer.invoke('server:open-web'),
   onStatus: (listener: (status: unknown) => void) => {
     const handler = (_event: Electron.IpcRendererEvent,status: unknown) => listener(status);
     ipcRenderer.on('server:status',handler);

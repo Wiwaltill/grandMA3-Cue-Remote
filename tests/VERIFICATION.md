@@ -1,4 +1,4 @@
-# Abnahme v0.2.1
+# Abnahme v0.2.2
 
 Stand: 27. November 2026. Entwicklungsfassung, keine Freigabe für laufende Shows.
 
@@ -6,7 +6,7 @@ Stand: 27. November 2026. Entwicklungsfassung, keine Freigabe für laufende Show
 
 - TypeScript strict für React, Node-Bridge, Electron-Main und Preload erfolgreich.
 - ESLint erfolgreich.
-- 27 Tests erfolgreich: 12 Demo-/Sequenztests, 8 OSC-/UDP-Tests, 7 Server-/HTTP-Tests.
+- 19 Tests erfolgreich: 2 Fade-Berechnungstests, 10 OSC-/UDP-Tests, 7 Server-/HTTP-Tests.
 - Produktionsbuild und macOS-arm64-App-Bundle erfolgreich; lokale Ad-hoc-Signatur wird beim Packaging mit codesign geprüft.
 - npm-Lockfile vorhanden; OSC benötigt keine zusätzliche Runtime-Bibliothek.
 
@@ -27,9 +27,17 @@ Der Benutzer bestätigte eine separate geöffnete Testshow und gab den Verbindun
 
 Die echte Abnahme bestätigt diese lokale Konstellation. Sie bestätigt weder jede Cue-/Loop-/Restart-Konfiguration noch verlorene UDP-Pakete oder Ende-zu-Ende-Exactly-once-Semantik.
 
-## Browser und Demo
+## Pause und berechnete Fade-Vorschau v0.2.2
 
-Die Demo wurde zuvor mit GO+/GO−, Sperre, bestätigtem Reset, Nummernübernahme, ungültiger Eingabe und Verwerfen geprüft. Dokumentbreite entsprach dem Viewport bei 390×844, 768×1024 und 1024×768; Bedienelemente mindestens 44 CSS-Pixel hoch. Auch lange Sequenznummern erzeugten keinen horizontalen Überlauf. Live-Pultdaten, Lock, Pending, echter GO+, unbekanntes GO−-Ergebnis und Resynchronisation wurden im verfügbaren In-App-Browser geprüft.
+Erneuter ausdrücklich freigegebener Test mit grandMA3 onPC 2.5.1.1 und separater Testshow: Ausgangszustand Off geprüft, GO+ durch tatsächliche Statusantwort bestätigt, danach Pause und Fortsetzen jeweils durch MA-`Cmd`-Rückgabe `OK` bestätigt. Die berechnete Vorschau blieb während Pause stehen und lief anschließend weiter. Abschließend Pause Off und Off für ausschließlich die getestete Sequenz gesendet; ursprünglicher Off-Zustand durch erneute Statusantwort bestätigt.
+
+Die geprüfte MA-API liefert gespeicherte Fade-Zeiten, jedoch keinen verifizierten laufenden Fade-Prozentwert. Der Benutzer wählte ausdrücklich eine als berechnet markierte Vorschau. Sie ist keine gemessene Pultfortschrittsanzeige. Externe Pause-/Rate-/Delay-Änderungen sind damit nicht zuverlässig erkennbar. Beim Verbindungsaufbau wird für bereits laufende Cues kein Beginn erfunden.
+
+UDP-Regressionstests prüfen außerdem: Pause bleibt bis zur passenden MA-Bestätigung pending; Vorschau friert erst nach Bestätigung ein und setzt nach erneuter Bestätigung fort. Ohne Bestätigung sperrt Timeout trotz frischer Snapshots; kein automatisches Wiederholen. Reine Berechnungstests prüfen Begrenzung, Pause und unveränderliche Eingaben.
+
+## Browser v0.2.2
+
+Isolierter simulierter MA-Empfänger, kein Pultzugriff: Produktoberfläche enthält keine Demo-/Reset-Bedienung. Current/Next einschließlich Cue 1.5, GO+, Pause, Fortsetzen und berechneter Fortschritt geprüft. Die Vorschau blieb über mehrere Prüfungen bei 7 % stehen und lief nach Fortsetzen weiter. Fortschrittsbalken in Current-Karte und aktueller Tabellenzeile sichtbar. Bei 390×844 und 820×1180 entsprach die Dokumentbreite dem Viewport; GO− und Pause stehen nebeneinander, jeweils 54 CSS-Pixel hoch. Desktopansicht visuell geprüft. Der simulierte Empfänger ist ausschließlich ein temporäres Prüfwerkzeug, kein Produktmodus.
 
 ## Noch offen
 
