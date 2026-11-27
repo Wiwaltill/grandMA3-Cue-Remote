@@ -62,3 +62,7 @@ Stabile MA-Handles bei Objektverschiebungen, große Shows, umfangreiche Sonderze
 Das fest generierte Lua liest TrigType als Display-Text am Cue und TrigTime als native Sekunden. Vorhandene Felder und Werte anhand realer read-only Antworten aus 2.5.1.1 sowie offizieller Sequence-Sheet-Dokumentation geprüft. Unbekannte Trigger werden als Unknown normalisiert, ungültige numerische Triggerzeiten verwerfen den Snapshot. Keine MA-Kommandos aus Metadaten, kein lokaler Scheduler. Follow startet in MA nach Ende des vorherigen Übergangs plus positiver TrigTime, Time dagegen relativ zum Trigger des vorherigen Cues.
 
 Alle externen/autonomen Cue-Wechsel werden ausschließlich aus dem bestätigten Current verarbeitet. HTTP-Polling kann kurze Zwischen-Cues unterhalb des Abfrageintervalls überspringen; die App behauptet keine lückenlose Triggerhistorie. Next bleibt Listennachfolger, keine Vorhersage von Loop/Off-Sonderzielen.
+
+## Untersuchung externer Pause (27. November 2026)
+
+Kein verifizierter Pause-Snapshot gefunden. IsRunningPlayback und HasActivePlayback bleiben auch bei Pause true; enumerierte Sequenzeigenschaften und Fadertexte unterscheiden Pause nicht. Die dokumentierten OSC-Playback-Ausgaben sind Aktionen, keine zustandsvolle Resynchronisation. Deshalb keine automatische externe Pause-Erkennung aus ungesicherten Toggles. Realtests und Grenzen im [Untersuchungsbericht](tests/PAUSE-INVESTIGATION.md). Aktuelles Produktverhalten unverändert.

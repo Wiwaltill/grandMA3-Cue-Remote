@@ -87,3 +87,7 @@ Rein lesende Property-Abfrage in onPC 2.5.1.1 bestätigt TRIGTYPE und TRIGTIME d
 Neue isolierte UDP-Tests prüfen Follow-Metadaten, Zusatzzeit 0, ungültige Zeiten, unbekannte Trigger und externe Current-Wechsel 1 -> 1.5 -> 2 -> Off bei null gesendeten GO-Befehlen. Ohne geänderte Rückmeldung wird Current nicht weitergeschaltet. Insgesamt 25 Tests.
 
 Browser mit isoliertem simuliertem MA: Next zeigt FOLLOW +3,0 s und Automatisch nach aktuellem Übergang +3,0 s. Nach einer vom Empfänger ausgelösten Statusänderung ist Current 1.5 / Next 2; Current- und Next-Zeile sowie GO+-Ziel stimmen. FOLLOW bleibt am aktuellen Cue als Eingangstrigger sichtbar. Bei 390x844 weiterhin kein horizontaler oder vertikaler Dokumentüberlauf, Playback-Buttons sichtbar. Native App-Fenster und echtes iPad/Safari weiterhin nicht interaktiv geprüft.
+
+## Untersuchung externer Pause
+
+Zusätzliche reale Pause-On/Off-Vergleiche auf der freigegebenen lokalen Testshow, danach Off wiederhergestellt und bestätigt. Kein verifizierter abfragbarer Pause-Zustand gefunden; keine Produktimplementierung. [Ergebnisse, Negativbefunde und erforderliche nächste Nachweise](PAUSE-INVESTIGATION.md).
