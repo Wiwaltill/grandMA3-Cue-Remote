@@ -1,4 +1,4 @@
-# Abnahme v0.2.0
+# Abnahme v0.2.1
 
 Stand: 27. November 2026. Entwicklungsfassung, keine Freigabe für laufende Shows.
 
@@ -6,13 +6,13 @@ Stand: 27. November 2026. Entwicklungsfassung, keine Freigabe für laufende Show
 
 - TypeScript strict für React, Node-Bridge, Electron-Main und Preload erfolgreich.
 - ESLint erfolgreich.
-- 26 Tests erfolgreich: 12 Demo-/Sequenztests, 7 OSC-/UDP-Tests, 7 Server-/HTTP-Tests.
+- 27 Tests erfolgreich: 12 Demo-/Sequenztests, 8 OSC-/UDP-Tests, 7 Server-/HTTP-Tests.
 - Produktionsbuild und macOS-arm64-App-Bundle erfolgreich; lokale Ad-hoc-Signatur wird beim Packaging mit codesign geprüft.
 - npm-Lockfile vorhanden; OSC benötigt keine zusätzliche Runtime-Bibliothek.
 
-Die OSC-Tests benutzen echte UDP-Sockets auf Loopback und einen simulierten MA-Empfänger. Sie prüfen OSC-Adressierung/UTF-8/Padding, Konfiguration, Off-/Dezimal-Cues, unbekanntes Next, keine optimistische Fortschreibung, kein automatisches GO, Request-Deduplizierung, konkurrierende Requests, stabile Revisionen bei Heartbeats, Timeout ohne Retry, gefälschte Nonces, Stale/Recovery, vollständige Resynchronisation und Sequenzwechsel mit neuer Sperre. HTTP-Tests prüfen Bedienerschlüssel, Origin, abgewiesene freie Commands/Konfigurationsversuche und Schlüsselrotation nach Serverneustart. CI spricht niemals ein echtes Pult an.
+Die OSC-Tests benutzen echte UDP-Sockets auf Loopback und einen simulierten MA-Empfänger. Sie prüfen OSC-Adressierung/UTF-8/Padding, Konfiguration, Off-/Dezimal-Cues, Next als Listennachfolger, keine optimistische Fortschreibung, kein automatisches GO, Request-Deduplizierung, konkurrierende Requests, stabile Revisionen bei Heartbeats, Timeout ohne Retry, gefälschte Nonces, Stale/Recovery, vollständige Resynchronisation und Sequenzwechsel mit neuer Sperre. HTTP-Tests prüfen Bedienerschlüssel, Origin, abgewiesene freie Commands/Konfigurationsversuche und Schlüsselrotation nach Serverneustart. CI spricht niemals ein echtes Pult an.
 
-## Echte lokale Testshow – ausdrücklich freigegeben
+## Echte lokale Testshow v0.2.0 – ausdrücklich freigegeben
 
 Der Benutzer bestätigte eine separate geöffnete Testshow und gab den Verbindungstest frei. Getestet wurde grandMA3 onPC **2.5.1.1 auf demselben Mac**.
 
@@ -35,9 +35,15 @@ Die Demo wurde zuvor mit GO+/GO−, Sperre, bestätigtem Reset, Nummernübernahm
 
 - Echtes iPad/Safari, Hardware-Touch, Safe Areas und Netzwerk-/WLAN-Ausfalltests.
 - Native Electron-Fenster-/IPC-Bedienung, Doppelstart und Installation aus einem heruntergeladenen Artefakt. Die verfügbaren Browserwerkzeuge steuern keine nativen macOS-Fenster; das Bundle ist gebaut und seine Signatur geprüft.
-- Generische Next-Cue-Abfrage. Ohne explizit geladenen Cue bleibt Next unbekannt; keine Index-/Loop-Annahme.
+- Goto und eine generische pultbestätigte Next-Abfrage sind spätere Aufgaben. Die aktuelle Next-Anzeige folgt auf Benutzerwunsch der Cueliste.
 - Umfangreiche Shows, größere Cue-Mengen, Zeitformate/Sonderzustände, gleichzeitige Objektverschiebungen und stabile MA-Handles.
 - Apple-Developer-Signatur, Notarisierung und DMG.
 - Ein lokal erfolgreicher Build bestätigt nicht automatisch den GitHub-Workflow-Lauf.
 
 Die eingebettete Node-Version der Desktop-Umgebung blockiert native Rollup-Module durch macOS-Library-Validation. Die Prüfungen nutzen deshalb eine unveränderte offizielle Node-24.22.3-Installation im temporären Verzeichnis. Bei regulär installiertem Node inklusive npm ist dieser Umweg nicht nötig.
+
+## Änderung v0.2.1: Next immer aus der Liste
+
+Zusätzlicher Regressionstest prüft Off → erster Cue, laufender Cue → nächster Listeneintrag einschließlich Dezimal-Cues, Ende → kein Listeneintrag sowie eine leere Liste. Ein abweichender geladener Cue überschreibt den Listennachfolger nicht. Die frühere unbekannte Next-Anzeige des oben dokumentierten Ersttests ist damit ersetzt. Für diese reine Anzeigeänderung werden keine Befehle an ein echtes Pult gesendet.
+
+Browserprüfung mit isoliertem simuliertem MA-Empfänger: Current 1 → Next 1.5 / Solo, nach GO+ Current 1.5 → Next 2 / Finale, nach weiterem GO+ Current 2 → Ende der Cueliste. Next-Karte, blaue Tabellenmarkierung und GO+-Beschriftung waren konsistent. Kein echtes Pult wurde dabei angesprochen.

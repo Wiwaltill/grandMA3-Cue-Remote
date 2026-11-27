@@ -9,21 +9,23 @@ export function localAddresses(): string[] {
   return [...new Set(['127.0.0.1',...Object.values(networkInterfaces()).flatMap(entries=>(entries??[]).filter(a=>a.family==='IPv4').map(a=>a.address))])];
 }
 function emptySnapshot(revision=0): PlaybackSnapshot {
-  return {sequence:{id:'unconfigured',dataPool:'1',number:'1',name:'—'},cues:[],currentCueId:null,nextCueId:null,nextCueKnown:false,playbackState:'off',connectionState:'OFFLINE',revision,timestamp:0,locked:true,commandState:'idle'};
+  return {sequence:{id:'unconfigured',dataPool:'1',number:'1',name:'—'},cues:[],currentCueId:null,nextCueId:null,playbackState:'off',connectionState:'OFFLINE',revision,timestamp:0,locked:true,commandState:'idle'};
 }
 export function parseFeedback(value: unknown,config: OscConfig): {cues: Cue[];name: string;current: string | null;next: string | null;running: boolean;version: string} | null {
   if (!value || typeof value!=='object') return null;
   const raw=value as Record<string,unknown>;
-  if (raw.error || raw.dataPool!==config.dataPool || raw.number!==config.sequenceNumber || raw.version!=='2.5.1.1' || typeof raw.name!=='string' || raw.name.length>512 || typeof raw.running!=='boolean' || typeof raw.current!=='string' || typeof raw.loaded!=='string' || !Array.isArray(raw.cues) || raw.cues.length>500) return null;
+  if (raw.error || raw.dataPool!==config.dataPool || raw.number!==config.sequenceNumber || raw.version!=='2.5.1.1' || typeof raw.name!=='string' || raw.name.length>512 || typeof raw.running!=='boolean' || typeof raw.current!=='string' || !Array.isArray(raw.cues) || raw.cues.length>500) return null;
   const cues: Cue[]=[];const numbers=new Set<string>();
   for (const item of raw.cues) {
     if (!item || typeof item!=='object' || typeof item.number!=='string' || !/^\d+(\.\d+)?$/.test(item.number) || item.number.length>32 || numbers.has(item.number) || typeof item.name!=='string' || item.name.length>512 || (item.fade!==undefined && (typeof item.fade!=='number' || !Number.isFinite(item.fade) || item.fade<0))) return null;
     numbers.add(item.number);cues.push({id:`${config.dataPool}/${config.sequenceNumber}/${item.number}`,number:item.number,name:item.name,...(item.fade===undefined?{}:{fade:item.fade})});
   }
-  const currentNumber=raw.current.trim(),loadedNumber=raw.loaded.trim();
+  const currentNumber=raw.current.trim();
   const current=raw.running?cues.find(c=>c.number===currentNumber)?.id ?? null:null;
   if (raw.running && !current) return null;
-  const next=cues.find(c=>c.number===loadedNumber)?.id ?? null;
+  // NEXT CUE is the following list entry, as requested; selecting it never sends playback.
+  const currentIndex=cues.findIndex(c=>c.id===current);
+  const next=cues[currentIndex+1]?.id ?? null;
   return {cues,name:raw.name,current,next,running:raw.running,version:raw.version};
 }
 export class OscBridge {
@@ -68,7 +70,7 @@ export class OscBridge {
       const fingerprint=JSON.stringify([parsed.current,parsed.running]);
       if (this.state.commandState==='pending' && fingerprint!==this.beforeCommand) this.state.commandState='idle';
       const unknown=this.state.commandState==='unknown';
-      this.publish({cues:parsed.cues,sequence:{...this.state.snapshot.sequence,name:parsed.name},currentCueId:parsed.current,nextCueId:parsed.next,nextCueKnown:parsed.next!==null,playbackState:parsed.running?'running':'off',timestamp:this.receivedAt,connectionState:unknown?'STALE':'ONLINE',...(unknown?{locked:true}:{})},unknown?'timeout':null);
+      this.publish({cues:parsed.cues,sequence:{...this.state.snapshot.sequence,name:parsed.name},currentCueId:parsed.current,nextCueId:parsed.next,playbackState:parsed.running?'running':'off',timestamp:this.receivedAt,connectionState:unknown?'STALE':'ONLINE',...(unknown?{locked:true}:{})},unknown?'timeout':null);
     });
     socket.on('error',()=>{if(this.socket===socket) this.publish({connectionState:'OFFLINE',locked:true},'send-failed');});
     try {await new Promise<void>((resolve,reject)=>{socket.once('error',reject);socket.bind(0,'0.0.0.0',()=>{socket.removeListener('error',reject);resolve();});});}

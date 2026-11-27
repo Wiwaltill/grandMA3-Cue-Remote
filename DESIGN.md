@@ -20,7 +20,7 @@ Querformat: Liste und Steuerbereich nebeneinander, Status jederzeit sichtbar.
 Große Touch-Ziele (mindestens 44 CSS-Pixel), ausreichend Abstand, Safe Areas, keine horizontale Scrollleiste. Farbe nie als einziges Statusmerkmal. Kontrastreiche Texte, sichtbarer Fokus.
 
 ## Zustände
-DEMO / CONNECTING / ONLINE / STALE / OFFLINE. ONLINE nur bei bestätigtem frischem Pultstatus. Unbekannte Werte als — anzeigen. Bei Sperre oder unklarem Status Steuerung deaktivieren, Grund anzeigen. Letzte Cue und Loop anhand Pultstatus behandeln, keine pauschale Endannahme im Live-Modus.
+DEMO / CONNECTING / ONLINE / STALE / OFFLINE. ONLINE nur bei bestätigtem frischem Pultstatus. Unbekannte Werte als — anzeigen. Bei Sperre oder unklarem Status Steuerung deaktivieren, Grund anzeigen. Next zeigt auf Benutzerwunsch den nächsten Listeneintrag. Bei Off den ersten Cue; am Listenende „Ende der Cueliste“. Tatsächliche Playback-Übergänge bleiben pultgesteuert.
 
 ## Lokale Serversteuerung
 
@@ -34,4 +34,4 @@ Unter der Kopfzeile steht ein touchgeeignetes Feld „Sequenznummer“ mit „Ü
 
 Die Mac-App trennt Webserver- und OSC-Verbindungsstatus. Ziel-IP, lokale Rückmelde-IP, OSC-Port, Präfix, DataPool und Sequenznummer werden über Felder eingegeben. „Verbinden“ fragt lesend ab; „Trennen“ beendet Abfragen. „Demo öffnen“ und „Live-Weboberfläche öffnen“ sind getrennte Aktionen. Verbindungsdaten sind während einer Verbindung gesperrt.
 
-Im Live-Browser werden DataPool und Zielsequenz angezeigt. ONLINE gibt es ausschließlich nach validierter frischer Antwort der Zielversion. Die Bedienung beginnt gesperrt. Pending deaktiviert weitere GO-Befehle; unbekanntes Ergebnis sperrt dauerhaft bis zur neuen vollständigen Synchronisation und manuellen Freigabe. „Neu synchronisieren“ löst keinen GO aus. Ein Live-Reset existiert nicht. Unbekanntes Next ist ausdrücklich beschriftet und darf nicht als Listenende erscheinen. Nur echte Pultdaten bestimmen die Cueliste und Current.
+Im Live-Browser werden DataPool und Zielsequenz angezeigt. ONLINE gibt es ausschließlich nach validierter frischer Antwort der Zielversion. Die Bedienung beginnt gesperrt. Pending deaktiviert weitere GO-Befehle; unbekanntes Ergebnis sperrt dauerhaft bis zur neuen vollständigen Synchronisation und manuellen Freigabe. „Neu synchronisieren“ löst keinen GO aus. Ein Live-Reset existiert nicht. NEXT CUE, blaue Tabellenmarkierung und GO+-Beschriftung zeigen den nächsten Listeneintrag, auch bei Dezimal-Cues. Geladene Ziele beeinflussen diese Listenanzeige nicht; Goto folgt später. Nur echte Pultdaten bestimmen die Cueliste und Current.

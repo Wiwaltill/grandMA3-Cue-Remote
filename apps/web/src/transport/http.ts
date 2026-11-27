@@ -1,7 +1,7 @@
 import type { Command, CommandResult, PlaybackSnapshot, PlaybackTransport } from '../../../../packages/shared/playback.ts';
 import type { LiveState } from '../../../../packages/shared/live.ts';
 export class HttpTransport implements PlaybackTransport {
-  private state: PlaybackSnapshot={sequence:{id:'unconfigured',dataPool:'1',number:'1',name:'—'},cues:[],currentCueId:null,nextCueId:null,nextCueKnown:false,connectionState:'OFFLINE',playbackState:'off',revision:0,timestamp:0,locked:true};
+  private state: PlaybackSnapshot={sequence:{id:'unconfigured',dataPool:'1',number:'1',name:'—'},cues:[],currentCueId:null,nextCueId:null,connectionState:'OFFLINE',playbackState:'off',revision:0,timestamp:0,locked:true};
   private listeners=new Set<()=>void>();
   private timer: ReturnType<typeof setInterval> | null=null;
   private polling=false;

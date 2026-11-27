@@ -2,13 +2,13 @@
 
 Lokale, iPad-optimierte Sequenz-Fernbedienung mit grafischer macOS-Serversteuerung. React/TypeScript, Node und Electron; ohne Cloud oder Telemetrie.
 
-## v0.2.0 – echte OSC-Anbindung
+## v0.2.1 – echte OSC-Anbindung mit Next aus der Cueliste
 
 Die App verbindet sich mit **grandMA3 onPC 2.5.1.1**, liest Sequenzname, Cue-Liste, bekannte Fade-Zeiten und Current-Status aus MA und sendet gezieltes GO+/GO− an den ausgewählten DataPool und die eingetragene Sequenznummer. Die Weboberfläche enthält Lock, Auto-Follow und Listenpositionsfortschritt. Sie simuliert im Live-Modus keinen Playback-Erfolg.
 
 Echter Test auf dem Entwicklungs-Mac: Version und Sequenzdaten empfangen, GO+ über die Weboberfläche ausgelöst und anschließend Cue 1 vom Pult bestätigt. GO− ohne Zustandsänderung am Listenanfang führte korrekt zur Sperre „Ergebnis unbekannt“. Resynchronisation und Rückkehr zum ursprünglichen Off-Zustand wurden geprüft. Dies ist eine Entwicklungsfassung; die vollständige Show-/iPad-Abnahme steht aus.
 
-**Next:** Es wird nur ein von MA explizit gemeldeter geladener Cue angezeigt. Ohne diese Information steht dort „Next wird vom Pult nicht gemeldet“. Die App leitet im Live-Modus keinen vermeintlich sicheren Next aus der Listenposition ab. Ende, Wrap Around, Restart Mode und Sprünge entscheidet MA.
+**Next:** Zeigt immer den nächsten Eintrag der Cueliste mit Nummer, Name und bekanntem Fade. Bei Off wird der erste Cue angezeigt, am Listenende „Ende der Cueliste“. Die blaue Tabellenmarkierung und der Text auf GO+ verwenden denselben Listennachfolger. Goto wird später ergänzt. Die Anzeige ändert keinen Cue am Pult; Playback bleibt durch echte Rückmeldungen bestätigt.
 
 ## Verbinden – vollständig per UI
 
@@ -68,7 +68,7 @@ npm run desktop:package
 
 `desktop:dev` baut und öffnet die Mac-App. `desktop:package` erzeugt auf macOS das arm64-App-Bundle. `npm run dev` und `npm run preview` dienen optional der reinen Webentwicklung; ohne Bridge/API ist dort ausschließlich die Demo funktionsfähig. `dist/` enthält die Webdateien, `dist-desktop/` die kompilierte Desktop-Anwendung.
 
-26 Tests decken Demo-Zustände, echte UDP-Pakete mit simuliertem MA, Frische, Timeout, Deduplizierung, konkurrierende Revisionen, Zielwechsel, Nonce-Prüfung, Authentifizierung, Origin, Serverstart/-stopp und Zugriffsbeschränkungen ab. CI sendet niemals an ein echtes Pult. Testdetails und offene Abnahmen: [Testbericht](tests/VERIFICATION.md).
+27 Tests decken Demo-Zustände, echte UDP-Pakete mit simuliertem MA, Frische, Timeout, Deduplizierung, konkurrierende Revisionen, Zielwechsel, Nonce-Prüfung, Authentifizierung, Origin, Serverstart/-stopp und Zugriffsbeschränkungen ab. CI sendet niemals an ein echtes Pult. Testdetails und offene Abnahmen: [Testbericht](tests/VERIFICATION.md).
 
 Struktur: `apps/web` für UI und HTTP-Transport, `packages/shared` für Typen/Validierung, `packages/demo` für die reine Simulation, `apps/desktop` für Electron, HTTP-Server und OSC-Bridge. UI enthält keine OSC-/Lua-Syntax. Keine zusätzlichen Runtime-Abhängigkeiten für OSC; UDP und Paketkodierung verwenden Node-Bordmittel.
 

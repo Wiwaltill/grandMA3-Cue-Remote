@@ -5,7 +5,7 @@ export interface PlaybackSnapshot {
   sequence: SequenceRef; cues: readonly Cue[]; currentCueId: string | null;
   nextCueId: string | null; playbackState: 'running' | 'off';
   connectionState: ConnectionState; revision: number; timestamp: number; locked: boolean;
-  nextCueKnown?: boolean; commandState?: 'idle' | 'pending' | 'unknown';
+  commandState?: 'idle' | 'pending' | 'unknown';
 }
 export interface Command { requestId: string; sequenceRef: SequenceRef; action: 'goPlus' | 'goMinus'; expectedRevision: number }
 export type CommandResult = { accepted: true } | { accepted: false; reason: 'duplicate' | 'locked' | 'unavailable' | 'revision' | 'sequence' | 'boundary' | 'busy' | 'invalid' };

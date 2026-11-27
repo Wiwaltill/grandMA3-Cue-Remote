@@ -48,9 +48,9 @@ test('OSC configuration rejects injection, multicast, invalid ports and noncanon
   assert.equal(isOscConfig(config),true);
   for(const value of [null,{...config,sequenceNumber:'1; Off Sequence Thru'},{...config,sequenceNumber:'0'},{...config,prefix:'foo/cmd'},{...config,host:'224.0.0.1'},{...config,port:1.5},{...config,port:65536},{...config,dataPool:'01'}])assert.equal(isOscConfig(value),false);
 });
-test('real UDP round trip publishes authoritative cues, Off and explicit unknown Next; no automatic GO',async()=>{
+test('real UDP round trip publishes authoritative cues, Off and the next list entry; no automatic GO',async()=>{
   const f=await setup();try {
-    const s=f.bridge.getState().snapshot;assert.equal(s.locked,true);assert.equal(s.playbackState,'off');assert.equal(s.nextCueKnown,false);assert.equal(s.cues[1].number,'1.5');assert.equal(f.counters.go,0);
+    const s=f.bridge.getState().snapshot;assert.equal(s.locked,true);assert.equal(s.playbackState,'off');assert.equal(s.nextCueId,'1/1/1');assert.equal(s.cues[1].number,'1.5');assert.equal(f.counters.go,0);
     await until(()=>f.counters.query>=3);assert.equal(f.bridge.getState().snapshot.revision,s.revision,'unchanged heartbeat must not invalidate command revision');
     assert.deepEqual(await f.bridge.execute(f.command()),{accepted:false,reason:'locked'});
     f.bridge.setLocked(false);const first=f.command();const competing=f.command('test-2');
@@ -96,4 +96,13 @@ test('feedback validates target, version, cue IDs, decimals and running state',(
   for(const raw of [{...feedback(),number:'2'},{...feedback(),version:'2.4'},{...feedback(),running:true,current:'99'},{...feedback(),cues:[{number:'1',name:'A',fade:-1}]},{...feedback(),cues:[{number:'1',name:'A'},{number:'1',name:'B'}]}])assert.equal(parseFeedback(raw,config),null);
   const result=parseFeedback({...feedback(),running:true,current:'1.5',loaded:'2'},config);
   assert.equal(result?.current,'1/1/1.5');assert.equal(result?.next,'1/1/2');
+});
+
+test('Next follows list order through Off, decimal cues and list end, ignoring loaded destinations',()=>{
+  const base=feedback();
+  assert.equal(parseFeedback({...base,current:'2',loaded:'2'},config)?.next,'1/1/1');
+  assert.equal(parseFeedback({...base,running:true,current:'1',loaded:'2'},config)?.next,'1/1/1.5');
+  assert.equal(parseFeedback({...base,running:true,current:'1.5',loaded:'1'},config)?.next,'1/1/2');
+  assert.equal(parseFeedback({...base,running:true,current:'2',loaded:'1'},config)?.next,null);
+  assert.equal(parseFeedback({...base,cues:[]},config)?.next,null);
 });
