@@ -14,7 +14,7 @@ export class HttpTransport implements PlaybackTransport {
     const response=await fetch(path,{method:body===undefined?'GET':'POST',headers:{Authorization:`Bearer ${this.token}`,...(body===undefined?{}:{'Content-Type':'application/json'})},body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(2500),cache:'no-store'});
     if(!response.ok)throw new Error('Request rejected');return response.json();
   }
-  private offline=()=>this.publish({...this.state,connectionState:'OFFLINE',locked:true,fadePreview:undefined});
+  private offline=()=>this.publish({...this.state,connectionState:'OFFLINE',locked:true,fadePreview:undefined,loadedCueId:undefined});
   private refresh=async()=>{
     if(this.polling){if(Date.now()-this.lastReceived>3000)this.offline();return;}
     this.polling=true;

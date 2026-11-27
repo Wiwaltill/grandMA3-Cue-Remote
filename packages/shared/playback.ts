@@ -4,6 +4,7 @@ export interface Cue { id: string; number: string; name: string; fade?: number; 
 export type ConnectionState = 'CONNECTING' | 'ONLINE' | 'STALE' | 'OFFLINE';
 export interface PlaybackSnapshot {
   sequence: SequenceRef; cues: readonly Cue[]; currentCueId: string | null;
+  loadedCueId?: string | null;
   nextCueId: string | null; playbackState: 'running' | 'off';
   connectionState: ConnectionState; revision: number; timestamp: number; locked: boolean;
   fadePreview?: FadePreview;

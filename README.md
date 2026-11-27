@@ -2,13 +2,13 @@
 
 Lokale, iPad-optimierte Sequenz-Fernbedienung mit grafischer macOS-Serversteuerung. React/TypeScript, Node und Electron; ohne Cloud oder Telemetrie.
 
-## v0.2.10 - Beenden mit Rückfrage
+## v0.2.11 - sichtbares Load-Feedback
 
 Die App verbindet sich mit **grandMA3 onPC 2.5.1.1**, liest Sequenzname, Cue-Liste, bekannte Fade-Zeiten und Current-Status aus MA und sendet gezieltes GO+/GO− an den ausgewählten DataPool und die eingetragene Sequenznummer. Die Weboberfläche enthält Lock, Auto-Follow, Listenpositionsfortschritt und eine klar als berechnet markierte Fade-Vorschau. Der Demo-Modus ist entfernt. Sie simuliert im Live-Modus keinen Playback-Erfolg.
 
 Echter Test auf dem Entwicklungs-Mac: Version und Sequenzdaten empfangen, GO+ über die Weboberfläche ausgelöst und anschließend Cue 1 vom Pult bestätigt. GO− ohne Zustandsänderung am Listenanfang führte korrekt zur Sperre „Ergebnis unbekannt“. Resynchronisation und Rückkehr zum ursprünglichen Off-Zustand wurden geprüft. Dies ist eine Entwicklungsfassung; die vollständige Show-/iPad-Abnahme steht aus.
 
-**Next:** Zeigt immer den nächsten Eintrag der Cueliste mit Nummer, Name und bekanntem Fade. Bei Off wird der erste Cue angezeigt, am Listenende „Ende der Cueliste“. Die blaue Tabellenmarkierung und der Text auf GO+ verwenden denselben Listennachfolger. Load/Goto sind als separate kleine Buttons erreichbar. Die Anzeige ändert keinen Cue am Pult; Playback bleibt durch echte Rückmeldungen bestätigt.
+**Next:** Zeigt immer den nächsten Eintrag der Cueliste mit Nummer, Name und bekanntem Fade. Bei Off wird der erste Cue angezeigt, am Listenende „Ende der Cueliste“. Die blaue Tabellenmarkierung verwendet diesen Listennachfolger. GO+ zeigt einen tatsächlich vorgeladenen Cue bevorzugt als Ziel, sonst den Listennachfolger. Load/Goto sind als separate kleine Buttons erreichbar. Die Anzeige ändert keinen Cue am Pult; Playback bleibt durch echte Rückmeldungen bestätigt.
 
 ## Verbinden – vollständig per UI
 
@@ -42,13 +42,13 @@ Cue-Nummern bleiben Strings; die Anwendung validiert Eingaben und akzeptiert max
 
 ## Load und Goto
 
-MA-Referenz: [Load](https://help.malighting.com/grandMA3/2.5/HTML/keyword_load.html), [Goto](https://help.malighting.com/grandMA3/2.5/HTML/keyword_goto.html).
+MA-Referenz: [LoadedCue API seit 2.2](https://help.malighting.com/grandMA3/2.3/HTML/key_rn_v2_2.html), [Load](https://help.malighting.com/grandMA3/2.5/HTML/keyword_load.html), [Goto](https://help.malighting.com/grandMA3/2.5/HTML/keyword_goto.html).
 
 Unter GO− liegen zwei kleine Buttons **Load** und **Goto**. Beide öffnen eine Cue-Auswahl mit Nummer und Name aus der frisch bestätigten Cueliste. **Abbrechen** bzw. Escape schließen ohne Befehl. Erst **Load** oder **Goto** im Dialog führt die gewählte Aktion aus. Ändert sich der Pultstatus seit dem Öffnen, Auswahl erneut öffnen; alte Revisionen und Ziele werden serverseitig abgewiesen.
 
-**Load** lädt den Cue vor, ohne ihn zu starten. MA bestätigt die Ausführung per Cmd-OK. Dies ist kein ausgelesener dauerhafter LoadedCue-Status. Der nächste GO kann den geladenen Cue starten; **NEXT bleibt auf Benutzerwunsch immer der Listennachfolger** und ist daher nach Load nicht zwingend das tatsächliche GO-Ziel.
+**Load** lädt den Cue vor, ohne ihn zu starten. Die Bridge wartet auf MA-Cmd-OK und eine neue Statusantwort, die den Ziel-Cue als `LoadedCue` bestätigt. Danach erscheint in der Next-Karte ein separater goldener Bereich **GELADEN** mit Nummer und Name; die Cue-Zeile und der kleine Load-Button tragen ebenfalls die Markierung. GO+ zeigt **GELADEN: Nummer · Name** als Ziel. **NEXT bleibt auf Benutzerwunsch der Listennachfolger** und wird nicht durch den geladenen Cue ersetzt. Der Ladezustand wird bei jeder Abfrage erneut aus MA gelesen, einschließlich externer Load-Änderungen und Aufhebung. Bei fehlenden/veralteten Daten ist er unbekannt, kein alter Ladezustand bleibt sichtbar.
 
-**Goto** springt gezielt zum Cue mit den gespeicherten MA-Zeiten, ohne freien Fade-Override. Erst MA-Cmd-OK und eine neue gültige Statusantwort mit dem Ziel als Current beenden Pending. Es gibt keine optimistische Current-Anzeige. Wird ein sehr kurzer Follow-Cue zwischen zwei Abfragen bereits verlassen, kann der Zielnachweis fehlen; dann bleibt das Ergebnis unbekannt und die Bedienung gesperrt. Keine automatische Wiederholung. Load/Goto sind nur bei entsperrtem, frischem Status ohne ausstehenden Befehl verfügbar und gelten ausschließlich für die gewählte Sequenz. Die Statuszeile zeigt die letzte bestätigte Ausführung, keinen garantierten dauerhaften Ladezustand.
+**Goto** springt gezielt zum Cue mit den gespeicherten MA-Zeiten, ohne freien Fade-Override. Erst MA-Cmd-OK und eine neue gültige Statusantwort mit dem Ziel als Current beenden Pending. Es gibt keine optimistische Current-Anzeige. Wird ein sehr kurzer Follow-Cue zwischen zwei Abfragen bereits verlassen, kann der Zielnachweis fehlen; dann bleibt das Ergebnis unbekannt und die Bedienung gesperrt. Keine automatische Wiederholung. Load/Goto sind nur bei entsperrtem, frischem Status ohne ausstehenden Befehl verfügbar und gelten ausschließlich für die gewählte Sequenz. Die Statuszeile zeigt die letzte bestätigte Ausführung; die separate GELADEN-Anzeige stammt aus dem aktuellen MA-Status.
 
 ## Follow-Cues
 
@@ -90,7 +90,7 @@ npm run desktop:package
 
 `desktop:dev` baut und öffnet die Mac-App. `desktop:package` erzeugt auf macOS das arm64-App-Bundle. `npm run dev` und `npm run preview` dienen optional der reinen Webentwicklung; ohne Bridge/API bleibt die Bedienung gesperrt. `dist/` enthält die Webdateien, `dist-desktop/` die kompilierte Desktop-Anwendung.
 
-32 Tests decken Abbruch/Bestätigung des Beendens, parallele Schließanforderungen, Fehler beim Herunterfahren, Fade-Berechnung, Ablehnung entfernter Pause-Requests, echte UDP-Pakete mit simuliertem MA, Frische, Timeout, Deduplizierung, konkurrierende Revisionen, Zielwechsel, Nonce-Prüfung, Authentifizierung, Origin, Serverstart/-stopp und Zugriffsbeschränkungen ab. CI sendet niemals an ein echtes Pult. Testdetails und offene Abnahmen: [Testbericht](tests/VERIFICATION.md).
+35 Tests decken Abbruch/Bestätigung des Beendens, parallele Schließanforderungen, Fehler beim Herunterfahren, Fade-Berechnung, Ablehnung entfernter Pause-Requests, echte UDP-Pakete mit simuliertem MA, Frische, Timeout, Deduplizierung, konkurrierende Revisionen, Zielwechsel, Nonce-Prüfung, Authentifizierung, Origin, Serverstart/-stopp und Zugriffsbeschränkungen ab. CI sendet niemals an ein echtes Pult. Testdetails und offene Abnahmen: [Testbericht](tests/VERIFICATION.md).
 
 Struktur: `apps/web` für UI und HTTP-Transport, `packages/shared` für Typen/Validierung, `apps/desktop` für Electron, HTTP-Server und OSC-Bridge. UI enthält keine OSC-/Lua-Syntax. Keine zusätzlichen Runtime-Abhängigkeiten für OSC; UDP und Paketkodierung verwenden Node-Bordmittel.
 

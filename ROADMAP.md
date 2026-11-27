@@ -61,3 +61,6 @@ Explizite Cue-Auswahl aus der bestätigten Liste, Load-Vorladen und gezielter Go
 
 ## v0.2.10 - Rückfrage beim App-Beenden
 Gemeinsame native Abfrage für Fenster schließen und ⌘Q bei laufendem/startendem/stoppendem Server. Abbrechen (Standard/Escape) oder Server und Verbindung beenden. Keine Doppelabfrage; Serverstopp vor Prozessende abwarten. Bei gestopptem Server ohne Abfrage. Automatisierte Ablauf-Tests vorhanden; native Dialogbedienung bleibt manuell abzunehmen.
+
+## v0.2.11 - sichtbares LoadedCue-Feedback
+Tatsächlichen LoadedCue aus jeder MA-Statusantwort übernehmen. Goldene GELADEN-Anzeige mit Nummer/Name, Tabellenmarkierung, Load-Button-Nummer und zutreffendes GO+-Ziel. Next bleibt Listennachfolger. Load erst nach MA-OK plus Ziel-LoadedCue bestätigt. Externe Ladeänderungen, Aufhebung, unbekannter Status und Reconnect getestet. Gegen die separate lokale Testshow verifiziert.

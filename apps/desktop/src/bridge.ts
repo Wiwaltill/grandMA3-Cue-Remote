@@ -10,9 +10,9 @@ export function localAddresses(): string[] {
   return [...new Set(['127.0.0.1',...Object.values(networkInterfaces()).flatMap(entries=>(entries??[]).filter(a=>a.family==='IPv4').map(a=>a.address))])];
 }
 function emptySnapshot(revision=0): PlaybackSnapshot {
-  return {sequence:{id:'unconfigured',dataPool:'1',number:'1',name:'—'},cues:[],currentCueId:null,nextCueId:null,playbackState:'off',connectionState:'OFFLINE',revision,timestamp:0,locked:true,commandState:'idle'};
+  return {sequence:{id:'unconfigured',dataPool:'1',number:'1',name:'—'},cues:[],currentCueId:null,nextCueId:null,loadedCueId:undefined,playbackState:'off',connectionState:'OFFLINE',revision,timestamp:0,locked:true,commandState:'idle'};
 }
-export function parseFeedback(value: unknown,config: OscConfig): {cues: Cue[];name: string;current: string | null;next: string | null;running: boolean;version: string} | null {
+export function parseFeedback(value: unknown,config: OscConfig): {cues: Cue[];name: string;current: string | null;next: string | null;loaded: string | null | undefined;running: boolean;version: string} | null {
   if (!value || typeof value!=='object') return null;
   const raw=value as Record<string,unknown>;
   if (raw.error || raw.dataPool!==config.dataPool || raw.number!==config.sequenceNumber || raw.version!=='2.5.1.1' || typeof raw.name!=='string' || raw.name.length>512 || typeof raw.running!=='boolean' || typeof raw.current!=='string' || !Array.isArray(raw.cues) || raw.cues.length>500) return null;
@@ -27,7 +27,13 @@ export function parseFeedback(value: unknown,config: OscConfig): {cues: Cue[];na
   // NEXT CUE is the following list entry, as requested; selecting it never sends playback.
   const currentIndex=cues.findIndex(c=>c.id===current);
   const next=cues[currentIndex+1]?.id ?? null;
-  return {cues,name:raw.name,current,next,running:raw.running,version:raw.version};
+  let loaded: string | null | undefined;
+  if(raw.loaded!==undefined){
+    if(typeof raw.loaded!=='string')return null;
+    const number=raw.loaded.trim();loaded=number?cues.find(c=>c.number===number)?.id:null;
+    if(number && !loaded)return null;
+  }
+  return {cues,name:raw.name,current,next,loaded,running:raw.running,version:raw.version};
 }
 export class OscBridge {
   private socket: Socket | null=null;
@@ -58,7 +64,7 @@ export class OscBridge {
   getConfig=()=>this.config?{...this.config}:null;
   subscribe=(fn:()=>void)=>{this.listeners.add(fn);return()=>{this.listeners.delete(fn);};};
   private publish(update: Partial<PlaybackSnapshot>,error=this.state.error) {
-    if(update.connectionState && update.connectionState!=='ONLINE'){this.preview=null;update={...update,cueCommandReceipt:undefined};if(update.connectionState!=='CONNECTING')this.restoreSelectionUnlock=false;}
+    if(update.connectionState && update.connectionState!=='ONLINE'){this.preview=null;update={...update,cueCommandReceipt:undefined,loadedCueId:undefined};if(update.connectionState!=='CONNECTING')this.restoreSelectionUnlock=false;}
     const previous=this.state.snapshot;
     const next={...previous,...update,commandState:this.state.commandState};
     const semantic=(s: PlaybackSnapshot)=>JSON.stringify({...s,timestamp:0,revision:0});
@@ -78,8 +84,7 @@ export class OscBridge {
         this.actionNonce=null;
         if(raw.result!=='OK'){this.state.commandState='unknown';this.publish({connectionState:'STALE',locked:true},'send-failed');return;}
         this.actionAcknowledged=true;
-        if(this.pendingKind==='load'){this.state.commandState='idle';this.publish({cueCommandReceipt:{action:'load',cueId:this.pendingCueId!}},null);}
-        else this.query();
+        this.query();
         return;
       }
       if (!raw || raw.nonce!==this.nonce || this.now()-this.queriedAt>this.timeout()) return;
@@ -96,10 +101,10 @@ export class OscBridge {
       }
       this.receivedAt=this.now();this.state.version=parsed.version;
       const fingerprint=JSON.stringify([parsed.current,parsed.running]);
-      if(this.state.commandState==='pending' && (this.pendingKind==='goto'?this.actionAcknowledged && parsed.current===this.pendingCueId && parsed.running:this.pendingKind!=='load' && fingerprint!==this.beforeCommand)){this.state.commandState='idle';if(this.pendingKind==='goto')this.publish({cueCommandReceipt:{action:'goto',cueId:this.pendingCueId!}},null);}
+      if(this.state.commandState==='pending' && (this.pendingKind==='goto'?this.actionAcknowledged && parsed.current===this.pendingCueId && parsed.running:this.pendingKind==='load'?this.actionAcknowledged && parsed.loaded===this.pendingCueId:fingerprint!==this.beforeCommand)){this.state.commandState='idle';if(this.pendingKind==='goto' || this.pendingKind==='load')this.publish({cueCommandReceipt:{action:this.pendingKind,cueId:this.pendingCueId!}},null);}
       const restoreUnlocked=this.restoreSelectionUnlock;this.restoreSelectionUnlock=false;
       const unknown=this.state.commandState==='unknown';
-      this.publish({cues:parsed.cues,sequence:{...this.state.snapshot.sequence,name:parsed.name},currentCueId:parsed.current,nextCueId:parsed.next,playbackState:parsed.running?'running':'off',timestamp:this.receivedAt,connectionState:unknown?'STALE':'ONLINE',...(unknown?{locked:true}:restoreUnlocked?{locked:false}:{})},unknown?'timeout':null);
+      this.publish({cues:parsed.cues,sequence:{...this.state.snapshot.sequence,name:parsed.name},currentCueId:parsed.current,nextCueId:parsed.next,loadedCueId:parsed.loaded,playbackState:parsed.running?'running':'off',timestamp:this.receivedAt,connectionState:unknown?'STALE':'ONLINE',...(unknown?{locked:true}:restoreUnlocked?{locked:false}:{})},unknown?'timeout':null);
     });
     socket.on('error',()=>{if(this.socket===socket) this.publish({connectionState:'OFFLINE',locked:true},'send-failed');});
     try {await new Promise<void>((resolve,reject)=>{socket.once('error',reject);socket.bind(0,'0.0.0.0',()=>{socket.removeListener('error',reject);resolve();});});}

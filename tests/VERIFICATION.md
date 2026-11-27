@@ -1,4 +1,4 @@
-# Abnahme v0.2.10
+# Abnahme v0.2.11
 
 Stand: 27. November 2026. Entwicklungsfassung, keine Freigabe für laufende Shows.
 
@@ -6,7 +6,7 @@ Stand: 27. November 2026. Entwicklungsfassung, keine Freigabe für laufende Show
 
 - TypeScript strict für React, Node-Bridge, Electron-Main und Preload erfolgreich.
 - ESLint erfolgreich.
-- 32 Tests erfolgreich: 2 Fade-Berechnungstests, 19 OSC-/UDP-Tests, 7 Server-/HTTP-Tests und 4 Beenden-Ablauftests.
+- 35 Tests erfolgreich: 2 Fade-Berechnungstests, 22 OSC-/UDP-Tests, 7 Server-/HTTP-Tests und 4 Beenden-Ablauftests.
 - Produktionsbuild und macOS-arm64-App-Bundle erfolgreich; lokale Ad-hoc-Signatur wird beim Packaging mit codesign geprüft.
 - npm-Lockfile vorhanden; OSC benötigt keine zusätzliche Runtime-Bibliothek.
 
@@ -119,3 +119,11 @@ Browser mit isoliertem Empfänger: Load-Dialog mit Cue 1.5 ausgeführt, MA-Best�
 Vier neue Tests der vom Electron-Main verwendeten gemeinsamen Beenden-Steuerung: Abbrechen erhält Server/Verbindung; erneutes Bestätigen beendet einmal; gestoppter Server ohne Dialog; gleichzeitiges Fensterschließen und Quit teilen sich eine Abfrage und warten auf asynchronen Shutdown; Dialog-/Shutdown-Fehler beenden nicht und erlauben Wiederholung. Rekursives app.quit nach Freigabe erzeugt keine weitere Abfrage. 32 Tests insgesamt.
 
 Close-/Before-quit-Handler und native MessageBox-Optionen anhand installierter Electron-Typdefinitionen und offizieller Electron-Dokumentation geprüft. Default/Cancel-ID 0 = Abbrechen. Serverstart/-stopp-Promises werden beim bestätigten Shutdown abgewartet und neue native IPC-Aufrufe verhindert. Keine Pultbefehle für diese Änderung. Native macOS-Dialogbedienung mit Fensterknopf/⌘Q/Escape und ein laufender Electron-Ende-zu-Ende-Test sind mit den verfügbaren Browserwerkzeugen nicht interaktiv geprüft; automatisierte Tests prüfen den Ablauf mit injizierten Abhängigkeiten. App-Bundle und Signaturprüfung durch Packaging.
+
+## LoadedCue-Feedback v0.2.11
+
+Offizielle MA-Release-Notes 2.2 dokumentieren LoadedCue. Tatsächliche Abfrage auf 2.5.1.1: vor Load q.LoadedCue=nil, nach Load Cue 1 userdata mit No=1, nach Goto wieder nil. Neue Bridge bestätigt Load erst nach OK plus LoadedCue-Zielantwort; realer Test mit der freigegebenen separaten Testsequenz 1, danach Off durch Status bestätigt. Kein Eingriff in die laufende Sequenz 2.
+
+Drei neue Tests: externe Load-Wechsel, Aufhebung und Wiederherstellung nach Stale/Resync; MA-OK ohne LoadedCue-Zielnachweis endet unbekannt/gesperrt statt optimistischer Anzeige; null/undefined/ungültige Referenzen getrennt validieren. Bestehende Load-Tests auf echte Statusbestätigung erweitert. 35 Tests insgesamt.
+
+Isolierter Browsercheck: Load Cue 1.5 zeigt GELADEN 1.5/Solo separat neben Next 1/Opening, Tabellenbadge und Load-Button-Nummer. GO+ zeigt GELADEN: 1.5/Solo. Nach Start ist Current 1.5, Next 2 und GELADEN entfernt. Bei 390x844 kein Dokumentüberlauf. Native Mac-Dialogbedienung und echtes iPad/Safari weiterhin offen.

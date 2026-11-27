@@ -17,12 +17,12 @@ const feedback=(number='1')=>({dataPool:'1',number,version:'2.5.1.1',name:'Test 
 async function setup(options: {now?:()=>number;timeoutMs?:number}={}) {
   const socket=dgram.createSocket('udp4');await new Promise<void>(r=>socket.bind(0,'127.0.0.1',r));
   const address=socket.address();assert.notEqual(typeof address,'string');
-  const counters={go:0,query:0,cue:0};const control={reply:true,advance:true,spoof:false,timing:'normal',ackCue:true,advanceGoto:true};let current='',running=false;
+  const counters={go:0,query:0,cue:0};const control={reply:true,advance:true,spoof:false,timing:'normal',ackCue:true,advanceGoto:true,advanceLoad:true};let current='',running=false,loaded='';
   socket.on('message',packet=>{
     const {command}=decode(packet);
     if(command.includes('actionNonce=')){
-      counters.cue++;const nonce=command.match(/actionNonce='([a-f0-9]{32})'/)?.[1];const port=Number(command.match(/,'127\.0\.0\.1',(\d+)/)?.[1]);
-      if(command.includes("Cmd('Goto ") && control.advanceGoto){current=command.match(/ Cue (\d+(?:\.\d+)?)/)?.[1]??'';running=true;}
+      counters.cue++;if(command.includes("Cmd('Load ") && control.advanceLoad)loaded=command.match(/ Cue (\d+(?:\.\d+)?)/)?.[1]??'';const nonce=command.match(/actionNonce='([a-f0-9]{32})'/)?.[1];const port=Number(command.match(/,'127\.0\.0\.1',(\d+)/)?.[1]);
+      if(command.includes("Cmd('Goto ") && control.advanceGoto){loaded='';current=command.match(/ Cue (\d+(?:\.\d+)?)/)?.[1]??'';running=true;}
       if(control.ackCue && nonce && port)socket.send(JSON.stringify({actionNonce:nonce,result:'OK'}),port,'127.0.0.1');
     } else if(command.startsWith('Lua ')) {
       counters.query++;
@@ -30,9 +30,9 @@ async function setup(options: {now?:()=>number;timeoutMs?:number}={}) {
       const port=Number(command.match(/j\.encode\(t\),'127\.0\.0\.1',(\d+)/)?.[1]);
       const nonce=command.match(/nonce='([a-f0-9]{32})'/)?.[1];
       const number=command.match(/number='(\d+)'/)?.[1] ?? '1';
-      if(port && nonce)socket.send(JSON.stringify({...feedback(number),cues:feedback(number).cues.map(c=>c.number==='1.5' && control.timing!=='normal'?{...c,fade:0,delay:0,individualFade:3,individualDelay:30,...(control.timing==='complex'?{duration:33}:{duration:undefined})}:c),dataPool:command.match(/dataPool='(\d+)'/)?.[1] ?? '1',current,running,nonce:control.spoof?'0'.repeat(32):nonce}),port,'127.0.0.1');
+      if(port && nonce)socket.send(JSON.stringify({...feedback(number),cues:feedback(number).cues.map(c=>c.number==='1.5' && control.timing!=='normal'?{...c,fade:0,delay:0,individualFade:3,individualDelay:30,...(control.timing==='complex'?{duration:33}:{duration:undefined})}:c),dataPool:command.match(/dataPool='(\d+)'/)?.[1] ?? '1',current,running,loaded,nonce:control.spoof?'0'.repeat(32):nonce}),port,'127.0.0.1');
     } else {
-      counters.go++;if(control.advance){running=true;current='1.5';}
+      counters.go++;loaded='';if(control.advance){running=true;current='1.5';}
     }
   });
   const bridge=new OscBridge({pollMs:30,timeoutMs:300,...options});
@@ -40,7 +40,7 @@ async function setup(options: {now?:()=>number;timeoutMs?:number}={}) {
   try{await bridge.connect(target);await until(()=>bridge.getState().snapshot.connectionState==='ONLINE');}
   catch(error){bridge.disconnect();socket.close();throw error;}
   const command=(id='test-1'): Command=>{const s=bridge.getState().snapshot;return {requestId:id,sequenceRef:s.sequence,action:'goPlus',expectedRevision:s.revision};};
-  return {bridge,target,counters,control,command,setPlayback:(number: string | null)=>{current=number??'';running=number!==null;},cleanup:()=>{bridge.disconnect();socket.close();}};
+  return {bridge,target,counters,control,command,setLoaded:(number:string)=>{loaded=number;},setPlayback:(number: string | null)=>{current=number??'';running=number!==null;},cleanup:()=>{bridge.disconnect();socket.close();}};
 }
 test('OSC string command encoding uses address, string type, UTF-8 and four-byte padding',()=>{
   const packet=encodeOscCommand('gma3','Go+ DataPool 2 Sequence 42');
@@ -193,7 +193,7 @@ test('Load requires a listed cue and MA acknowledgement, preserves Current and l
     assert.deepEqual(await f.bridge.execute({...cmd,cueId:'1/2/1.5'}),{accepted:false,reason:'invalid'});
     assert.deepEqual(await f.bridge.execute(cmd),{accepted:true});assert.equal(f.bridge.getState().commandState,'pending');
     await until(()=>f.bridge.getState().commandState==='idle');const s=f.bridge.getState().snapshot;
-    assert.equal(s.currentCueId,null);assert.equal(s.nextCueId,'1/1/1');assert.deepEqual(s.cueCommandReceipt,{action:'load',cueId:'1/1/1.5'});
+    assert.equal(s.currentCueId,null);assert.equal(s.nextCueId,'1/1/1');assert.equal(s.loadedCueId,'1/1/1.5');assert.deepEqual(s.cueCommandReceipt,{action:'load',cueId:'1/1/1.5'});
     assert.deepEqual(await f.bridge.execute(cmd),{accepted:false,reason:'duplicate'});assert.equal(f.counters.cue,1);assert.equal(f.counters.go,0);
   }finally{f.cleanup();}
 });
@@ -216,4 +216,28 @@ test('target OSC syntax is fixed and rejects free command injection',()=>{
   assert.match(cueCommandRequest(config,'load','1.5',12345,'a'.repeat(32)),/Cmd\('Load DataPool 1 Sequence 1 Cue 1.5'\)/);
   assert.match(cueCommandRequest(config,'goto','2',12345,'a'.repeat(32)),/Cmd\('Goto DataPool 1 Sequence 1 Cue 2'\)/);
   for(const cue of ['0','1; Off Sequence Thru','1 Fade 0','NaN'])assert.throws(()=>cueCommandRequest(config,'goto',cue,12345,'a'.repeat(32)));
+});
+
+test('LoadedCue feedback follows external loads, clear and reconnect without changing list Next',async()=>{
+  const f=await setup();try{
+    assert.equal(f.bridge.getState().snapshot.loadedCueId,null);f.setLoaded('1.5');await until(()=>f.bridge.getState().snapshot.loadedCueId==='1/1/1.5');
+    assert.equal(f.bridge.getState().snapshot.nextCueId,'1/1/1');assert.equal(f.counters.cue,0);
+    f.setLoaded('2');await until(()=>f.bridge.getState().snapshot.loadedCueId==='1/1/2');
+    f.control.reply=false;await until(()=>f.bridge.getState().snapshot.connectionState==='STALE');assert.equal(f.bridge.getState().snapshot.loadedCueId,undefined);
+    f.control.reply=true;f.bridge.resync();await until(()=>f.bridge.getState().snapshot.connectionState==='ONLINE');assert.equal(f.bridge.getState().snapshot.loadedCueId,'1/1/2');assert.equal(f.bridge.getState().snapshot.locked,true);
+    f.setLoaded('');await until(()=>f.bridge.getState().snapshot.loadedCueId===null);assert.equal(f.counters.go,0);
+  }finally{f.cleanup();}
+});
+test('Load execution OK without loaded target confirmation times out instead of inventing feedback',async()=>{
+  const f=await setup();try{
+    f.control.advanceLoad=false;f.bridge.setLocked(false);await f.bridge.execute({...f.command('missing-loaded'),action:'load',cueId:'1/1/1.5'});
+    await until(()=>f.counters.cue===1);assert.equal(f.bridge.getState().commandState,'pending');assert.equal(f.bridge.getState().snapshot.loadedCueId,null);
+    await until(()=>f.bridge.getState().commandState==='unknown');assert.equal(f.bridge.getState().snapshot.loadedCueId,undefined);assert.equal(f.bridge.getState().snapshot.cueCommandReceipt,undefined);assert.equal(f.counters.cue,1);
+  }finally{f.cleanup();}
+});
+test('loaded references distinguish none, unknown and invalid IDs',()=>{
+  assert.equal(parseFeedback({...feedback(),loaded:''},config)?.loaded,null);
+  assert.equal(parseFeedback({...feedback(),loaded:undefined},config)?.loaded,undefined);
+  assert.equal(parseFeedback({...feedback(),loaded:' 1.5 '},config)?.loaded,'1/1/1.5');
+  for(const loaded of ['99',5,{},'1; Off Sequence Thru'])assert.equal(parseFeedback({...feedback(),loaded},config),null);
 });
