@@ -1,13 +1,37 @@
-import { app, BrowserWindow, ipcMain, shell, Menu } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, Menu, dialog } from 'electron';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { isOscConfig } from './osc.js';
 import { OscBridge, localAddresses } from './bridge.js';
+import { QuitController } from './quit-controller.js';
+import { desktopText } from './text.js';
 import { RemoteServer } from './server.js';
 
 let window: BrowserWindow | null = null;
 let remoteServer: RemoteServer;
 const bridge=new OscBridge();
+const serverOperations=new Set<Promise<unknown>>();
+function serverOperation<T>(operation: Promise<T>): Promise<T> {
+  serverOperations.add(operation);
+  return operation.finally(()=>{serverOperations.delete(operation);});
+}
+const quitController=new QuitController({
+  needsConfirmation:()=>!!remoteServer && ['starting','running','stopping'].includes(remoteServer.getStatus().phase),
+  confirm:async()=>{
+    const options: Electron.MessageBoxOptions={type:'question',title:desktopText.quit.title,message:desktopText.quit.message,detail:desktopText.quit.detail,buttons:[desktopText.quit.cancel,desktopText.quit.confirm],defaultId:0,cancelId:0,noLink:true};
+    const parent=window && !window.isDestroyed()?window:undefined;
+    if(parent){if(parent.isMinimized())parent.restore();parent.show();parent.focus();}
+    const result=await (parent?dialog.showMessageBox(parent,options):dialog.showMessageBox(options));
+    return result.response===1;
+  },
+  shutdown:async()=>{
+    bridge.disconnect();
+    while(serverOperations.size)await Promise.allSettled([...serverOperations]);
+    if(remoteServer)await remoteServer.stop();
+  },
+  quit:()=>app.quit(),
+  onError:async()=>{await dialog.showMessageBox({type:'error',title:desktopText.quit.title,message:desktopText.quit.error,buttons:[desktopText.quit.ok]});},
+});
 const hasLock = app.requestSingleInstanceLock();
 if (!hasLock) app.quit();
 else {
@@ -20,11 +44,11 @@ else {
       if (window && !window.isDestroyed()) window.webContents.send('server:status',status);
     },bridge);
     const authorized = (event: Electron.IpcMainInvokeEvent) => {
-      if (!window || event.sender !== window.webContents || event.senderFrame !== window.webContents.mainFrame || event.senderFrame.url !== launcherUrl) throw new Error('Unauthorized IPC');
+      if (quitController.closing || !window || event.sender !== window.webContents || event.senderFrame !== window.webContents.mainFrame || event.senderFrame.url !== launcherUrl) throw new Error('Unauthorized IPC');
     };
     ipcMain.handle('server:get',event => { authorized(event); return remoteServer.getStatus(); });
-    ipcMain.handle('server:start',(event,config: unknown) => { authorized(event); return remoteServer.start(config); });
-    ipcMain.handle('server:stop',event => { authorized(event); return remoteServer.stop(); });
+    ipcMain.handle('server:start',(event,config: unknown) => { authorized(event); return serverOperation(remoteServer.start(config)); });
+    ipcMain.handle('server:stop',event => { authorized(event); return serverOperation(remoteServer.stop()); });
     ipcMain.handle('osc:get',event=>{authorized(event);return bridge.getState();});
     ipcMain.handle('osc:addresses',event=>{authorized(event);return localAddresses();});
     ipcMain.handle('osc:connect',(event,config: unknown)=>{authorized(event);const target=bridge.getState().snapshot.sequence;return bridge.connect(isOscConfig(config)?{...config,dataPool:target.dataPool,sequenceNumber:target.number}:config);});
@@ -35,6 +59,7 @@ else {
       window.webContents.setWindowOpenHandler(() => ({action:'deny'}));
       window.webContents.on('will-navigate',event => event.preventDefault());
       window.webContents.session.setPermissionRequestHandler((_contents,_permission,callback) => callback(false));
+      window.on('close',event=>{if(quitController.allowExit)return;event.preventDefault();void quitController.request();});
       window.on('closed',() => { window = null; });
       await window.loadFile(launcherPath);
     };
@@ -48,10 +73,9 @@ else {
   });
   // Server is in this process: closing the app cannot leave an orphaned child server.
   app.on('window-all-closed',() => app.quit());
-  let quitting = false;
   app.on('before-quit',event => {
-    if (quitting || !remoteServer) return;
-    event.preventDefault(); quitting = true;bridge.disconnect();
-    void remoteServer.stop().finally(() => app.quit());
+    if(quitController.allowExit || !app.isReady())return;
+    event.preventDefault();
+    void quitController.request();
   });
 }

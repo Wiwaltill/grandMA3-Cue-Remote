@@ -49,7 +49,7 @@ HTTP bindet standardmäßig lokal; LAN nur nach UI-Freigabe in einem vertrauensw
 
 Nur der native validierte IPC-Aufrufer kann die OSC-Netzwerkverbindung konfigurieren/trennen. Die Zielauswahl bleibt bei einem erneuten nativen Verbinden innerhalb desselben App-Laufs erhalten; sie startet nach App-Neustart bei DataPool 1 / Sequenz 1. Die Web-Einstellungsseite wird über ?page=settings im selben React-Client geöffnet, mit Browser-Zurück-Unterstützung. Desktop-Steuerung wird per loadFile geladen und funktioniert auch bei gestopptem HTTP-Server. Sandbox und Context Isolation aktiv, Node-Integration deaktiviert; IPC auf genaues Fenster, Main Frame und lokale Dateiadresse beschränkt. Navigation, neue Fenster und Berechtigungsanfragen werden abgewiesen. HTTP liefert nur index.html und gebaute Assets.
 
-Server im Hauptprozess, keine Shell-/Kindprozesse; App-Schließen beendet Server und Bridge. Single-Instance-Lock verhindert Doppelstarts. Kein automatischer GO bei Start, Reconnect oder Zielwechsel. Kein Offline-Command-Cache, keine Pult-Tests auf laufenden Shows ohne ausdrückliche Freigabe.
+Server im Hauptprozess, keine Shell-/Kindprozesse; Bestätigtes App-Beenden trennt Bridge und stoppt den Server, bevor der Prozess beendet wird. Single-Instance-Lock verhindert Doppelstarts. Kein automatischer GO bei Start, Reconnect oder Zielwechsel. Kein Offline-Command-Cache, keine Pult-Tests auf laufenden Shows ohne ausdrückliche Freigabe.
 
 ## Offene Abnahme
 
@@ -70,3 +70,9 @@ Auf Benutzerwunsch kein Pause-Befehl, kein Pause-Zustandsmodell, kein OSC-Playba
 Cue-ID serverseitig gegen aktuelle Liste validieren, Cue-Nummer ausschließlich daraus ableiten. Feste Cmd-Aufrufe Load/Goto DataPool N Sequence N Cue X; keine freien Kommandos, Namen oder Fade-Overrides. Separate zufällige actionNonce und Quell-IP-Prüfung für Ausführungsbestätigung. Load beendet Pending nur nach OK. Goto fragt nach OK mit neuer Querynonce vollständig ab und endet erst bei laufendem bestätigtem Ziel-Current. Bei gleichem Ziel-Cue wird keine künstliche Cue-Änderung verlangt, aber dennoch eine frische Statusantwort nach OK. Fehlende Bestätigung/Zielantwort: unbekannt, STALE, gesperrt, kein Retry.
 
 cueCommandReceipt ist eine bestätigte vergangene Ausführung, kein dauerhafter LoadedCue-Status. Neue Bedienbefehle/Resync/Verbindungswechsel verwerfen sie. Current und Next bleiben autoritative Current-Rückmeldung bzw. Listennachfolger. Modaler Cue-Dialog bindet Auswahl an Sequenz und Revision beim Öffnen; keine Aktion allein durch Zeilenwahl.
+
+## Beenden seit v0.2.10
+
+Ein gemeinsamer QuitController verbindet BrowserWindow.close und app.before-quit (inkl. ⌘Q/Menü). Beide verhindern zunächst das normale Schließen. Bei starting/running/stopping wird die native asynchrone MessageBox mit cancelId/defaultId=0 und Abbrechen als erstem Button angezeigt. Ein gemeinsames laufendes Promise verhindert doppelte Dialoge/Shutdowns. Abbrechen ändert keine Betriebsdaten.
+
+Nach Bestätigung sperrt closing neue native IPC-Aufrufe; OSC wird getrennt. Laufende native Serverstart/-stopp-Operationen werden abgewartet, danach RemoteServer.stop(). Erst dann allowExit und app.quit(); folgende close-/before-quit-Ereignisse fragen nicht erneut. Bei Fehler bleibt die App geöffnet, zeigt eine Fehlermeldung und erlaubt einen neuen Versuch. Gestoppter/fehlender Server braucht keine Rückfrage; eine bestehende OSC-Verbindung wird trotzdem getrennt. Erzwungenes Beenden/Absturz/Betriebssystem-Ausfall durchlaufen nicht garantiert diesen Dialog; es gibt weiterhin keinen separaten Kindserverprozess.

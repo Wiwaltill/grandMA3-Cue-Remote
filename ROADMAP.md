@@ -58,3 +58,6 @@ Auf Benutzerwunsch Pause-Button, Zustandsanzeige, MA-Pause-Kommandos und separat
 
 ## v0.2.9 - kleine Load-/Goto-Buttons
 Explizite Cue-Auswahl aus der bestätigten Liste, Load-Vorladen und gezielter Goto mit MA-Zeiten. Load wartet auf Ausführungsbestätigung; Goto zusätzlich auf frischen Ziel-Current. Keine freie Command-/Fade-Eingabe, keine automatische Wiederholung. Next bleibt Listennachfolger. Separate freigegebene onPC-Testsequenz: Load ohne Start, Goto mit echtem Current und anschließendem Off geprüft.
+
+## v0.2.10 - Rückfrage beim App-Beenden
+Gemeinsame native Abfrage für Fenster schließen und ⌘Q bei laufendem/startendem/stoppendem Server. Abbrechen (Standard/Escape) oder Server und Verbindung beenden. Keine Doppelabfrage; Serverstopp vor Prozessende abwarten. Bei gestopptem Server ohne Abfrage. Automatisierte Ablauf-Tests vorhanden; native Dialogbedienung bleibt manuell abzunehmen.

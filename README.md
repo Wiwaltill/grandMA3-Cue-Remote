@@ -2,7 +2,7 @@
 
 Lokale, iPad-optimierte Sequenz-Fernbedienung mit grafischer macOS-Serversteuerung. React/TypeScript, Node und Electron; ohne Cloud oder Telemetrie.
 
-## v0.2.9 - Load und Goto
+## v0.2.10 - Beenden mit Rückfrage
 
 Die App verbindet sich mit **grandMA3 onPC 2.5.1.1**, liest Sequenzname, Cue-Liste, bekannte Fade-Zeiten und Current-Status aus MA und sendet gezieltes GO+/GO− an den ausgewählten DataPool und die eingetragene Sequenznummer. Die Weboberfläche enthält Lock, Auto-Follow, Listenpositionsfortschritt und eine klar als berechnet markierte Fade-Vorschau. Der Demo-Modus ist entfernt. Sie simuliert im Live-Modus keinen Playback-Erfolg.
 
@@ -20,7 +20,7 @@ Die macOS-arm64-App enthält Laufzeit und Weboberfläche. Für die normale Bedie
 4. **Verbinden** anklicken. Die App fragt ausschließlich lesend ab. Erst eine frische, gültige MA-Antwort für die gewählte Sequenz ergibt **Pultstatus empfangen / ONLINE**.
 5. **Weboberfläche öffnen** anklicken. Die Bedienung beginnt gesperrt. Nach Prüfung von DataPool, Sequenz und Cue-Liste oben **entsperren**, dann GO+/GO− bedienen.
 6. In der Weboberfläche **Einstellungen** (Zahnrad) öffnen, **DataPool** und **Sequenznummer** eingeben und **Übernehmen** anklicken. Beide Angaben werden gemeinsam übernommen, ohne GO. Während der vollständigen Synchronisation bleibt Playback gesperrt. War die Bedienung vorher entsperrt, wird sie nach gültiger frischer Antwort automatisch wieder frei. Eine manuelle Sperre bleibt erhalten; bei Fehler oder Timeout ist bewusstes Entsperren nötig. Auch eine nicht vorhandene Zielsequenz lässt sich in Einstellungen korrigieren. Nicht übernommene Eingaben sperren Playback bis Übernehmen oder Verwerfen. **Playback** führt zurück; die Hauptseite enthält keine Eingabefelder und scrollt bei üblichen Tablet-/Desktopgrößen nicht, nur die Cueliste. Sehr niedrige Fenster und starke Vergrößerung dürfen für erreichbare Bedienelemente scrollen.
-7. **Trennen** beendet die OSC-Abfragen. **Server stoppen** beendet den Webserver und sperrt Playback. Schließen der Mac-App beendet beides.
+7. **Trennen** beendet die OSC-Abfragen. **Server stoppen** beendet den Webserver und sperrt Playback. Beim Schließen der Mac-App oder ⌘Q erscheint bei laufendem Server eine Rückfrage: **Abbrechen** lässt App, Server und OSC-Verbindung unverändert weiterlaufen; **Server und Verbindung beenden** trennt OSC, stoppt den Server und beendet danach die App. Escape/Enter wählen standardmäßig Abbrechen. Bei gestopptem Server beendet sich die App ohne Rückfrage und trennt eine eventuell noch aktive OSC-Verbindung. Das Schließen des Web-Browser-Tabs beendet die Mac-App nicht.
 
 Es ist kein manuell einzufügendes Lua-Plugin und kein zusätzliches OSC-Sendeprogramm nötig. Die Bridge sendet fest erzeugte, rein lesende Lua-Abfragen über den offiziellen OSC-Command-Eingang. Die verwendeten `socket`-/`json`-Module und Objektzugriffe wurden gegen die installierte Version und echte Rückmeldungen geprüft. Sie sind nicht als universelle Zusage für andere MA-Versionen zu verstehen; die aktuelle Live-Bridge akzeptiert nur 2.5.1.1.
 
@@ -90,7 +90,7 @@ npm run desktop:package
 
 `desktop:dev` baut und öffnet die Mac-App. `desktop:package` erzeugt auf macOS das arm64-App-Bundle. `npm run dev` und `npm run preview` dienen optional der reinen Webentwicklung; ohne Bridge/API bleibt die Bedienung gesperrt. `dist/` enthält die Webdateien, `dist-desktop/` die kompilierte Desktop-Anwendung.
 
-28 Tests decken Fade-Berechnung, Ablehnung entfernter Pause-Requests, echte UDP-Pakete mit simuliertem MA, Frische, Timeout, Deduplizierung, konkurrierende Revisionen, Zielwechsel, Nonce-Prüfung, Authentifizierung, Origin, Serverstart/-stopp und Zugriffsbeschränkungen ab. CI sendet niemals an ein echtes Pult. Testdetails und offene Abnahmen: [Testbericht](tests/VERIFICATION.md).
+32 Tests decken Abbruch/Bestätigung des Beendens, parallele Schließanforderungen, Fehler beim Herunterfahren, Fade-Berechnung, Ablehnung entfernter Pause-Requests, echte UDP-Pakete mit simuliertem MA, Frische, Timeout, Deduplizierung, konkurrierende Revisionen, Zielwechsel, Nonce-Prüfung, Authentifizierung, Origin, Serverstart/-stopp und Zugriffsbeschränkungen ab. CI sendet niemals an ein echtes Pult. Testdetails und offene Abnahmen: [Testbericht](tests/VERIFICATION.md).
 
 Struktur: `apps/web` für UI und HTTP-Transport, `packages/shared` für Typen/Validierung, `apps/desktop` für Electron, HTTP-Server und OSC-Bridge. UI enthält keine OSC-/Lua-Syntax. Keine zusätzlichen Runtime-Abhängigkeiten für OSC; UDP und Paketkodierung verwenden Node-Bordmittel.
 

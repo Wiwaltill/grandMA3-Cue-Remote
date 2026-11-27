@@ -1,4 +1,4 @@
-# Abnahme v0.2.9
+# Abnahme v0.2.10
 
 Stand: 27. November 2026. Entwicklungsfassung, keine Freigabe für laufende Shows.
 
@@ -6,7 +6,7 @@ Stand: 27. November 2026. Entwicklungsfassung, keine Freigabe für laufende Show
 
 - TypeScript strict für React, Node-Bridge, Electron-Main und Preload erfolgreich.
 - ESLint erfolgreich.
-- 28 Tests erfolgreich: 2 Fade-Berechnungstests, 19 OSC-/UDP-Tests, 7 Server-/HTTP-Tests.
+- 32 Tests erfolgreich: 2 Fade-Berechnungstests, 19 OSC-/UDP-Tests, 7 Server-/HTTP-Tests und 4 Beenden-Ablauftests.
 - Produktionsbuild und macOS-arm64-App-Bundle erfolgreich; lokale Ad-hoc-Signatur wird beim Packaging mit codesign geprüft.
 - npm-Lockfile vorhanden; OSC benötigt keine zusätzliche Runtime-Bibliothek.
 
@@ -113,3 +113,9 @@ Vier neue Tests: Load mit Dezimal-Cue und MA-OK ohne Current-Änderung, ungülti
 Realer Test auf der bereits freigegebenen separaten onPC-Testshow 2.5.1.1: DataPool 1 / Sequenz 1 zunächst Off, Load Cue 1 per MA-Cmd bestätigt bei weiterhin Current=null, danach Goto Cue 1 mit Cmd-OK und Current=1 bestätigt. Abschließend Off gesendet und Off per Snapshot bestätigt. Keine Cue-Programmierung. Der Test bestätigt keine allgemeine LoadedCue-Statusabfrage oder alle Tracking-/Follow-Sonderfälle.
 
 Browser mit isoliertem Empfänger: Load-Dialog mit Cue 1.5 ausgeführt, MA-Bestätigung sichtbar und Current weiterhin Off; Goto-Dialog abgebrochen ohne Current-Änderung, danach Goto Cue 1.5 ausgeführt mit Current 1.5 / Next 2 und korrekter Tabellenmarkierung. Bei 390x844 kein Dokumentüberlauf; beide kleinen Buttons 171x44 CSS-Pixel. Native Fensterbedienung und echtes iPad/Safari weiterhin offen.
+
+## Beenden-Rückfrage v0.2.10
+
+Vier neue Tests der vom Electron-Main verwendeten gemeinsamen Beenden-Steuerung: Abbrechen erhält Server/Verbindung; erneutes Bestätigen beendet einmal; gestoppter Server ohne Dialog; gleichzeitiges Fensterschließen und Quit teilen sich eine Abfrage und warten auf asynchronen Shutdown; Dialog-/Shutdown-Fehler beenden nicht und erlauben Wiederholung. Rekursives app.quit nach Freigabe erzeugt keine weitere Abfrage. 32 Tests insgesamt.
+
+Close-/Before-quit-Handler und native MessageBox-Optionen anhand installierter Electron-Typdefinitionen und offizieller Electron-Dokumentation geprüft. Default/Cancel-ID 0 = Abbrechen. Serverstart/-stopp-Promises werden beim bestätigten Shutdown abgewartet und neue native IPC-Aufrufe verhindert. Keine Pultbefehle für diese Änderung. Native macOS-Dialogbedienung mit Fensterknopf/⌘Q/Escape und ein laufender Electron-Ende-zu-Ende-Test sind mit den verfügbaren Browserwerkzeugen nicht interaktiv geprüft; automatisierte Tests prüfen den Ablauf mit injizierten Abhängigkeiten. App-Bundle und Signaturprüfung durch Packaging.

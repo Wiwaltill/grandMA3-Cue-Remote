@@ -23,3 +23,7 @@ Bei unbekannter Fade-Zeit, initial bereits laufendem Cue oder fehlender Synchron
 CONNECTING / ONLINE / STALE / OFFLINE. ONLINE nur nach validierter frischer MA-Antwort. Unbekannte Werte als — anzeigen. Bei Sperre oder unklarem Status Bedienung deaktivieren und Grund zeigen. Keine optimistische Current-Aktualisierung durch Sendebestätigungen. Unbekanntes Befehlsergebnis sperrt bis zur expliziten vollständigen Resynchronisation und manuellen Freigabe.
 
 Die Mac-App trennt Webserver- und OSC-Status. Server starten/stoppen sowie Weboberfläche öffnen per UI. OSC-Felder: Ziel-IP, lokale Rückmelde-IP, Port und Präfix. Playback-Ziel ausschließlich in den Web-Einstellungen; initial DataPool 1 / Sequenz 1. „Verbinden“ fragt lesend ab, „Trennen“ beendet die Abfragen. Verbindungsdaten während einer Verbindung sperren. Webadressen mit Bedienerschlüssel erst nach Serverstart anzeigen; LAN-Freigabe standardmäßig aus. Keine Terminalbedienung für den normalen Betrieb.
+
+## Mac-App beenden
+
+Fenster schließen und ⌘Q führen bei laufendem (auch startendem/stoppendem) Server zur gleichen nativen Rückfrage: Abbrechen oder Server und Verbindung beenden. Abbrechen ist Standard und Escape-Aktion; bis zur Bestätigung bleiben Server und Verbindung unverändert. Keine mehrfachen Dialoge bei wiederholtem Schließen. Nach Bestätigung erst OSC trennen und Serverstopp abwarten, dann App beenden. Bei gestopptem Server keine Rückfrage. grandMA3-Playback bleibt unberührt.

@@ -1,6 +1,6 @@
 export const desktopText = {
   title:'MA3 CUE REMOTE', label:'LOKALER SERVER · OSC BRIDGE', intro:'Deine Cue Remote. Mit einem Klick bereit.',
-  version:'v0.2.9', notice:'Die OSC-Verbindung steuert ausschließlich die gewählte Sequenz.',
+  version:'v0.2.10', notice:'Die OSC-Verbindung steuert ausschließlich die gewählte Sequenz.',
   status:'SERVERSTATUS', stopped:'Gestoppt', starting:'Wird gestartet …', running:'Läuft', stopping:'Wird gestoppt …', error:'Start fehlgeschlagen',
   stoppedHint:'Starte den Server, um die Weboberfläche zu öffnen.', runningHint:'Der Webserver ist bereit. Die Weboberfläche lässt sich jetzt öffnen.',
   port:'Port', portHint:'0 wählt automatisch einen freien Port.',
@@ -8,7 +8,8 @@ export const desktopText = {
   local:'Nur auf diesem Mac erreichbar', network:'LAN-Freigabe aktiv',
   start:'Server starten', stop:'Server stoppen', open:'Weboberfläche öffnen',
   addresses:'WEBADRESSEN', localAddress:'Dieser Mac', lanAddress:'iPad / lokales Netzwerk',
-  quitHint:'Beim Schließen der App wird der Server beendet.',
+  quitHint:'Beim Beenden mit laufendem Server erscheint eine Rückfrage.',
+  quit:{title:'MA3 Cue Remote beenden',message:'Der Server läuft noch. App wirklich beenden?',detail:'Server und OSC-Verbindung werden beendet. Verbundene Weboberflächen verlieren die Verbindung. grandMA3 und dessen Playback laufen weiter.',cancel:'Abbrechen',confirm:'Server und Verbindung beenden',error:'Server und Verbindung konnten nicht vollständig beendet werden. Die App bleibt geöffnet. Bitte erneut versuchen.',ok:'OK'},
   standalone:'Bitte die macOS-App öffnen. Diese Serversteuerung benötigt die Desktop-App.',
   ipcError:'Die Aktion konnte nicht ausgeführt werden. Bitte die App erneut öffnen.',
   osc:{title:'grandMA3 onPC · OSC',intro:'Mit grandMA3 2.5.1.1 verbinden. Beginnt gesperrt; Freigabe erst nach frischem Pultstatus.',host:'onPC / Pult IPv4',reply:'Lokale Rückmelde-IP',port:'OSC-Port',prefix:'OSC-Präfix (ohne /)',pool:'DataPool',sequence:'Sequenznummer',connect:'Verbinden',disconnect:'Trennen',offline:'Getrennt',connecting:'Warte auf Pultstatus …',online:'Pultstatus empfangen',stale:'Status veraltet · gesperrt',pending:'Befehl ausstehend',unknown:'Ergebnis unbekannt · gesperrt',next:'Next zeigt den nächsten Eintrag der Cueliste.',setup:'In MA: Menu → In & Out → OSC. Enable Input einschalten, Mode UDP, gleichen Port/Präfix verwenden und Receive Command auf Yes setzen. Interface passend zur IPv4 wählen.',pairing:'Webadressen für berechtigte Bediener (enthalten den lokalen Zugriffsschlüssel):',errors:{timeout:'Keine frische Antwort. IP, Interface, Port, Präfix und Receive Command in MA prüfen. Bei unbekanntem GO-Ergebnis niemals automatisch wiederholen.','invalid-config':'IPv4, Port, lokale Rückmelde-IP, DataPool und Sequenznummer prüfen.','invalid-snapshot':'Keine gültigen Sequenzdaten. Sequenz/DataPool und grandMA3-Version 2.5.1.1 prüfen.','send-failed':'OSC-Transport fehlgeschlagen. Verbindung trennen und Einstellungen prüfen.'}},
