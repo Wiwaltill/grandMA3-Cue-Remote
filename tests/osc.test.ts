@@ -4,7 +4,7 @@ import dgram from 'node:dgram';
 import type { AddressInfo } from 'node:net';
 import { setTimeout as delay } from 'node:timers/promises';
 import { OscBridge, parseFeedback } from '../apps/desktop/src/bridge.ts';
-import { encodeOscCommand, isOscConfig, playbackCommand } from '../apps/desktop/src/osc.ts';
+import { encodeOscCommand, isOscConfig, playbackCommand, cueCommandRequest } from '../apps/desktop/src/osc.ts';
 import type { OscConfig } from '../packages/shared/live.ts';
 import type { Command } from '../packages/shared/playback.ts';
 const config: OscConfig={host:'127.0.0.1',replyHost:'127.0.0.1',port:8000,prefix:'',dataPool:'1',sequenceNumber:'1'};
@@ -17,10 +17,14 @@ const feedback=(number='1')=>({dataPool:'1',number,version:'2.5.1.1',name:'Test 
 async function setup(options: {now?:()=>number;timeoutMs?:number}={}) {
   const socket=dgram.createSocket('udp4');await new Promise<void>(r=>socket.bind(0,'127.0.0.1',r));
   const address=socket.address();assert.notEqual(typeof address,'string');
-  const counters={go:0,query:0};const control={reply:true,advance:true,spoof:false,timing:'normal'};let current='',running=false;
+  const counters={go:0,query:0,cue:0};const control={reply:true,advance:true,spoof:false,timing:'normal',ackCue:true,advanceGoto:true};let current='',running=false;
   socket.on('message',packet=>{
     const {command}=decode(packet);
-    if(command.startsWith('Lua ')) {
+    if(command.includes('actionNonce=')){
+      counters.cue++;const nonce=command.match(/actionNonce='([a-f0-9]{32})'/)?.[1];const port=Number(command.match(/,'127\.0\.0\.1',(\d+)/)?.[1]);
+      if(command.includes("Cmd('Goto ") && control.advanceGoto){current=command.match(/ Cue (\d+(?:\.\d+)?)/)?.[1]??'';running=true;}
+      if(control.ackCue && nonce && port)socket.send(JSON.stringify({actionNonce:nonce,result:'OK'}),port,'127.0.0.1');
+    } else if(command.startsWith('Lua ')) {
       counters.query++;
       if(!control.reply)return;
       const port=Number(command.match(/j\.encode\(t\),'127\.0\.0\.1',(\d+)/)?.[1]);
@@ -181,4 +185,35 @@ test('Follow times validate zero and reject malformed feedback; unknown triggers
 
 test('removed Pause commands are rejected and never sent to MA',async()=>{
   const f=await setup();try{f.bridge.setLocked(false);assert.deepEqual(await f.bridge.execute({...f.command('removed-pause'),action:'pause'} as unknown as Command),{accepted:false,reason:'invalid'});assert.equal(f.counters.go,0);}finally{f.cleanup();}
+});
+
+test('Load requires a listed cue and MA acknowledgement, preserves Current and list Next, and deduplicates',async()=>{
+  const f=await setup();try{
+    f.bridge.setLocked(false);const cmd={...f.command('load-decimal'),action:'load' as const,cueId:'1/1/1.5'};
+    assert.deepEqual(await f.bridge.execute({...cmd,cueId:'1/2/1.5'}),{accepted:false,reason:'invalid'});
+    assert.deepEqual(await f.bridge.execute(cmd),{accepted:true});assert.equal(f.bridge.getState().commandState,'pending');
+    await until(()=>f.bridge.getState().commandState==='idle');const s=f.bridge.getState().snapshot;
+    assert.equal(s.currentCueId,null);assert.equal(s.nextCueId,'1/1/1');assert.deepEqual(s.cueCommandReceipt,{action:'load',cueId:'1/1/1.5'});
+    assert.deepEqual(await f.bridge.execute(cmd),{accepted:false,reason:'duplicate'});assert.equal(f.counters.cue,1);assert.equal(f.counters.go,0);
+  }finally{f.cleanup();}
+});
+test('Goto needs MA execution acknowledgement and authoritative target Current, including same cue',async()=>{
+  const f=await setup();try{
+    f.bridge.setLocked(false);const send=(id: string)=>f.bridge.execute({...f.command(id),action:'goto',cueId:'1/1/1.5'});
+    await send('goto-decimal');assert.equal(f.bridge.getState().snapshot.currentCueId,null);await until(()=>f.bridge.getState().commandState==='idle');
+    assert.equal(f.bridge.getState().snapshot.currentCueId,'1/1/1.5');assert.equal(f.bridge.getState().snapshot.nextCueId,'1/1/2');
+    await send('goto-same');await until(()=>f.bridge.getState().commandState==='idle');assert.equal(f.counters.cue,2);
+  }finally{f.cleanup();}
+});
+test('missing Load acknowledgement or Goto target feedback locks without retry',async()=>{
+  for(const action of ['load','goto'] as const){const f=await setup();try{
+    f.bridge.setLocked(false);f.control.ackCue=action!=='load';f.control.advanceGoto=false;
+    await f.bridge.execute({...f.command('target-timeout'),action,cueId:'1/1/1.5'});await until(()=>f.bridge.getState().commandState==='unknown');
+    assert.equal(f.bridge.getState().snapshot.locked,true);assert.equal(f.bridge.getState().snapshot.cueCommandReceipt,undefined);await delay(50);assert.equal(f.counters.cue,1);
+  }finally{f.cleanup();}}
+});
+test('target OSC syntax is fixed and rejects free command injection',()=>{
+  assert.match(cueCommandRequest(config,'load','1.5',12345,'a'.repeat(32)),/Cmd\('Load DataPool 1 Sequence 1 Cue 1.5'\)/);
+  assert.match(cueCommandRequest(config,'goto','2',12345,'a'.repeat(32)),/Cmd\('Goto DataPool 1 Sequence 1 Cue 2'\)/);
+  for(const cue of ['0','1; Off Sequence Thru','1 Fade 0','NaN'])assert.throws(()=>cueCommandRequest(config,'goto',cue,12345,'a'.repeat(32)));
 });

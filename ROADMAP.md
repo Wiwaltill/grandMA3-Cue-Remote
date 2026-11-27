@@ -55,3 +55,6 @@ Zusätzlicher konfigurierbarer Feedback-Empfänger. MA-Pause On/Off real verifiz
 
 ## v0.2.8 - Pause entfernt
 Auf Benutzerwunsch Pause-Button, Zustandsanzeige, MA-Pause-Kommandos und separaten OSC-Playback-Feedbackempfänger samt Konfiguration entfernt. GO+/GO−, Follow und MA-Duration-Zeitvorschau bleiben. API lehnt alte Pause-Requests ab. Frühere Pause-Meilensteine sind historisch und kein aktueller Produktumfang.
+
+## v0.2.9 - kleine Load-/Goto-Buttons
+Explizite Cue-Auswahl aus der bestätigten Liste, Load-Vorladen und gezielter Goto mit MA-Zeiten. Load wartet auf Ausführungsbestätigung; Goto zusätzlich auf frischen Ziel-Current. Keine freie Command-/Fade-Eingabe, keine automatische Wiederholung. Next bleibt Listennachfolger. Separate freigegebene onPC-Testsequenz: Load ohne Start, Goto mit echtem Current und anschließendem Off geprüft.

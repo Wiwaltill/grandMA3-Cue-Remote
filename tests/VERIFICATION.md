@@ -1,4 +1,4 @@
-# Abnahme v0.2.8
+# Abnahme v0.2.9
 
 Stand: 27. November 2026. Entwicklungsfassung, keine Freigabe für laufende Shows.
 
@@ -6,7 +6,7 @@ Stand: 27. November 2026. Entwicklungsfassung, keine Freigabe für laufende Show
 
 - TypeScript strict für React, Node-Bridge, Electron-Main und Preload erfolgreich.
 - ESLint erfolgreich.
-- 24 Tests erfolgreich: 2 Fade-Berechnungstests, 15 OSC-/UDP-Tests, 7 Server-/HTTP-Tests.
+- 28 Tests erfolgreich: 2 Fade-Berechnungstests, 19 OSC-/UDP-Tests, 7 Server-/HTTP-Tests.
 - Produktionsbuild und macOS-arm64-App-Bundle erfolgreich; lokale Ad-hoc-Signatur wird beim Packaging mit codesign geprüft.
 - npm-Lockfile vorhanden; OSC benötigt keine zusätzliche Runtime-Bibliothek.
 
@@ -105,3 +105,11 @@ Browsercheck mit isoliertem simuliertem MA: initial Pause unbekannt ohne false-p
 Pause-spezifische Tests und deren Testadapter entfernt. Bestehende Timing-/Follow-/Sicherheitsprüfungen bleiben; UDP- und HTTP-Regression prüfen zusätzlich, dass alte Pause-Requests als invalid abgewiesen werden und keine Nachricht an MA auslösen. Keine echten Pultbefehle für diese Entfernung erforderlich. Historische Pause-Tests oben beschreiben frühere Versionen.
 
 Browserprüfung v0.2.8 mit isoliertem Empfänger: nur GO+ und GO− als Playback-Buttons, keine Pause-Statusanzeige. GO− nutzt die ganze Breite. Bei 390x844 Dokumentbreite und -höhe gleich Viewport, kein Seitenscrollen. Follow-Markierung und Next weiter sichtbar. Native Mac-Fenster und echtes iPad/Safari weiterhin nicht interaktiv geprüft; App-Bundle gebaut und Signaturprüfung erfolgreich.
+
+## Load/Goto v0.2.9
+
+Vier neue Tests: Load mit Dezimal-Cue und MA-OK ohne Current-Änderung, ungültige/fremde Cue-ID und Deduplizierung; Goto erst nach OK plus Zielstatus einschließlich gleichem Ziel-Cue; fehlendes Load-OK bzw. Goto-Zielantwort sperren ohne Retry; feste Kommandosyntax und Injection-Ablehnung. Insgesamt 28 Tests.
+
+Realer Test auf der bereits freigegebenen separaten onPC-Testshow 2.5.1.1: DataPool 1 / Sequenz 1 zunächst Off, Load Cue 1 per MA-Cmd bestätigt bei weiterhin Current=null, danach Goto Cue 1 mit Cmd-OK und Current=1 bestätigt. Abschließend Off gesendet und Off per Snapshot bestätigt. Keine Cue-Programmierung. Der Test bestätigt keine allgemeine LoadedCue-Statusabfrage oder alle Tracking-/Follow-Sonderfälle.
+
+Browser mit isoliertem Empfänger: Load-Dialog mit Cue 1.5 ausgeführt, MA-Bestätigung sichtbar und Current weiterhin Off; Goto-Dialog abgebrochen ohne Current-Änderung, danach Goto Cue 1.5 ausgeführt mit Current 1.5 / Next 2 und korrekter Tabellenmarkierung. Bei 390x844 kein Dokumentüberlauf; beide kleinen Buttons 171x44 CSS-Pixel. Native Fensterbedienung und echtes iPad/Safari weiterhin offen.

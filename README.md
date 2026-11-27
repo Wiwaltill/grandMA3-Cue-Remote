@@ -2,13 +2,13 @@
 
 Lokale, iPad-optimierte Sequenz-Fernbedienung mit grafischer macOS-Serversteuerung. React/TypeScript, Node und Electron; ohne Cloud oder Telemetrie.
 
-## v0.2.8 - Playback ohne Pause
+## v0.2.9 - Load und Goto
 
 Die App verbindet sich mit **grandMA3 onPC 2.5.1.1**, liest Sequenzname, Cue-Liste, bekannte Fade-Zeiten und Current-Status aus MA und sendet gezieltes GO+/GO− an den ausgewählten DataPool und die eingetragene Sequenznummer. Die Weboberfläche enthält Lock, Auto-Follow, Listenpositionsfortschritt und eine klar als berechnet markierte Fade-Vorschau. Der Demo-Modus ist entfernt. Sie simuliert im Live-Modus keinen Playback-Erfolg.
 
 Echter Test auf dem Entwicklungs-Mac: Version und Sequenzdaten empfangen, GO+ über die Weboberfläche ausgelöst und anschließend Cue 1 vom Pult bestätigt. GO− ohne Zustandsänderung am Listenanfang führte korrekt zur Sperre „Ergebnis unbekannt“. Resynchronisation und Rückkehr zum ursprünglichen Off-Zustand wurden geprüft. Dies ist eine Entwicklungsfassung; die vollständige Show-/iPad-Abnahme steht aus.
 
-**Next:** Zeigt immer den nächsten Eintrag der Cueliste mit Nummer, Name und bekanntem Fade. Bei Off wird der erste Cue angezeigt, am Listenende „Ende der Cueliste“. Die blaue Tabellenmarkierung und der Text auf GO+ verwenden denselben Listennachfolger. Goto wird später ergänzt. Die Anzeige ändert keinen Cue am Pult; Playback bleibt durch echte Rückmeldungen bestätigt.
+**Next:** Zeigt immer den nächsten Eintrag der Cueliste mit Nummer, Name und bekanntem Fade. Bei Off wird der erste Cue angezeigt, am Listenende „Ende der Cueliste“. Die blaue Tabellenmarkierung und der Text auf GO+ verwenden denselben Listennachfolger. Load/Goto sind als separate kleine Buttons erreichbar. Die Anzeige ändert keinen Cue am Pult; Playback bleibt durch echte Rückmeldungen bestätigt.
 
 ## Verbinden – vollständig per UI
 
@@ -30,7 +30,7 @@ Vor dem Webserverstart bewusst **Im lokalen Netzwerk freigeben** aktivieren. Dan
 
 Standardbindung des HTTP-Servers ist 127.0.0.1. Die OSC-Rückmeldung wird nur von der konfigurierten Ziel-IP und mit passender zufälliger Abfragenonce angenommen. Kein Zugriff aus der Cloud. LAN-HTTP ist für ein vertrauenswürdiges separates Show-Netz vorgesehen; keine Internet-Portweiterleitung.
 
-Alle Live-Clients sehen denselben Bridge-Status und dieselbe Sperre. Der Server prüft Zugriffsschlüssel, Origin, Zielsequenz, erwartete Revision, Statusfrische und Request-ID. Er akzeptiert nur GO+/GO−, validierte DataPool-/Sequenzwahl, Lock und Resynchronisation. Es gibt keine frei eingebbaren MA-/Lua-Kommandos im Web-API.
+Alle Live-Clients sehen denselben Bridge-Status und dieselbe Sperre. Der Server prüft Zugriffsschlüssel, Origin, Zielsequenz, erwartete Revision, Statusfrische und Request-ID. Er akzeptiert nur GO+/GO− und gezieltes Load/Goto, validierte DataPool-/Sequenzwahl, Lock und Resynchronisation. Es gibt keine frei eingebbaren MA-/Lua-Kommandos im Web-API.
 
 ## Fehler und Resynchronisation
 
@@ -39,6 +39,16 @@ Die Bridge fragt alle 500 ms einen vollständigen Snapshot ab; der Browser aktua
 Nach einem GO ist höchstens ein Bedienbefehl ausstehend. Zeigt MA binnen 3 Sekunden keine Änderung von Current/Running, gilt das Ergebnis als **unbekannt**: Sperre, keine Queue und keine automatische Wiederholung. Das kann auch bei einem korrekt empfangenen GO am Listenanfang/-ende oder einer unveränderten Cue passieren. **Neu synchronisieren** liest erneut vollständig; anschließend bewusst entsperren. Es ist keine Behauptung, dass der Befehl nicht angekommen sei. Bei verlorenem Feedback bleibt die Sperre auch nach frischer Rückmeldung bestehen, bis ein Bediener entsperrt.
 
 Cue-Nummern bleiben Strings; die Anwendung validiert Eingaben und akzeptiert maximal 500 Cues in einem Snapshot bis 60 KB. Unbekannte Fade-Werte werden als — angezeigt. Nicht vorhandene Sequenzen, unpassende MA-Versionen oder ungültige Snapshots geben die Bedienung nicht frei. Nummern werden gezielt adressiert; Schutz vor gleichzeitiger Objektverschiebung und stabile MA-Handles sind noch nicht abgenommen. Die Lösung bietet keine Ende-zu-Ende-Exactly-once-Garantie über UDP.
+
+## Load und Goto
+
+MA-Referenz: [Load](https://help.malighting.com/grandMA3/2.5/HTML/keyword_load.html), [Goto](https://help.malighting.com/grandMA3/2.5/HTML/keyword_goto.html).
+
+Unter GO− liegen zwei kleine Buttons **Load** und **Goto**. Beide öffnen eine Cue-Auswahl mit Nummer und Name aus der frisch bestätigten Cueliste. **Abbrechen** bzw. Escape schließen ohne Befehl. Erst **Load** oder **Goto** im Dialog führt die gewählte Aktion aus. Ändert sich der Pultstatus seit dem Öffnen, Auswahl erneut öffnen; alte Revisionen und Ziele werden serverseitig abgewiesen.
+
+**Load** lädt den Cue vor, ohne ihn zu starten. MA bestätigt die Ausführung per Cmd-OK. Dies ist kein ausgelesener dauerhafter LoadedCue-Status. Der nächste GO kann den geladenen Cue starten; **NEXT bleibt auf Benutzerwunsch immer der Listennachfolger** und ist daher nach Load nicht zwingend das tatsächliche GO-Ziel.
+
+**Goto** springt gezielt zum Cue mit den gespeicherten MA-Zeiten, ohne freien Fade-Override. Erst MA-Cmd-OK und eine neue gültige Statusantwort mit dem Ziel als Current beenden Pending. Es gibt keine optimistische Current-Anzeige. Wird ein sehr kurzer Follow-Cue zwischen zwei Abfragen bereits verlassen, kann der Zielnachweis fehlen; dann bleibt das Ergebnis unbekannt und die Bedienung gesperrt. Keine automatische Wiederholung. Load/Goto sind nur bei entsperrtem, frischem Status ohne ausstehenden Befehl verfügbar und gelten ausschließlich für die gewählte Sequenz. Die Statuszeile zeigt die letzte bestätigte Ausführung, keinen garantierten dauerhaften Ladezustand.
 
 ## Follow-Cues
 
@@ -80,7 +90,7 @@ npm run desktop:package
 
 `desktop:dev` baut und öffnet die Mac-App. `desktop:package` erzeugt auf macOS das arm64-App-Bundle. `npm run dev` und `npm run preview` dienen optional der reinen Webentwicklung; ohne Bridge/API bleibt die Bedienung gesperrt. `dist/` enthält die Webdateien, `dist-desktop/` die kompilierte Desktop-Anwendung.
 
-24 Tests decken Fade-Berechnung, Ablehnung entfernter Pause-Requests, echte UDP-Pakete mit simuliertem MA, Frische, Timeout, Deduplizierung, konkurrierende Revisionen, Zielwechsel, Nonce-Prüfung, Authentifizierung, Origin, Serverstart/-stopp und Zugriffsbeschränkungen ab. CI sendet niemals an ein echtes Pult. Testdetails und offene Abnahmen: [Testbericht](tests/VERIFICATION.md).
+28 Tests decken Fade-Berechnung, Ablehnung entfernter Pause-Requests, echte UDP-Pakete mit simuliertem MA, Frische, Timeout, Deduplizierung, konkurrierende Revisionen, Zielwechsel, Nonce-Prüfung, Authentifizierung, Origin, Serverstart/-stopp und Zugriffsbeschränkungen ab. CI sendet niemals an ein echtes Pult. Testdetails und offene Abnahmen: [Testbericht](tests/VERIFICATION.md).
 
 Struktur: `apps/web` für UI und HTTP-Transport, `packages/shared` für Typen/Validierung, `apps/desktop` für Electron, HTTP-Server und OSC-Bridge. UI enthält keine OSC-/Lua-Syntax. Keine zusätzlichen Runtime-Abhängigkeiten für OSC; UDP und Paketkodierung verwenden Node-Bordmittel.
 

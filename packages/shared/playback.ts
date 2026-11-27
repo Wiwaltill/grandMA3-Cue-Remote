@@ -7,9 +7,10 @@ export interface PlaybackSnapshot {
   nextCueId: string | null; playbackState: 'running' | 'off';
   connectionState: ConnectionState; revision: number; timestamp: number; locked: boolean;
   fadePreview?: FadePreview;
+  cueCommandReceipt?: {action:'load' | 'goto';cueId:string};
   commandState?: 'idle' | 'pending' | 'unknown';
 }
-export interface Command { requestId: string; sequenceRef: SequenceRef; action: 'goPlus' | 'goMinus'; expectedRevision: number }
+export interface Command { requestId: string; sequenceRef: SequenceRef; action: 'goPlus' | 'goMinus' | 'load' | 'goto'; cueId?: string; expectedRevision: number }
 export type CommandResult = { accepted: true } | { accepted: false; reason: 'duplicate' | 'locked' | 'unavailable' | 'revision' | 'sequence' | 'boundary' | 'busy' | 'invalid' };
 // A future transport must publish confirmed snapshots; sending a command is not confirmation.
 export interface PlaybackTransport {

@@ -15,7 +15,7 @@ Der frühere Demo-Adapter und alle Produktzugänge dazu sind seit v0.2.2 auf Ben
 
 SequenceRef enthält DataPool, ID, Nummer und Name. Cue enthält ID, Cue-Nummer als String, Name und optionale allgemeine/individuelle Fade-/Delay-Zeiten sowie MA-Duration, validierten Trigger (Go/Follow/Time/Sound/BPM/Unknown) und optionale numerische Triggerzeit. PlaybackSnapshot enthält Sequenz, Cues, bestätigten Current, Next als Listennachfolger, Running/Off, Verbindungsstatus, Revision, Zeitstempel, Lock und Befehlsstatus. Die optionale FadePreview ist ausdrücklich eine Berechnung, kein autoritativer MA-Fade-Prozentwert.
 
-Command enthält Request-ID, Zielreferenz, erwartete Revision und ausschließlich goPlus oder goMinus. Die gemeinsame DataPool-/Sequenzwahl verlangt die erwartete Revision und sperrt bis zum neuen vollständigen Pultstatus. Eine vor dem Wechsel frische, entsperrte Bedienung wird ausschließlich nach gültigem neuen Snapshot wieder freigegeben. Manuelle Sperre, Fehler, Timeout, Serverstopp und Resync widerrufen diese Freigabe. Zielwahl ist auch im gesperrten Zustand möglich; sie hebt bestehende Sperren nicht auf. Keine frei eingebbaren MA-/Lua-Kommandos. Cue-Nummern bleiben Strings; Next folgt der gelieferten Listenreihenfolge (Off → erster Cue, Listenende → null). Goto folgt später.
+Command enthält Request-ID, Zielreferenz, erwartete Revision und ausschließlich goPlus, goMinus, load oder goto. Bei load/goto ist cueId aus der aktuellen Sequenzliste erforderlich. Die gemeinsame DataPool-/Sequenzwahl verlangt die erwartete Revision und sperrt bis zum neuen vollständigen Pultstatus. Eine vor dem Wechsel frische, entsperrte Bedienung wird ausschließlich nach gültigem neuen Snapshot wieder freigegeben. Manuelle Sperre, Fehler, Timeout, Serverstopp und Resync widerrufen diese Freigabe. Zielwahl ist auch im gesperrten Zustand möglich; sie hebt bestehende Sperren nicht auf. Keine frei eingebbaren MA-/Lua-Kommandos. Cue-Nummern bleiben Strings; Next folgt der gelieferten Listenreihenfolge (Off → erster Cue, Listenende → null). Next bleibt auch nach Load der Listennachfolger.
 
 ## OSC und Status
 
@@ -63,4 +63,10 @@ Alle externen/autonomen Cue-Wechsel werden ausschließlich aus dem bestätigten 
 
 ## Pause seit v0.2.8 entfernt
 
-Auf Benutzerwunsch kein Pause-Befehl, kein Pause-Zustandsmodell, kein OSC-Playback-Feedbackempfänger und keine zugehörige Netzwerkkonfiguration mehr im Produkt. Das Web-API validiert ausschließlich goPlus/goMinus; alte Pause-Requests werden abgewiesen. Die historische Untersuchung bleibt in tests/PAUSE-INVESTIGATION.md erhalten. Externe Pause am Pult wird durch die berechnete Fade-Vorschau nicht erkannt.
+Auf Benutzerwunsch kein Pause-Befehl, kein Pause-Zustandsmodell, kein OSC-Playback-Feedbackempfänger und keine zugehörige Netzwerkkonfiguration mehr im Produkt. Das Web-API validiert goPlus/goMinus/load/goto; alte Pause-Requests werden abgewiesen. Die historische Untersuchung bleibt in tests/PAUSE-INVESTIGATION.md erhalten. Externe Pause am Pult wird durch die berechnete Fade-Vorschau nicht erkannt.
+
+## Load/Goto seit v0.2.9
+
+Cue-ID serverseitig gegen aktuelle Liste validieren, Cue-Nummer ausschließlich daraus ableiten. Feste Cmd-Aufrufe Load/Goto DataPool N Sequence N Cue X; keine freien Kommandos, Namen oder Fade-Overrides. Separate zufällige actionNonce und Quell-IP-Prüfung für Ausführungsbestätigung. Load beendet Pending nur nach OK. Goto fragt nach OK mit neuer Querynonce vollständig ab und endet erst bei laufendem bestätigtem Ziel-Current. Bei gleichem Ziel-Cue wird keine künstliche Cue-Änderung verlangt, aber dennoch eine frische Statusantwort nach OK. Fehlende Bestätigung/Zielantwort: unbekannt, STALE, gesperrt, kein Retry.
+
+cueCommandReceipt ist eine bestätigte vergangene Ausführung, kein dauerhafter LoadedCue-Status. Neue Bedienbefehle/Resync/Verbindungswechsel verwerfen sie. Current und Next bleiben autoritative Current-Rückmeldung bzw. Listennachfolger. Modaler Cue-Dialog bindet Auswahl an Sequenz und Revision beim Öffnen; keine Aktion allein durch Zeilenwahl.

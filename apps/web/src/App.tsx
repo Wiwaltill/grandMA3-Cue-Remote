@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import type { PlaybackTransport } from '../../../packages/shared/playback.ts';
+import type { Command, PlaybackTransport } from '../../../packages/shared/playback.ts';
 import { parseSequenceNumber } from '../../../packages/shared/sequence.ts';
 import { FadeProgress } from './FadeProgress.tsx';
 import { timingLabel, timingDetails, triggerLabel, followHint, text as t } from './text.ts';
@@ -10,6 +10,10 @@ export function App({transport, onResync}: {transport: PlaybackTransport; onResy
   useEffect(()=>{const pop=()=>setSettings(new URLSearchParams(location.search).get('page')==='settings');addEventListener('popstate',pop);return()=>removeEventListener('popstate',pop);},[]);
   const [poolDraft,setPoolDraft]=useState(state.sequence.dataPool);
   useEffect(()=>setPoolDraft(state.sequence.dataPool),[state.sequence.dataPool]);
+  const [cueAction,setCueAction]=useState<{action:'load' | 'goto';sequenceId:string;revision:number} | null>(null);
+  const [cueChoice,setCueChoice]=useState('');
+  const cueDialog=useRef<HTMLDialogElement>(null);
+  useEffect(()=>{if(cueAction)cueDialog.current?.showModal();else cueDialog.current?.close();},[cueAction]);
   const [following, setFollowing] = useState(true);
   const [cooldown, setCooldown] = useState(false);
   const [error, setError] = useState('');
@@ -37,8 +41,8 @@ export function App({transport, onResync}: {transport: PlaybackTransport; onResy
     if (following && !settings) rowRef.current?.scrollIntoView({block:'nearest',behavior:'smooth'});
   }, [state.currentCueId, following,settings]);
   useEffect(() => () => clearTimeout(timer.current), []);
-  async function execute(action: 'goPlus' | 'goMinus') {
-    const result = await transport.execute({requestId:Array.from(crypto.getRandomValues(new Uint8Array(16)),byte=>byte.toString(16).padStart(2,'0')).join(''),sequenceRef:state.sequence,action,expectedRevision:state.revision});
+  async function execute(action: Command['action'],cueId?: string,revision=state.revision) {
+    const result = await transport.execute({requestId:Array.from(crypto.getRandomValues(new Uint8Array(16)),byte=>byte.toString(16).padStart(2,'0')).join(''),sequenceRef:state.sequence,action,...(cueId?{cueId}:{}),expectedRevision:revision});
     if (!result.accepted) { setError(t.error); return; }
     setError(''); setCooldown(true);
     timer.current = setTimeout(() => setCooldown(false),450);
@@ -84,15 +88,24 @@ export function App({transport, onResync}: {transport: PlaybackTransport; onResy
           </div><div className="list-bottom"><span><i className="green-dot" />{following?t.following:t.manual}</span><span>{t.footer}</span></div>
         </div>
         <aside className="control-panel"><div className="progress-section"><div className="eyebrow">{t.position}</div><div className="position"><strong>{String(index+1).padStart(2,'0')}</strong><span>/ {String(state.cues.length).padStart(2,'0')}</span></div><progress aria-label={t.position} value={index+1} max={state.cues.length}/><p>{current?.name ?? (available?t.off:t.unknown)}</p></div>
-          <div className="controls"><p className={`control-status ${state.locked?'warning':''}`} role="status">{state.commandState==='unknown'?t.unknownResult:!available?t.unavailable:state.locked?t.lockReason:state.commandState==='pending'?t.pending:sequencePending?t.sequencePending:error || (cooldown?t.cooldown:state.playbackState==='off'?t.offReady:t.ready)}</p>
+          <div className="controls"><p className={`control-status ${state.locked?'warning':''}`} role="status">{state.commandState==='unknown'?t.unknownResult:!available?t.unavailable:state.locked?t.lockReason:state.commandState==='pending'?t.pending:sequencePending?t.sequencePending:error || (state.cueCommandReceipt?`${t.maConfirmed} ${state.cueCommandReceipt.action==='load'?t.load:t.goto} · ${state.cues.find(c=>c.id===state.cueCommandReceipt?.cueId)?.number??'—'}`:cooldown?t.cooldown:state.playbackState==='off'?t.offReady:t.ready)}</p>
             <button className={`go-plus ${fading?'is-fading':''}`} title={fading?t.fadeEstimate:undefined} disabled={playbackBlocked} onClick={() => execute('goPlus')}><span className="go-label">{t.goPlus}<span aria-hidden="true">→</span></span><span className="go-target">{fading && <span className="fade-indicator">{t.fadeRunning} · </span>}{next?`${next.number} · ${next.name}`:t.noNext}</span></button>
 
             <div className="secondary-controls"><button className="go-minus" disabled={playbackBlocked} onClick={() => execute('goMinus')}><span aria-hidden="true">←</span><strong>{t.goMinus}</strong><span>{t.previous}</span></button></div>
+            <div className="cue-actions">{(['load','goto'] as const).map(action=><button key={action} disabled={playbackBlocked || !state.cues.length} onClick={()=>{setCueChoice(next?.id??current?.id??state.cues[0]?.id??'');setCueAction({action,sequenceId:state.sequence.id,revision:state.revision});}}>{t[action]}<span aria-hidden="true">{action==='load'?' ↥':' ↗'}</span></button>)}</div>
             <button className="resync" onClick={() => void onResync()}>{t.resync}</button>
           </div>
         </aside>
       </section>
     </main>
     </>}
+    <dialog ref={cueDialog} onCancel={()=>setCueAction(null)} aria-labelledby="cue-action-title">
+      <form onSubmit={event=>{event.preventDefault();if(!cueAction || playbackBlocked || cueAction.sequenceId!==state.sequence.id || cueAction.revision!==state.revision || !state.cues.some(c=>c.id===cueChoice))return;void execute(cueAction.action,cueChoice,cueAction.revision);setCueAction(null);}}>
+        <h2 id="cue-action-title">{cueAction?t[cueAction.action]:''}</h2><p>{cueAction?.action==='load'?t.loadHint:t.gotoHint}</p>
+        <label htmlFor="target-cue">{t.targetCue}</label><select id="target-cue" value={cueChoice} onChange={e=>setCueChoice(e.target.value)}>{state.cues.map(c=><option key={c.id} value={c.id}>{c.number} · {c.name}</option>)}</select>
+        {cueAction && cueAction.revision!==state.revision && <p role="status">{t.selectionChanged}</p>}
+        <div className="dialog-actions"><button type="button" onClick={()=>setCueAction(null)}>{t.cancel}</button><button className={cueAction?.action==='goto'?'goto-confirm':''} type="submit" disabled={playbackBlocked || !cueChoice || cueAction?.sequenceId!==state.sequence.id || cueAction?.revision!==state.revision}>{cueAction?t[cueAction.action]:''}</button></div>
+      </form>
+    </dialog>
   </div>;
 }
