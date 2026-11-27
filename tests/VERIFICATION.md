@@ -1,4 +1,4 @@
-# Abnahme v0.2.4
+# Abnahme v0.2.5
 
 Stand: 27. November 2026. Entwicklungsfassung, keine Freigabe für laufende Shows.
 
@@ -6,7 +6,7 @@ Stand: 27. November 2026. Entwicklungsfassung, keine Freigabe für laufende Show
 
 - TypeScript strict für React, Node-Bridge, Electron-Main und Preload erfolgreich.
 - ESLint erfolgreich.
-- 21 Tests erfolgreich: 2 Fade-Berechnungstests, 12 OSC-/UDP-Tests, 7 Server-/HTTP-Tests.
+- 23 Tests erfolgreich: 2 Fade-Berechnungstests, 14 OSC-/UDP-Tests, 7 Server-/HTTP-Tests.
 - Produktionsbuild und macOS-arm64-App-Bundle erfolgreich; lokale Ad-hoc-Signatur wird beim Packaging mit codesign geprüft.
 - npm-Lockfile vorhanden; OSC benötigt keine zusätzliche Runtime-Bibliothek.
 
@@ -71,3 +71,11 @@ Bestehende UDP-Tests erweitert: Pause sendet ausdrücklich On bzw. Off, kein Akt
 Realer Test in der bereits ausdrücklich freigegebenen separaten onPC-Testshow 2.5.1.1: zunächst Off geprüft, GO+ bestätigt, Pause On und Pause Off jeweils mit echter MA-Cmd-Ausführungsbestätigung OK; Berechnung angehalten und fortgesetzt. Abschließend ursprünglichen Off-Zustand wiederhergestellt und durch Statusantwort bestätigt. Keine Showfile-Programmierung.
 
 Isolierter Browsertest: GO+ mit is-fading und CSS-Animation fade-warning (1,8 Sekunden), gelbe Warnfarbe und Text Fade läuft. Nach bestätigtem Pause On gelber Button Pause aktiv, aria-pressed=true und statischer gelber GO+ (Fade angehalten). Nach Pause Off neutraler Pause-Button, aria-pressed=false und wieder laufender Fortschritt. Keine große Berechnet-Beschriftung. Mobile Dokumentgröße 390x844 ohne Seitenscrollen/Überlauf geprüft. Reduced Motion per CSS ohne Pulsieren; reales Betriebssystem-Setting nicht umgestellt. Native Fensterbedienung und echtes iPad/Safari weiterhin offen.
+
+## Duration, Delay und individuelle MAtricks-Zeiten v0.2.5
+
+Rein lesende Prüfung in onPC 2.5.1.1: Benutzer nannte DataPool 1 / Cue 5; dieser wurde in Sequenz 2 gefunden. CueInFade=0, CueInDelay=0, IndivFade=3, IndivDelay=30, Duration=33 Sekunden. Rohwerte p.Duration/p.CueInFade/p.CueInDelay/p.IndivFade/p.IndivDelay sind numerische Sekunden; Edit-/Display-Text ist nur formatiert. Die korrigierte Bridge liefert für diesen Cue duration=33, individualFade=3, individualDelay=30. Keine GO-/Pause-/Programmierbefehle bei dieser Prüfung.
+
+Regressionstests: Dauer 33 s bleibt auch nach 32 s aktiv; fehlende Duration erzeugt keinen Ersatzbalken aus CueFade. Zusätzliche Validierung aller neuen Felder gegen negative, nicht endliche und nicht numerische Werte. 23 Tests erfolgreich. Mehrpart-Auswertung im generierten Lua: Maximum jeder Part-Duration; keine Addition voneinander unabhängiger Timing-Maxima. Mehrpart-MAtricks, Normalized und dynamische Rate-Master nicht separat in einer veränderten realen Show programmiert/getestet.
+
+Isolierter Browsercheck mit denselben Zeitwerten: Current/Next Gesamt 33 s, individuelle Fade 3 s / Delay 30 s; Zeitspalte 33 s und Delay 30 s. Laufende Vorschau Gesamt 33 s und gelber GO+-Hinweis. Bei 390x844 Dokument ohne Überlauf/Seitenscrollen, alle drei Playback-Buttons sichtbar. Native Fenster- und echte iPad/Safari-Abnahme weiterhin offen.

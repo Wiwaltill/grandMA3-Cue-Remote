@@ -13,11 +13,11 @@ function decode(packet: Buffer) {
   return {address:string(),types:string(),command:string()};
 }
 async function until(predicate:()=>boolean) {const start=Date.now();while(!predicate()){if(Date.now()-start>2500)throw new Error('Condition timed out');await delay(10);}}
-const feedback=(number='1')=>({dataPool:'1',number,version:'2.5.1.1',name:'Test sequence',running:false,current:'',loaded:'',cues:[{number:'1',name:'Opening',fade:2},{number:'1.5',name:'Solo',fade:1},{number:'2',name:'Finale'}]});
+const feedback=(number='1')=>({dataPool:'1',number,version:'2.5.1.1',name:'Test sequence',running:false,current:'',loaded:'',cues:[{number:'1',name:'Opening',fade:2,delay:0,duration:2},{number:'1.5',name:'Solo',fade:1,delay:0,duration:1},{number:'2',name:'Finale'}]});
 async function setup(options: {now?:()=>number;timeoutMs?:number}={}) {
   const socket=dgram.createSocket('udp4');await new Promise<void>(r=>socket.bind(0,'127.0.0.1',r));
   const address=socket.address();assert.notEqual(typeof address,'string');
-  const counters={go:0,query:0,pause:0};const control={reply:true,advance:true,spoof:false,ackPause:true,pauseCommand:''};let current='',running=false;
+  const counters={go:0,query:0,pause:0};const control={reply:true,advance:true,spoof:false,ackPause:true,pauseCommand:'',timing:'normal'};let current='',running=false;
   socket.on('message',packet=>{
     const {command}=decode(packet);
     if(command.includes('ackNonce=')){
@@ -31,7 +31,7 @@ async function setup(options: {now?:()=>number;timeoutMs?:number}={}) {
       const port=Number(command.match(/j\.encode\(t\),'127\.0\.0\.1',(\d+)/)?.[1]);
       const nonce=command.match(/nonce='([a-f0-9]{32})'/)?.[1];
       const number=command.match(/number='(\d+)'/)?.[1] ?? '1';
-      if(port && nonce)socket.send(JSON.stringify({...feedback(number),dataPool:command.match(/dataPool='(\d+)'/)?.[1] ?? '1',current,running,nonce:control.spoof?'0'.repeat(32):nonce}),port,'127.0.0.1');
+      if(port && nonce)socket.send(JSON.stringify({...feedback(number),cues:feedback(number).cues.map(c=>c.number==='1.5' && control.timing!=='normal'?{...c,fade:0,delay:0,individualFade:3,individualDelay:30,...(control.timing==='complex'?{duration:33}:{duration:undefined})}:c),dataPool:command.match(/dataPool='(\d+)'/)?.[1] ?? '1',current,running,nonce:control.spoof?'0'.repeat(32):nonce}),port,'127.0.0.1');
     } else {
       counters.go++;if(control.advance){running=true;current='1.5';}
     }
@@ -183,4 +183,25 @@ test('failed target synchronization or explicit lock cancels automatic unlock',a
     await until(()=>f.bridge.getState().snapshot.connectionState==='ONLINE');
     assert.equal(f.bridge.getState().snapshot.locked,true);assert.equal(f.counters.go,0);
   }finally{f.cleanup();}
+});
+
+test('MA duration retains delay and cooked individual timing instead of using cue fade alone',()=>{
+  const raw={...feedback(),running:true,current:'5',cues:[{number:'5',name:'Timing cue',fade:0,delay:0,individualFade:3,individualDelay:30,duration:33}]};
+  const cue=parseFeedback(raw,config)?.cues[0];assert.equal(cue?.duration,33);assert.equal(cue?.fade,0);assert.equal(cue?.individualDelay,30);
+  for(const key of ['delay','duration','individualFade','individualDelay'])for(const value of [-1,Infinity,'33'])assert.equal(parseFeedback({...raw,cues:[{...raw.cues[0],[key]:value}]},config),null);
+});
+
+test('transition preview and GO warning duration include MA individual delays; missing duration is not replaced by fade',async()=>{
+  let now=10000;const f=await setup({now:()=>now,timeoutMs:60000});try{
+    f.control.timing='complex';f.bridge.setLocked(false);await f.bridge.execute(f.command('complex-timing'));
+    await until(()=>f.bridge.getState().commandState==='idle');
+    assert.equal(f.bridge.getState().snapshot.fadePreview?.durationMs,33000);
+    now+=32000;assert.equal(f.bridge.getState().snapshot.fadePreview?.elapsedMs,32000,'warning must still be active after the three-second individual fade');
+    now+=1000;assert.equal(f.bridge.getState().snapshot.fadePreview?.elapsedMs,33000);
+    f.bridge.resync();await until(()=>f.bridge.getState().snapshot.connectionState==='ONLINE');assert.equal(f.bridge.getState().snapshot.fadePreview,undefined);
+  }finally{f.cleanup();}
+  const g=await setup();try{
+    g.control.timing='unknown';g.bridge.setLocked(false);await g.bridge.execute(g.command('unknown-duration'));
+    await until(()=>g.bridge.getState().commandState==='idle');assert.equal(g.bridge.getState().snapshot.fadePreview,undefined);
+  }finally{g.cleanup();}
 });

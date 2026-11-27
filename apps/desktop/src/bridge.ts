@@ -18,8 +18,8 @@ export function parseFeedback(value: unknown,config: OscConfig): {cues: Cue[];na
   if (raw.error || raw.dataPool!==config.dataPool || raw.number!==config.sequenceNumber || raw.version!=='2.5.1.1' || typeof raw.name!=='string' || raw.name.length>512 || typeof raw.running!=='boolean' || typeof raw.current!=='string' || !Array.isArray(raw.cues) || raw.cues.length>500) return null;
   const cues: Cue[]=[];const numbers=new Set<string>();
   for (const item of raw.cues) {
-    if (!item || typeof item!=='object' || typeof item.number!=='string' || !/^\d+(\.\d+)?$/.test(item.number) || item.number.length>32 || numbers.has(item.number) || typeof item.name!=='string' || item.name.length>512 || (item.fade!==undefined && (typeof item.fade!=='number' || !Number.isFinite(item.fade) || item.fade<0))) return null;
-    numbers.add(item.number);cues.push({id:`${config.dataPool}/${config.sequenceNumber}/${item.number}`,number:item.number,name:item.name,...(item.fade===undefined?{}:{fade:item.fade})});
+    if (!item || typeof item!=='object' || typeof item.number!=='string' || !/^\d+(\.\d+)?$/.test(item.number) || item.number.length>32 || numbers.has(item.number) || typeof item.name!=='string' || item.name.length>512 || ['fade','delay','individualFade','individualDelay','duration'].some(k=>item[k]!==undefined && (typeof item[k]!=='number' || !Number.isFinite(item[k]) || item[k]<0))) return null;
+    numbers.add(item.number);cues.push({id:`${config.dataPool}/${config.sequenceNumber}/${item.number}`,number:item.number,name:item.name,...Object.fromEntries(['fade','delay','individualFade','individualDelay','duration'].filter(k=>item[k]!==undefined).map(k=>[k,item[k]]))});
   }
   const currentNumber=raw.current.trim();
   const current=raw.running?cues.find(c=>c.number===currentNumber)?.id ?? null:null;
@@ -88,10 +88,10 @@ export class OscBridge {
       const previous=this.state.snapshot;
       if(!parsed.running)this.preview=null;
       else if(previous.connectionState==='ONLINE' && previous.timestamp>0 && previous.currentCueId!==parsed.current){
-        const fade=parsed.cues.find(c=>c.id===parsed.current)?.fade;
+        const duration=parsed.cues.find(c=>c.id===parsed.current)?.duration;
         const now=this.now();
         const start=this.state.commandState==='pending' && this.pendingAction!=='pause'?Math.max(previous.timestamp,this.pendingAt):(previous.timestamp+now)/2;
-        this.preview=fade===undefined?null:{value:{cueId:parsed.current!,durationMs:fade*1000,elapsedMs:Math.min(fade*1000,Math.max(0,now-start)),paused:false},anchor:now};
+        this.preview=duration===undefined?null:{value:{cueId:parsed.current!,durationMs:duration*1000,elapsedMs:Math.min(duration*1000,Math.max(0,now-start)),paused:false},anchor:now};
       }
       this.receivedAt=this.now();this.state.version=parsed.version;
       const fingerprint=JSON.stringify([parsed.current,parsed.running]);

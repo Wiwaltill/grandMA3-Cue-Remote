@@ -43,3 +43,6 @@ DataPool/Sequenz aus der nativen Netzwerkkonfiguration entfernt und als gemeinsa
 
 ## v0.2.4 - Fade-Warnung und Pause-Anzeige
 Auf Benutzerwunsch große Berechnet-Beschriftung durch dezentes Fade mit Tooltip-/Einstellungshinweis ersetzt. GO+ gelb und langsam pulsierend während der berechneten Fade-Dauer, statisch bei Pause, danach grün. Warnung ohne zusätzliche GO-Sperre. Pause On/Off mit bestätigter gemeinsamer App-Aktiv-Anzeige, unabhängig von vorhandener Fade-Vorschau; unbekannt nach Statusverlust/Resync/Ziel-/Cue-Wechsel. Externe Pult-Pause bleibt nicht auslesbar.
+
+## v0.2.5 - Cue-Delay und MAtricks-Zeiten
+Die Vorschau verwendet die maximale von MA gelieferte Duration aller Cue-Parts statt des Cue-Fades des ersten Parts. Cue-Delay und individuelle gespeicherte/gekochte MAtricks-Zeiten fließen damit in die Gesamtdauer ein. Allgemeine und individuelle Fade-/Delay-Werte werden angezeigt. Native Sekundenwerte statt formatierter Texte; fehlende Gesamtdauer erzeugt keinen Ersatz aus bloßem Fade. Gegen den vom Benutzer genannten Cue rein lesend verifiziert: allgemeine Zeiten 0, individuelle Fade 3 s, Delay 30 s, Duration 33 s.

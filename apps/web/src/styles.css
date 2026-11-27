@@ -24,3 +24,5 @@
 .go-plus.is-fading.fade-held{animation:none}.fade-indicator{font-weight:750}.secondary-controls .pause{background:#1d2428;color:#bec8c7;border-color:var(--line)}.secondary-controls .pause.is-active{background:#edc45d;color:#302508;border-color:#ffe39a;box-shadow:inset 0 0 0 1px #fff2c5}.secondary-controls .pause.is-active strong{font-size:18px}
 @keyframes fade-warning{0%,100%{background-color:#edc45d;box-shadow:0 0 0 2px #edc45d18}50%{background-color:#ffe195;box-shadow:0 0 18px #edc45d38}}
 @media(prefers-reduced-motion:reduce){.go-plus.is-fading{animation:none}}
+
+.timing-detail{display:block;font-size:9px;line-height:1.4;color:var(--muted);margin-top:5px;overflow-wrap:anywhere;max-width:100%}.cue-detail>div{min-width:0}.cue-detail .timing-detail{max-width:34vw}.fade-preview .eyebrow{letter-spacing:1px}@media(max-width:650px){.timing-detail{font-size:8px}.cue-detail .timing-detail{max-width:34vw}}
