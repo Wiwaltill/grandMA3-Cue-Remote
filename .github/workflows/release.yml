@@ -1,0 +1,68 @@
+name: Release downloads
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing version tag to build
+        required: true
+        type: string
+      release_id:
+        description: Existing draft release ID
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  downloads:
+    runs-on: macos-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    env:
+      RELEASE_TAG: ${{ inputs.tag }}
+      RELEASE_ID: ${{ inputs.release_id }}
+    steps:
+      - name: Validate inputs
+        run: '[[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ && "$RELEASE_ID" =~ ^[0-9]+$ ]]'
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag }}
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+      - name: Validate version
+        run: test "v$(node -p 'JSON.parse(require("fs").readFileSync("package.json")).version')" = "$RELEASE_TAG"
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run desktop:dmg
+      - name: Create ZIP and checksums
+        run: |
+          mkdir -p 'release/zip-stage/MA3 Cue Remote'
+          ditto 'release/MA3 Cue Remote-darwin-arm64/MA3 Cue Remote.app' 'release/zip-stage/MA3 Cue Remote/MA3 Cue Remote.app'
+          cp LICENSE 'release/zip-stage/MA3 Cue Remote/LICENSE.txt'
+          cp 'release/MA3 Cue Remote-darwin-arm64/LICENSE' 'release/zip-stage/MA3 Cue Remote/Electron-LICENSE.txt'
+          cp 'release/MA3 Cue Remote-darwin-arm64/LICENSES.chromium.html' 'release/zip-stage/MA3 Cue Remote/'
+          ditto -c -k --sequesterRsrc --keepParent 'release/zip-stage/MA3 Cue Remote' "release/MA3-Cue-Remote-${RELEASE_TAG}-macOS-arm64.zip"
+          cd release
+          shasum -a 256 "MA3-Cue-Remote-${RELEASE_TAG}-macOS-arm64.dmg" "MA3-Cue-Remote-${RELEASE_TAG}-macOS-arm64.zip" > SHA256SUMS.txt
+      - name: Upload only to matching draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" > release/draft.json
+          test "$(jq -r .draft release/draft.json)" = true
+          test "$(jq -r .tag_name release/draft.json)" = "$RELEASE_TAG"
+          upload_url="$(jq -r '.upload_url | split("{")[0]' release/draft.json)"
+          for asset_id in $(jq -r '.assets[].id' release/draft.json); do
+            gh api --method DELETE "repos/$GITHUB_REPOSITORY/releases/assets/$asset_id"
+          done
+          for file in "release/MA3-Cue-Remote-${RELEASE_TAG}-macOS-arm64.dmg" "release/MA3-Cue-Remote-${RELEASE_TAG}-macOS-arm64.zip" release/SHA256SUMS.txt "release/MA3-Cue-Remote-${RELEASE_TAG}-macOS-arm64.dmg.sha256"; do
+            name="$(basename "$file")"
+            curl --fail --silent --show-error --connect-timeout 20 --max-time 300 -H "Authorization: Bearer $GH_TOKEN" -H 'Content-Type: application/octet-stream' --data-binary "@$file" "$upload_url?name=$name" > release/upload.json
+            test "$(jq -r .state release/upload.json)" = uploaded
+            test "$(jq -r .digest release/upload.json)" = "sha256:$(shasum -a 256 "$file" | cut -d ' ' -f 1)"
+          done

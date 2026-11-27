@@ -90,3 +90,5 @@ Load und Goto fragen nach OK mit neuer Querynonce ab. Load verlangt den Ziel-Loa
 ## DMG-Auslieferung
 
 `scripts/create-dmg.mjs` verpackt ein vorhandenes, versionsgeprüftes arm64-App-Bundle mit nativen macOS-Werkzeugen in ein komprimiertes read-only DMG. Es enthält eine Programme-Verknüpfung nach /Applications, Installationshinweise und Lizenzen. Die App wird weder geändert noch neu signiert. hdiutil prüft das Image; eine separate SHA-256-Datei begleitet den Download. `npm run desktop:dmg` baut zuvor das App-Bundle. Keine zusätzlichen Paketabhängigkeiten.
+
+`Release downloads` baut per manuellem Workflow-Start einen bestehenden Versionstag, prüft Version/Typecheck/Lint/Tests und erstellt DMG, ZIP und Prüfsummen direkt auf dem macOS-Runner. Upload ausschließlich in einen passenden vorhandenen Release-Entwurf, nach Prüfung von Tag und Draft-Status. Nur dieser manuell gestartete Job erhält contents:write; er veröffentlicht den Release nicht. Vorhandene Dateien des Entwurfs werden durch die frisch berechneten Downloads ersetzt. Dadurch hängt die Auslieferung nicht vom lokalen Upload großer Dateien ab.
