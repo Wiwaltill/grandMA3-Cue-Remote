@@ -16,3 +16,8 @@ Lies README.md, ROADMAP.md, DESIGN.md und ARCHITECTURE.md vor Änderungen. Entwi
 - Keine unnötigen Abhängigkeiten, keine Cloud, keine Telemetrie. GitHub Actions für CI und später macOS arm64 DMG; aktuelle unterstützte Action-Versionen verifizieren.
 
 Erste Aufgabe: v0.1.0 als responsive Web-App mit getrenntem Demo-Adapter, realistischen Beispieldaten, Current/Next, Cueliste, GO+/GO−, Lock und Demo Reset umsetzen. Build- und Testanleitung dokumentieren.
+
+## Zusammenarbeit und Auslieferung
+
+- Abgeschlossene, geprüfte Änderungen für dieses Projekt selbstständig committen und zu GitHub pushen; keine erneute Freigabe für gewöhnliche Commits und Pushs anfordern. Keine fremden Änderungen überschreiben und keinen Force-Push verwenden.
+- Vom Benutzer keine Terminalbedienung verlangen. Installation, Start und technische Prüfungen selbst übernehmen und eine direkt nutzbare Oberfläche bzw. einen Link bereitstellen.

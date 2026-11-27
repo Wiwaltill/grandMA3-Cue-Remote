@@ -1,8 +1,8 @@
 # Roadmap
 
-Alle Meilensteine sind geplant, noch nicht implementiert.
+v0.1.0 ist implementiert und lokal geprüft; die Abnahme auf echtem iPad/Safari steht noch aus. Weitere Meilensteine sind geplant.
 
-## v0.1.0 – Demo
+## v0.1.0 – Demo (implementiert; Safari-Abnahme offen)
 Responsive React/TypeScript-Oberfläche, Current/Next, Cue-Tabelle, Fortschritt, GO+/GO−, Lock, Reset. Lokaler Demo-Adapter ohne Netzwerk zum Pult. Akzeptanz: Build, Tests und Bedienung in Safari; Demo eindeutig sichtbar.
 
 ## v0.2.0 – OSC

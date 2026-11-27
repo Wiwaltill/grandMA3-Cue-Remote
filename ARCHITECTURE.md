@@ -27,3 +27,9 @@ Server bindet standardmäßig lokal; LAN-Freigabe bewusst konfigurieren. Vertrau
 
 ## Teststrategie
 Unit-Tests für Zustandsmaschine und Befehlsvalidierung, Integrationstests mit simuliertem Adapter, Browser-Tests für Touch/Layouts, Hardware-Abnahme mit Testshow auf MA 2.5.1.1. Paketierung und Signierung gesondert prüfen.
+
+## Implementierter Stand v0.1.0
+
+`apps/web` verwendet ausschließlich den `PlaybackTransport`-Vertrag aus `packages/shared`. `packages/demo` verwaltet synchrone lokale Snapshots, Revisionen, Request-Deduplizierung, Sperre und Doppelklickschutz. React abonniert die Snapshots via `useSyncExternalStore`; Playback-Zustand wird nicht separat in der UI fortgeschrieben. Cue-Nummern bleiben Strings, Next wird vom Adapter geliefert. Ein absichtlicher Demo-Loop und Off-Snapshots sind im Adapter testbar; die Standarddemo läuft ohne Loop.
+
+Der injizierbare Ausgangssnapshot ist für Simulationstests vorgesehen. Der Demo-Adapter akzeptiert ausschließlich den Status DEMO; ONLINE, STALE, OFFLINE und CONNECTING geben keine Befehle frei. Es gibt keine Netzwerkverbindung, keinen Heartbeat und keinen Reconnect. Browser-Tabs teilen keinen Zustand. Server, Authentifizierung und Live-Transport werden erst in den jeweiligen Meilensteinen ergänzt. Für Live-Betrieb genügt die clientseitige Sperre ausdrücklich nicht.
