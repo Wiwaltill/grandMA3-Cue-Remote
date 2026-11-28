@@ -1,6 +1,6 @@
 export const desktopText = {
   title:'MA3 CUE REMOTE', label:'LOKALER SERVER · OSC BRIDGE', intro:'Deine Cue Remote. Mit einem Klick bereit.',
-  version:'v1.0.1', notice:'Die OSC-Verbindung steuert ausschließlich die gewählte Sequenz.',
+  version:'v1.0.2', notice:'Die OSC-Verbindung steuert ausschließlich die gewählte Sequenz.',
   status:'SERVERSTATUS', stopped:'Gestoppt', starting:'Wird gestartet …', running:'Läuft', stopping:'Wird gestoppt …', error:'Start fehlgeschlagen',
   stoppedHint:'Starte den Server, um die Weboberfläche zu öffnen.', runningHint:'Der Webserver ist bereit. Die Weboberfläche lässt sich jetzt öffnen.',
   port:'Port', portHint:'Für Shortcuts einen festen Port wählen. 0 wählt automatisch einen freien Port.',

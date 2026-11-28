@@ -6,13 +6,13 @@
 
 Lokale Sequenz-Fernbedienung für grandMA3 mit einer Mac-App als Server und einer kompakten Weboberfläche für Tablet und Desktop.
 
-[![Version](https://img.shields.io/badge/Version-1.0.1-67dba0?style=flat-square)](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/tag/v1.0.1)
-[![macOS](https://img.shields.io/badge/macOS-13%2B%20%C2%B7%20Apple%20Silicon-9db9de?style=flat-square)](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/tag/v1.0.1)
+[![Version](https://img.shields.io/badge/Version-1.0.2-67dba0?style=flat-square)](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/tag/v1.0.2)
+[![macOS](https://img.shields.io/badge/macOS-13%2B%20%C2%B7%20Apple%20Silicon-9db9de?style=flat-square)](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/tag/v1.0.2)
 [![grandMA3](https://img.shields.io/badge/grandMA3%20onPC-2.5.1.1-f0c96a?style=flat-square)](#voraussetzungen)
 [![CI](https://github.com/Wiwaltill/grandMA3-Cue-Remote/actions/workflows/ci.yml/badge.svg)](https://github.com/Wiwaltill/grandMA3-Cue-Remote/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/Lizenz-MIT-84929b?style=flat-square)](LICENSE)
 
-**[Mac-App als DMG herunterladen](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/download/v1.0.1/MA3-Cue-Remote-v1.0.1-macOS-arm64.dmg)** · [Release Notes](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/tag/v1.0.1) · [Ausführliche Einrichtung](docs/SETUP.md)
+**[Mac-App als DMG herunterladen](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/download/v1.0.2/MA3-Cue-Remote-v1.0.2-macOS-arm64.dmg)** · [Release Notes](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/tag/v1.0.2) · [Ausführliche Einrichtung](docs/SETUP.md)
 
 </div>
 
@@ -35,17 +35,17 @@ Die Oberfläche ist dunkel, kontrastreich und responsiv. DataPool und Sequenz st
 
 - **Mac mit Apple Silicon (arm64), macOS 13 oder neuer.** Kein Intel- oder Windows-Build in diesem Release.
 - **grandMA3 onPC 2.5.1.1.** Die Bridge akzeptiert derzeit genau diese Version; getestet mit einer separaten Testshow auf demselben Mac. Andere Versionen und Hardware-Pulte sind noch nicht abgenommen.
-- Für ein Tablet: Browser und Zugang zum selben vertrauenswürdigen lokalen Netzwerk. Echtes iPad/Safari ist noch nicht vollständig abgenommen.
+- Für ein Tablet: Browser und Zugang zum selben vertrauenswürdigen lokalen Netzwerk. Seit v1.0.2 gibt es einen zusätzlichen Legacy-Build für **Safari unter iOS 10.3 / 10.3.3**. Der Test auf echter alter iPad-Hardware steht noch aus.
 
 Für den normalen Betrieb sind **kein Terminal, kein Node/npm und kein manuell installiertes Lua-Plugin** nötig. Die App läuft lokal, ohne Cloud oder Telemetrie.
 
-> **v1.0.1:** Regulärer Release mit geprüfter lokaler onPC-Anbindung. Die vollständige Show-, Installations- und iPad-Abnahme steht noch aus. Neue Setups zuerst mit einer separaten Testshow prüfen.
+> **v1.0.2:** Regulärer Release mit geprüfter lokaler onPC-Anbindung. Die vollständige Show-, Installations- und iPad-Abnahme steht noch aus. Neue Setups zuerst mit einer separaten Testshow prüfen.
 
 ## In wenigen Schritten verbunden
 
 ### 1. Mac-App installieren
 
-Die [DMG herunterladen](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/download/v1.0.1/MA3-Cue-Remote-v1.0.1-macOS-arm64.dmg) und per Doppelklick öffnen. **MA3 Cue Remote.app** auf die enthaltene Verknüpfung **Programme** ziehen, das Image auswerfen und die App aus **Programme** öffnen. Alternativ ist das [App-ZIP](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/download/v1.0.1/MA3-Cue-Remote-v1.0.1-macOS-arm64.zip) verfügbar. SHA-256-Prüfsummen liegen im Release bei.
+Die [DMG herunterladen](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/download/v1.0.2/MA3-Cue-Remote-v1.0.2-macOS-arm64.dmg) und per Doppelklick öffnen. **MA3 Cue Remote.app** auf die enthaltene Verknüpfung **Programme** ziehen, das Image auswerfen und die App aus **Programme** öffnen. Alternativ ist das [App-ZIP](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/download/v1.0.2/MA3-Cue-Remote-v1.0.2-macOS-arm64.zip) verfügbar. SHA-256-Prüfsummen liegen im Release bei.
 
 Die App ist ad-hoc signiert, aber noch nicht mit einer Apple Developer ID signiert oder notarisiert. Falls macOS den Start blockiert, unter **Systemeinstellungen → Datenschutz & Sicherheit** die Meldung prüfen und die App nur bei vertrauter Herkunft über **Dennoch öffnen** freigeben. Dafür ist kein Terminal nötig.
 
@@ -92,6 +92,12 @@ Beim Schließen der Mac-App oder **⌘Q** mit laufendem Server stehen **Abbreche
 
 **Fade** ist eine berechnete Vorschau der gesamten MA-Duration, kein gemessener MA-Fade-Prozentwert. Die gelbe GO+-Anzeige warnt, sperrt den Button aber nicht zusätzlich. Pause am Pult, dynamische Rate-/Timing-Master und abweichende Rücklaufzeiten werden nicht vollständig nachgeführt. Es gibt keinen Pause-Button und keinen Demo-Modus.
 
+## Alte iPads mit iOS 10.3.3
+
+Die Mac-App ab **v1.0.2** installieren und neu starten; die Weboberfläche wird vom Mac ausgeliefert. Auf dem iPad dieselbe Adresse neu laden. Safari lädt den passenden JavaScript-Build automatisch, ohne andere Ansicht oder manuelle Umschaltung. Falls weiterhin eine alte leere Seite erscheint, den bisherigen Tab schließen und die Adresse neu öffnen.
+
+Layout, Farben und Bedienung bleiben erhalten. Der Build ergänzt lokal ausgelieferte JavaScript-Polyfills, ältere Safari-Dialoge, CSS-Abstände und eine passende Höhenberechnung. Statusabfragen verwenden einen kompatiblen Transport mit unverändertem Timeout und ohne Befehlswiederholung. Der erzwungene Legacy-Pfad wurde im Browser geprüft; das ersetzt keinen echten iOS-10-Gerätetest und ist keine Zusage für jede ältere iOS-Version.
+
 ## Wenn die Verbindung ausfällt
 
 Bei **OFFLINE**, **STALE** oder einem unbekannten Befehlsergebnis sperren Server und Browser die Bedienung. Es gibt keine Befehlswarteschlange und keine automatische Wiederholung von GO, Load oder Goto.
@@ -110,6 +116,7 @@ npm run typecheck
 npm run lint
 npm test
 npm run build
+npm run test:legacy
 ```
 
 `npm run desktop:dev` öffnet die Entwicklungs-App; `npm run desktop:package` erstellt auf macOS das arm64-App-Bundle. `npm run desktop:dmg` baut zusätzlich ein geprüftes, komprimiertes DMG mit Programme-Verknüpfung und eigener `.dmg.sha256`-Datei. Diese Befehle sind ausschließlich für die Entwicklung nötig.
@@ -121,7 +128,7 @@ packages/shared/  Domänenmodell, Validierung und Fade-Berechnung
 tests/           Isolierte Domänen-, UDP-, HTTP- und Beenden-Tests
 ```
 
-**38 automatisierte Tests** prüfen unter anderem Load-Feedback, Cue-Wechsel, Frische, Timeouts, Reconnect, konkurrierende Clients und Server-Lebenszyklus. CI spricht nie ein echtes Pult an. Ergebnisse und offene Abnahmen stehen im [Testbericht](tests/VERIFICATION.md).
+**45 automatisierte Tests** prüfen unter anderem Load-Feedback, Cue-Wechsel, Frische, Timeouts, Reconnect, konkurrierende Clients und Server-Lebenszyklus. CI spricht nie ein echtes Pult an. Ergebnisse und offene Abnahmen stehen im [Testbericht](tests/VERIFICATION.md).
 
 ## Dokumentation
 

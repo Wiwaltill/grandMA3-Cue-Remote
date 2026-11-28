@@ -4,11 +4,11 @@
 
 Lokale, iPad-optimierte Sequenz-Fernbedienung mit grafischer macOS-Serversteuerung. React/TypeScript, Node und Electron; ohne Cloud oder Telemetrie.
 
-## v1.0.1 – Einrichtung und Betrieb
+## v1.0.2 – Einrichtung und Betrieb
 
 Die App verbindet sich mit **grandMA3 onPC 2.5.1.1**, liest Sequenzname, Cue-Liste, bekannte Fade-Zeiten und Current-Status aus MA und sendet gezieltes GO+/GO− an den ausgewählten DataPool und die eingetragene Sequenznummer. Die Weboberfläche enthält Lock, Auto-Follow, Listenpositionsfortschritt und eine klar als berechnet markierte Fade-Vorschau. Der Demo-Modus ist entfernt. Sie simuliert im Live-Modus keinen Playback-Erfolg.
 
-Echter Test auf dem Entwicklungs-Mac: Version und Sequenzdaten empfangen, GO+ über die Weboberfläche ausgelöst und anschließend Cue 1 vom Pult bestätigt. GO− ohne Zustandsänderung am Listenanfang führte korrekt zur Sperre „Ergebnis unbekannt“. Resynchronisation und Rückkehr zum ursprünglichen Off-Zustand wurden geprüft. v1.0.1 ist als regulärer Release veröffentlicht; die vollständige Show-/iPad-Abnahme steht weiterhin aus.
+Echter Test auf dem Entwicklungs-Mac: Version und Sequenzdaten empfangen, GO+ über die Weboberfläche ausgelöst und anschließend Cue 1 vom Pult bestätigt. GO− ohne Zustandsänderung am Listenanfang führte korrekt zur Sperre „Ergebnis unbekannt“. Resynchronisation und Rückkehr zum ursprünglichen Off-Zustand wurden geprüft. v1.0.2 ist als regulärer Release veröffentlicht; die vollständige Show-/iPad-Abnahme steht weiterhin aus.
 
 **Next:** Zeigt immer den nächsten Eintrag der Cueliste mit Nummer, Name und bekanntem Fade. Bei Off wird der erste Cue angezeigt, am Listenende „Ende der Cueliste“. Die blaue Tabellenmarkierung verwendet diesen Listennachfolger. GO+ zeigt einen tatsächlich vorgeladenen Cue bevorzugt als Ziel, sonst den Listennachfolger. Load/Goto sind als separate kleine Buttons erreichbar. Die Anzeige ändert keinen Cue am Pult; Playback bleibt durch echte Rückmeldungen bestätigt.
 
@@ -28,7 +28,7 @@ Es ist kein manuell einzufügendes Lua-Plugin und kein zusätzliches OSC-Sendepr
 
 ## iPad und mehrere Bediener
 
-Vor dem Webserverstart bewusst **Im lokalen Netzwerk freigeben** aktivieren. Danach eine angezeigte Adresse auf dem iPad im gleichen vertrauenswürdigen WLAN öffnen. **IP:Port reicht seit v1.0.1 aus**, ohne Hash oder vorab bekannten Schlüssel. Der Aufruf der Hauptseite setzt automatisch eine Browser-Sitzung. Geräte im freigegebenen Netz erhalten damit Bedienerzugang einschließlich Entsperren; keine geräteweise Anmeldung. Für einen Shortcut in der Mac-App einen festen Port statt 0 wählen und eine gleichbleibende Mac-IP sicherstellen. Nach Serverneustart die Seite neu laden oder den Shortcut erneut öffnen. Cookies für diese lokale Adresse erlauben.
+Vor dem Webserverstart bewusst **Im lokalen Netzwerk freigeben** aktivieren. Danach eine angezeigte Adresse auf dem iPad im gleichen vertrauenswürdigen WLAN öffnen. **IP:Port reicht seit v1.0.2 aus**, ohne Hash oder vorab bekannten Schlüssel. Der Aufruf der Hauptseite setzt automatisch eine Browser-Sitzung. Geräte im freigegebenen Netz erhalten damit Bedienerzugang einschließlich Entsperren; keine geräteweise Anmeldung. Für einen Shortcut in der Mac-App einen festen Port statt 0 wählen und eine gleichbleibende Mac-IP sicherstellen. Nach Serverneustart die Seite neu laden oder den Shortcut erneut öffnen. Cookies für diese lokale Adresse erlauben.
 
 Standardbindung des HTTP-Servers ist 127.0.0.1. Die OSC-Rückmeldung wird nur von der konfigurierten Ziel-IP und mit passender zufälliger Abfragenonce angenommen. Kein Zugriff aus der Cloud. LAN-HTTP ist für ein vertrauenswürdiges separates Show-Netz vorgesehen; keine Internet-Portweiterleitung.
 
@@ -72,7 +72,7 @@ Die Anwendung besitzt ausschließlich die echte Pultanbindung, keinen Demo-Modus
 
 ## App beziehen
 
-Den fertigen Download gibt es unter [GitHub Releases](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/tag/v1.0.1): **MA3-Cue-Remote-v1.0.1-macOS-arm64.dmg** herunterladen und öffnen, **MA3 Cue Remote.app** auf die enthaltene Verknüpfung **Programme** ziehen, das Image auswerfen und die App aus **Programme** öffnen. Alternativ das ZIP herunterladen und entpacken. macOS 13 oder neuer und Apple Silicon sind erforderlich. DMG und ZIP enthalten außerdem Projekt- und Drittanbieter-Lizenzhinweise. **SHA256SUMS.txt** enthält die ZIP-Prüfsumme, die separate **.dmg.sha256**-Datei die DMG-Prüfsumme.
+Den fertigen Download gibt es unter [GitHub Releases](https://github.com/Wiwaltill/grandMA3-Cue-Remote/releases/tag/v1.0.2): **MA3-Cue-Remote-v1.0.2-macOS-arm64.dmg** herunterladen und öffnen, **MA3 Cue Remote.app** auf die enthaltene Verknüpfung **Programme** ziehen, das Image auswerfen und die App aus **Programme** öffnen. Alternativ das ZIP herunterladen und entpacken. macOS 13 oder neuer und Apple Silicon sind erforderlich. DMG und ZIP enthalten außerdem Projekt- und Drittanbieter-Lizenzhinweise. **SHA256SUMS.txt** enthält die ZIP-Prüfsumme, die separate **.dmg.sha256**-Datei die DMG-Prüfsumme.
 
 Lokal liegt das App-Bundle unter `release/MA3 Cue Remote-darwin-arm64/MA3 Cue Remote.app`. Für Entwicklungsbuilds erstellt der Workflow [macOS App](https://github.com/Wiwaltill/grandMA3-Cue-Remote/actions/workflows/desktop.yml) weiterhin ein ZIP-Artefakt.
 
@@ -88,6 +88,7 @@ npm run typecheck
 npm run lint
 npm test
 npm run build
+npm run test:legacy
 npm run desktop:dev
 npm run desktop:package
 npm run desktop:dmg
@@ -95,7 +96,7 @@ npm run desktop:dmg
 
 `desktop:dev` baut und öffnet die Mac-App. `desktop:package` erzeugt auf macOS das arm64-App-Bundle. `npm run dev` und `npm run preview` dienen optional der reinen Webentwicklung; ohne Bridge/API bleibt die Bedienung gesperrt. `dist/` enthält die Webdateien, `dist-desktop/` die kompilierte Desktop-Anwendung.
 
-38 Tests decken Abbruch/Bestätigung des Beendens, parallele Schließanforderungen, Fehler beim Herunterfahren, Fade-Berechnung, Ablehnung entfernter Pause-Requests, echte UDP-Pakete mit simuliertem MA, Frische, Timeout, Deduplizierung, konkurrierende Revisionen, Zielwechsel, Nonce-Prüfung, Authentifizierung, Origin, Serverstart/-stopp und Zugriffsbeschränkungen ab. CI sendet niemals an ein echtes Pult. Testdetails und offene Abnahmen: [Testbericht](../tests/VERIFICATION.md).
+45 Tests decken Abbruch/Bestätigung des Beendens, parallele Schließanforderungen, Fehler beim Herunterfahren, Fade-Berechnung, Ablehnung entfernter Pause-Requests, echte UDP-Pakete mit simuliertem MA, Frische, Timeout, Deduplizierung, konkurrierende Revisionen, Zielwechsel, Nonce-Prüfung, Authentifizierung, Origin, Serverstart/-stopp und Zugriffsbeschränkungen ab. CI sendet niemals an ein echtes Pult. Testdetails und offene Abnahmen: [Testbericht](../tests/VERIFICATION.md).
 
 Struktur: `apps/web` für UI und HTTP-Transport, `packages/shared` für Typen/Validierung, `apps/desktop` für Electron, HTTP-Server und OSC-Bridge. UI enthält keine OSC-/Lua-Syntax. Keine zusätzlichen Runtime-Abhängigkeiten für OSC; UDP und Paketkodierung verwenden Node-Bordmittel.
 
@@ -104,3 +105,7 @@ Struktur: `apps/web` für UI und HTTP-Transport, `packages/shared` für Typen/Va
 - Toolchain: [Node-LTS](https://github.com/nodejs/Release), [Electron-Sicherheit](https://www.electronjs.org/docs/latest/tutorial/security), [Packager](https://electron.github.io/packager/main/), [Checkout](https://github.com/actions/checkout), [Setup Node](https://github.com/actions/setup-node), [Upload Artifact](https://github.com/actions/upload-artifact)
 
 Keine Tests auf laufenden Shows ohne ausdrückliche Freigabe. Lizenz: [MIT](../LICENSE).
+
+## Ältere iPads
+
+Ab v1.0.2 zusätzlicher Produktionsbuild für Safari auf iOS 10.3 / 10.3.3. Mac-App aktualisieren und neu starten, danach iPad-Seite neu laden. Kein Kompatibilitätsschalter nötig, Oberfläche unverändert. Entwicklung mit `npm run dev` prüft ausschließlich den modernen Pfad; Legacy-Tests benötigen `npm run build` und `npm run test:legacy`. Tatsächliche alte iPad-Hardware ist weiterhin nicht abgenommen.

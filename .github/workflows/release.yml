@@ -39,6 +39,7 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run desktop:dmg
+      - run: npm run test:legacy
       - name: Create ZIP and checksums
         run: |
           mkdir -p 'release/zip-stage/MA3 Cue Remote'

@@ -28,6 +28,7 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run desktop:package
+      - run: npm run test:legacy
       - name: Zip macOS app with executable permissions and symlinks
         run: ditto -c -k --sequesterRsrc --keepParent 'release/MA3 Cue Remote-darwin-arm64/MA3 Cue Remote.app' release/MA3-Cue-Remote-arm64.zip
       - uses: actions/upload-artifact@v7

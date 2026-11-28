@@ -27,3 +27,7 @@ Die Mac-App trennt Webserver- und OSC-Status. Server starten/stoppen sowie Webob
 ## Mac-App beenden
 
 Fenster schließen und ⌘Q führen bei laufendem (auch startendem/stoppendem) Server zur gleichen nativen Rückfrage: Abbrechen oder Server und Verbindung beenden. Abbrechen ist Standard und Escape-Aktion; bis zur Bestätigung bleiben Server und Verbindung unverändert. Keine mehrfachen Dialoge bei wiederholtem Schließen. Nach Bestätigung erst OSC trennen und Serverstopp abwarten, dann App beenden. Bei gestopptem Server keine Rückfrage. grandMA3-Playback bleibt unberührt.
+
+## Ältere Safari-Versionen
+
+Seit v1.0.2 gleiches Erscheinungsbild im Legacy-Build für iOS 10.3 / 10.3.3. Keine vereinfachte Ansicht und kein zusätzlicher Betriebsmodus. Feature-basierte Fallbacks für Flex-Abstände, Viewporthöhe, Schriftgrößen, Dialoge und Scrollen; Farben, Inhalte und Bedienflächen beibehalten. Moderne Browser nutzen ihre vorhandenen nativen Funktionen.

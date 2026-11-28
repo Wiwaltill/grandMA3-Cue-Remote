@@ -3,8 +3,10 @@ import { createRoot } from 'react-dom/client';
 import { text as t } from './text.ts';
 import { HttpTransport } from './transport/http.ts';
 import { App } from './App.tsx';
+import { initializeCompatibility } from './compatibility.ts';
 import './styles.css';
 document.title=t.pageTitle;
+initializeCompatibility();
 try{sessionStorage.removeItem('cue-remote-token');}catch{/* private browsing can disable storage */}
 const transport=new HttpTransport();
 history.replaceState(null,'',location.pathname+location.search);

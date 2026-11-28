@@ -1,5 +1,6 @@
 import type { Command, CommandResult, PlaybackSnapshot, PlaybackTransport } from '../../../../packages/shared/playback.ts';
 import type { LiveState } from '../../../../packages/shared/live.ts';
+import { requestJson } from './request.ts';
 export class HttpTransport implements PlaybackTransport {
   private state: PlaybackSnapshot={sequence:{id:'unconfigured',dataPool:'1',number:'1',name:'—'},cues:[],currentCueId:null,nextCueId:null,connectionState:'OFFLINE',playbackState:'off',revision:0,timestamp:0,locked:true};
   private listeners=new Set<()=>void>();
@@ -8,10 +9,7 @@ export class HttpTransport implements PlaybackTransport {
   private lastReceived=0;
   getSnapshot=()=>this.state;
   private publish(state: PlaybackSnapshot){this.state=state;this.listeners.forEach(fn=>fn());}
-  private async request(path: string,body?: unknown) {
-    const response=await fetch(path,{method:body===undefined?'GET':'POST',credentials:'same-origin',headers:body===undefined?{}:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body),signal:AbortSignal.timeout(2500),cache:'no-store'});
-    if(!response.ok)throw new Error('Request rejected');return response.json();
-  }
+  private request=requestJson;
   private offline=()=>this.publish({...this.state,connectionState:'OFFLINE',locked:true,fadePreview:undefined,loadedCueId:undefined});
   private refresh=async()=>{
     if(this.polling){if(Date.now()-this.lastReceived>3000)this.offline();return;}
@@ -30,7 +28,7 @@ export class HttpTransport implements PlaybackTransport {
     catch{this.offline();return {accepted:false,reason:'unavailable'};}
   };
   setLocked=async(locked: boolean)=>{try{await this.request('/api/lock',{locked});await this.refresh();}catch{this.offline();}};
-  selectTarget=async(dataPool: string,number: string,expectedRevision: number): Promise<CommandResult>=>{try{const result=await this.request('/api/target',{dataPool,number,expectedRevision});await this.refresh();return result;}catch{this.offline();return {accepted:false,reason:'unavailable'};}};
-  selectSequenceNumber=async(number: string,expectedRevision: number): Promise<CommandResult>=>{try{const result=await this.request('/api/sequence',{number,expectedRevision});await this.refresh();return result;}catch{this.offline();return {accepted:false,reason:'unavailable'};}};
+  selectTarget=async(dataPool: string,number: string,expectedRevision: number): Promise<CommandResult>=>{try{const result: CommandResult=await this.request('/api/target',{dataPool,number,expectedRevision});await this.refresh();return result;}catch{this.offline();return {accepted:false,reason:'unavailable'};}};
+  selectSequenceNumber=async(number: string,expectedRevision: number): Promise<CommandResult>=>{try{const result: CommandResult=await this.request('/api/sequence',{number,expectedRevision});await this.refresh();return result;}catch{this.offline();return {accepted:false,reason:'unavailable'};}};
   resync=async()=>{try{await this.request('/api/resync',{});await this.refresh();}catch{this.offline();}};
 }

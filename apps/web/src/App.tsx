@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { Command, PlaybackTransport } from '../../../packages/shared/playback.ts';
 import { parseSequenceNumber } from '../../../packages/shared/sequence.ts';
 import { FadeProgress } from './FadeProgress.tsx';
+import dialogPolyfill from 'dialog-polyfill';
+import { scrollCueIntoView } from './compatibility.ts';
 import { timingLabel, timingDetails, triggerLabel, followHint, text as t } from './text.ts';
 export function App({transport, onResync}: {transport: PlaybackTransport; onResync: () => Promise<void>}) {
   const state = useSyncExternalStore(transport.subscribe, transport.getSnapshot);
@@ -13,7 +15,7 @@ export function App({transport, onResync}: {transport: PlaybackTransport; onResy
   const [cueAction,setCueAction]=useState<{action:'load' | 'goto';sequenceId:string;revision:number} | null>(null);
   const [cueChoice,setCueChoice]=useState('');
   const cueDialog=useRef<HTMLDialogElement>(null);
-  useEffect(()=>{if(cueAction)cueDialog.current?.showModal();else cueDialog.current?.close();},[cueAction]);
+  useEffect(()=>{const dialog=cueDialog.current;if(!dialog)return;dialogPolyfill.registerDialog(dialog);if(cueAction && !dialog.open)dialog.showModal();else if(!cueAction && dialog.open)dialog.close();},[cueAction]);
   const [following, setFollowing] = useState(true);
   const [cooldown, setCooldown] = useState(false);
   const [error, setError] = useState('');
@@ -40,7 +42,7 @@ export function App({transport, onResync}: {transport: PlaybackTransport; onResy
   const selectionBlocked=state.connectionState==='OFFLINE' || cooldown || state.commandState!=='idle';
   const playbackBlocked = blocked || sequencePending;
   useEffect(() => {
-    if (following && !settings) rowRef.current?.scrollIntoView({block:'nearest',behavior:'smooth'});
+    if (following && !settings && rowRef.current) scrollCueIntoView(rowRef.current);
   }, [state.currentCueId, following,settings]);
   useEffect(() => () => clearTimeout(timer.current), []);
   async function execute(action: Command['action'],cueId?: string,revision=state.revision) {
@@ -101,7 +103,7 @@ export function App({transport, onResync}: {transport: PlaybackTransport; onResy
       </section>
     </main>
     </>}
-    <dialog ref={cueDialog} onCancel={()=>setCueAction(null)} aria-labelledby="cue-action-title">
+    <dialog role="dialog" aria-modal={cueAction?true:undefined} ref={cueDialog} onCancel={()=>setCueAction(null)} aria-labelledby="cue-action-title">
       <form onSubmit={event=>{event.preventDefault();if(!cueAction || playbackBlocked || cueAction.sequenceId!==state.sequence.id || cueAction.revision!==state.revision || !state.cues.some(c=>c.id===cueChoice))return;void execute(cueAction.action,cueChoice,cueAction.revision);setCueAction(null);}}>
         <h2 id="cue-action-title">{cueAction?t[cueAction.action]:''}</h2><p>{cueAction?.action==='load'?t.loadHint:t.gotoHint}</p>
         <label htmlFor="target-cue">{t.targetCue}</label><select id="target-cue" value={cueChoice} onChange={e=>setCueChoice(e.target.value)}>{state.cues.map(c=><option key={c.id} value={c.id}>{c.number} · {c.name}</option>)}</select>

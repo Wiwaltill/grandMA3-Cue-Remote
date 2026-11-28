@@ -1,6 +1,6 @@
 {
   "name": "grandma3-cue-remote",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "type": "module",
   "engines": {
@@ -15,9 +15,11 @@
     "test": "node --test tests/*.test.ts",
     "desktop:dev": "npm run build && electron .",
     "desktop:package": "npm run build && node scripts/package-desktop.mjs",
-    "desktop:dmg": "npm run desktop:package && node scripts/create-dmg.mjs"
+    "desktop:dmg": "npm run desktop:package && node scripts/create-dmg.mjs",
+    "test:legacy": "node --test tests/legacy-build.test.mjs"
   },
   "dependencies": {
+    "dialog-polyfill": "^0.5.6",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
@@ -27,8 +29,11 @@
     "@types/node": "^24.10.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-legacy": "^7.2.1",
+    "acorn": "^8.19.0",
     "electron": "^45.5.0",
     "eslint": "^10.15.0",
+    "terser": "^5.51.4",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.74.0",
     "vite": "^7.2.0"

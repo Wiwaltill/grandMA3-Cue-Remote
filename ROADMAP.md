@@ -73,3 +73,6 @@ Auf ausdrücklichen Benutzerwunsch wird der vorhandene Funktionsstand als regul�
 
 ## v1.0.1 – feste Shortcut-Adresse
 Auf Benutzerwunsch Zugriff über IP:Port ohne URL-Hash. Automatische Browser-Sitzung beim Seitenaufruf, erneuerbar nach Serverneustart durch Neuladen. Bekannte Hosts, Origin-Prüfung und serverseitige Playback-Sperren bleiben erforderlich. LAN-Freigabe gewährt Bedienerzugang an erreichbare Geräte des freigegebenen vertrauenswürdigen Netzes; keine geräteweise Paarung. Fester Port und stabile IP für Shortcuts dokumentiert.
+
+## v1.0.2 – ältere iPads
+Zusätzlicher Legacy-Build für Safari unter iOS 10.3 / 10.3.3, lokal gebündelte Polyfills, XHR-Transport ohne AbortSignal-Abhängigkeit, Dialog- und CSS-Fallbacks bei gleichem Design. Loader-CSP und Produktions-Bundles automatisch prüfen. Erzwungener Legacy-Browserpfad getestet; tatsächliche alte iPad-Hardware bleibt abzunehmen.

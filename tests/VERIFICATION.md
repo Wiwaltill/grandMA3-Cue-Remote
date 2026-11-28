@@ -1,12 +1,12 @@
-# Prüfstand v1.0.1
+# Prüfstand v1.0.2
 
-Stand: 27. November 2026. Regulärer GitHub-Release v1.0.1 auf Benutzerwunsch. Die Versionsfreigabe erweitert die unten dokumentierte Kompatibilität oder Show-Abnahme nicht.
+Stand: 28. November 2026. Regulärer GitHub-Release v1.0.2 auf Benutzerwunsch. Die Versionsfreigabe erweitert die unten dokumentierte Kompatibilität oder Show-Abnahme nicht.
 
 ## Automatisch
 
 - TypeScript strict für React, Node-Bridge, Electron-Main und Preload erfolgreich.
 - ESLint erfolgreich.
-- 38 Tests erfolgreich: 2 Fade-Berechnungstests, 22 OSC-/UDP-Tests, 10 Server-/HTTP-Tests und 4 Beenden-Ablauftests.
+- 43 Laufzeittests: 2 Fade-Berechnungstests, 22 OSC-/UDP-Tests, 11 Server-/HTTP-Tests, 4 Beenden-Ablauftests und 4 XHR-Tests. Zusätzlich 2 Legacy-Produktionsbuild-Tests; insgesamt 45.
 - Produktionsbuild und macOS-arm64-App-Bundle erfolgreich; lokale Ad-hoc-Signatur wird beim Packaging mit codesign geprüft.
 - npm-Lockfile vorhanden; OSC benötigt keine zusätzliche Runtime-Bibliothek.
 
@@ -141,3 +141,11 @@ App-/Web-Version und npm-Metadaten auf 1.0.0 angehoben; Playback-Verhalten unver
 HTTP-Tests prüfen Zugriff über IP:Port ohne Fragment, automatische HttpOnly-/SameSite=Strict-Sitzung, mehrere Clients, Erneuerung auf derselben Adresse nach Serverneustart, weiterhin gesetzten Lock sowie Ablehnung fremder Host-/Origin-/Fetch-Metadata-Header und eingebetteter Sitzungsinitialisierung. API-Zugriff ohne Sitzung bleibt abgewiesen. Bestehende Bearer-Clients weiterhin geprüft.
 
 Browserprüfung mit isoliertem simuliertem MA-Empfänger: neue Hauptseite ohne Hash geöffnet, ONLINE und Cueliste aus der Bridge erhalten, Bedienung zunächst gesperrt, explizites Entsperren über Cookie-authentifizierten POST erfolgreich. Kein echter Pultzugriff. Typecheck, Lint, alle 38 Tests, Build, App-Paketierung und DMG-Erstellung erfolgreich. Native macOS-Fensterbedienung und echtes iPad/Safari weiterhin offen.
+
+## v1.0.2: Safari-10-Ladepfad
+
+Typecheck, Lint, 43 Laufzeittests und 2 Legacy-Produktionsprüfungen erfolgreich. Die Legacy-Skripte werden auf ES2017-Syntax geparst; sämtliche inline Loader-Skripte sind über exakte SHA-256-Hashes freigegeben, auch in der Desktop-Meta-CSP. Kein unsafe-inline/unsafe-eval. XHR-Tests prüfen Timeout, Fehler, Abort, 401/403/500 und genau einen Command-Versand ohne Retry. HTTP-Test prüft CSP-Manifestvalidierung und dessen fehlende öffentliche Auslieferung. Cookie-Schreibzugriff ohne Origin nur mit eigenem App-Header; fremde Origin bleibt gesperrt.
+
+Browser mit ausschließlich geladenen Legacy-Skripten sowie abgeschalteten Fetch-, AbortController-/AbortSignal-, URLSearchParams-/queueMicrotask- und nativen Dialog-Funktionen: ONLINE, explizites Entsperren, Load Cue 1.5, GO+ auf geladenen Cue, bestätigter Goto Cue 2, berechneter Fade und Web-Einstellungen geprüft. Keine Konsolenfehler. Isolierter simulierter MA-Empfänger, kein Pultzugriff und kein Produkt-Demo-Modus.
+
+768×1024 und 1024×768: Dokument entspricht dem Viewport, kein Seitenüberlauf. In 768×1024 Positionen/Größen von Header, Cue-Karten, Workspace, Cueliste und Controls mit modernem Bundle verglichen. Separater Legacy-Teststil simuliert fehlendes Flex-Gap. Farben und Anordnung visuell verglichen. Diese Tests laufen auf einer aktuellen Browser-Engine und ersetzen weder echte Safari-10-/iOS-10.3.3-Hardware noch deren Touch-/Performance-/Cookie-Abnahme. Eine Aussage für alle noch älteren iOS-Versionen wird nicht abgeleitet.

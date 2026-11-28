@@ -10,6 +10,7 @@ async function fixture() {
   const root = await mkdtemp(join(tmpdir(),'cue-server-'));
   await mkdir(join(root,'assets'));
   await writeFile(join(root,'index.html'),'<!doctype html><title>Remote</title>');
+  await writeFile(join(root,'legacy-csp.json'),'[]');
   await writeFile(join(root,'assets','remote-test.js'),'export const remote = true;');
   return {root,cleanup:()=>rm(root,{recursive:true,force:true})};
 }
@@ -82,6 +83,19 @@ test('missing build and malformed config are shown as errors without listening',
   assert.equal((await server.stop()).phase,'stopped');
 });
 
+test('legacy loader CSP uses build hashes without enabling arbitrary inline scripts or eval',async()=>{
+  const f=await fixture();const server=new RemoteServer(f.root);const hash='A'.repeat(43)+'=';
+  try{
+    await writeFile(join(f.root,'legacy-csp.json'),JSON.stringify([hash]));
+    const state=await server.start({port:0,allowLan:false});const response=await fetch(state.urls[0]);
+    const policy=response.headers.get('content-security-policy')!;
+    assert.ok(policy.includes(`'sha256-${hash}'`));assert.ok(!policy.includes('unsafe-inline'));assert.ok(!policy.includes('unsafe-eval'));
+    assert.equal((await fetch(state.urls[0]+'/legacy-csp.json')).status,404);
+    await server.stop();await writeFile(join(f.root,'legacy-csp.json'),'["unsafe-inline"]');
+    assert.equal((await server.start({port:0,allowLan:false})).error,'missing-build');
+  }finally{await server.stop();await f.cleanup();}
+});
+
 test('live HTTP API requires operator token, rejects cross-origin mutations and exposes no configuration or shell',async()=>{
   const {OscBridge}=await import('../apps/desktop/src/bridge.ts');
   const f=await fixture();const bridge=new OscBridge();const server=new RemoteServer(f.root,()=>{},bridge);
@@ -124,6 +138,8 @@ test('plain IP and port establish an HttpOnly browser session for multiple clien
     assert.equal((await fetch(url+'/?page=settings')).headers.get('set-cookie'),cookie);
     const jsonHeaders={...headers,'Content-Type':'application/json'};
     assert.equal((await fetch(url+'/api/lock',{method:'POST',headers:jsonHeaders,body:'{"locked":false}'})).status,403);
+    assert.equal((await fetch(url+'/api/lock',{method:'POST',headers:{...jsonHeaders,'X-Cue-Remote':'1'},body:'{"locked":false}'})).status,200);
+    assert.equal((await fetch(url+'/api/lock',{method:'POST',headers:{...jsonHeaders,'X-Cue-Remote':'1',Origin:'http://untrusted.test'},body:'{"locked":false}'})).status,403);
     const response=await fetch(url+'/api/lock',{method:'POST',headers:{...jsonHeaders,Origin:url},body:'{"locked":false}'});
     assert.equal(response.status,200);assert.equal((await response.json()).snapshot.locked,true);
     assert.equal((await fetch(url+'/assets/remote-test.js')).headers.get('set-cookie'),null);

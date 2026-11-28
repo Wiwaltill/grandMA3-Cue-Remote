@@ -35,14 +35,20 @@ export class RemoteServer {
     if (!isServerConfig(config)) return this.update({phase:'error',error:'invalid-config'});
     this.token=randomBytes(32).toString('hex');this.bridge?.setLocked(true);
     this.update({phase:'starting',port:null,allowLan:config.allowLan,urls:[],error:null});
-    try { await stat(join(this.root,'index.html')); }
+    let scriptHashes: string[]=[];
+    try {
+      await stat(join(this.root,'index.html'));
+      const hashes: unknown=JSON.parse(await readFile(join(this.root,'legacy-csp.json'),'utf8'));
+      if(!Array.isArray(hashes) || hashes.length>16 || !hashes.every(hash=>typeof hash==='string' && /^[A-Za-z0-9+/]{43}=$/.test(hash)))throw new Error('Invalid CSP manifest');
+      scriptHashes=hashes.map(hash=>`'sha256-${hash}'`);
+    }
     catch { return this.update({phase:'error',error:'missing-build'}); }
     const allowedHosts=new Set<string>();
     let cookieName='';
     const server = createServer(async (request,response) => {
       response.setHeader('X-Content-Type-Options','nosniff');
       response.setHeader('Cache-Control','no-store');
-      response.setHeader('Content-Security-Policy',`default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src ${this.bridge ? "'self'" : "'none'"}; frame-ancestors 'none'; base-uri 'none'; form-action 'none'`);
+      response.setHeader('Content-Security-Policy',`default-src 'self'; script-src 'self' ${scriptHashes.join(' ')}; style-src 'self'; img-src 'self' data:; connect-src ${this.bridge ? "'self'" : "'none'"}; frame-ancestors 'none'; base-uri 'none'; form-action 'none'`);
       if(!allowedHosts.has(request.headers.host ?? '')){response.writeHead(421);response.end();return;}
       const origin=`http://${request.headers.host}`;
       const sameOrigin=(!request.headers.origin || request.headers.origin===origin) && (!request.headers['sec-fetch-site'] || request.headers['sec-fetch-site']==='same-origin' || request.headers['sec-fetch-site']==='none');
@@ -55,7 +61,9 @@ export class RemoteServer {
         const cookie=cookies.find(value=>value.startsWith(`${cookieName}=`))?.slice(cookieName.length+1)??'';
         const bearerValid=matches(bearer);
         if (!bearerValid && !matches(cookie)) {json(401,{error:'unauthorized'});return;}
-        if (!sameOrigin || (!bearerValid && request.method==='POST' && request.headers.origin!==origin)) {json(403,{error:'origin'});return;}
+        // Old WebKit may omit Origin on same-origin XHR. A custom header still
+        // prevents cross-site forms; foreign XHR preflights receive no CORS grant.
+        if (!sameOrigin || (!bearerValid && request.method==='POST' && request.headers.origin!==origin && request.headers['x-cue-remote']!=='1')) {json(403,{error:'origin'});return;}
         if (apiPath==='/api/state' && request.method==='GET') {json(200,this.bridge.getState());return;}
         if (request.method!=='POST') {json(405,{error:'method'});return;}
         if (request.headers['content-type']!=='application/json') {json(415,{error:'content-type'});return;}
